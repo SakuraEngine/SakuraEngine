@@ -19,7 +19,7 @@ public static class OpenEXR
                     .Depend(Visibility.Private, "LibDeflate@LibDeflate")
 
                     .RTTI(true)
-                    .SIMD(SIMDArchitecture.AVX)
+                    .Exception(true)
                     .OptimizationLevel(OptimizationLevel.Fastest)
 
                     // Instead of #include <IexConfigInternal.h>
@@ -51,6 +51,11 @@ public static class OpenEXR
                         "-Wno-parentheses",
                         "-Wno-pointer-sign"
                     );
+
+                if (Engine.TargetArch == Architecture.ARM64)
+                    Target.SIMD(SIMDArchitecture.Neon);
+                else
+                    Target.SIMD(SIMDArchitecture.AVX);
             });
     }
 }

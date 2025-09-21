@@ -39,7 +39,7 @@ namespace SB.Core
 
             var SourceFile = Driver.Arguments["Source"] as string;
             var ObjectFile = Driver.Arguments["Object"] as string;
-            var Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, SourceFile!, Emitter.Name, (Depend depend) =>
+            var Changed = BuildDepends.Solve(Target).OnChanged(Target.Name, SourceFile!, Emitter.Name, (Depend depend) =>
             {
                 ProcessOptions Options = new ProcessOptions
                 {
@@ -93,7 +93,7 @@ namespace SB.Core
 
             var InputFiles = Driver.Arguments["Inputs"] as ArgumentList<string>;
             var OutputFile = Driver.Arguments["Output"] as string;
-            bool Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
+            bool Changed = BuildDepends.Solve(Target).OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
             {
                 int ExitCode = BuildSystem.RunProcess(ExecutablePath, String.Join(" ", LinkerArgsList), out var OutputInfo, out var ErrorInfo);
                 if (ExitCode != 0)

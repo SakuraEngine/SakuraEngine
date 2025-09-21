@@ -2,24 +2,23 @@
 #include "SkrGui/framework/render_object/render_object.hpp"
 #include "SkrGui/math/layout.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/render_object/render_box.generated.h"
-#endif
+#include "SkrGui/framework/render_object/render_box.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "d4c45487-d696-42fb-bff1-f0a3f6adcea3")
-SKR_GUI_API RenderBox : public RenderObject {
+struct [[sattr(guid = "d4c45487-d696-42fb-bff1-f0a3f6adcea3"
+)]] SKR_GUI_API RenderBox : public RenderObject
+{
     SKR_GENERATE_BODY(RenderBox)
 
     RenderBox();
     ~RenderBox();
 
     // getter & setter
-    inline Sizef          size() const SKR_NOEXCEPT { return _size; }
-    inline void           set_size(Sizef size) SKR_NOEXCEPT { _size = size; }
+    inline Sizef size() const SKR_NOEXCEPT { return _size; }
+    inline void set_size(Sizef size) SKR_NOEXCEPT { _size = size; }
     inline BoxConstraints constraints() const SKR_NOEXCEPT { return _constraints; }
-    inline void           set_constraints(BoxConstraints constraints) SKR_NOEXCEPT
+    inline void set_constraints(BoxConstraints constraints) SKR_NOEXCEPT
     {
         if (_constraints != constraints)
         {
@@ -62,7 +61,7 @@ private:
     void perform_resize() SKR_NOEXCEPT override; // override compute_dry_layout instead
 
 private:
-    Sizef          _size        = {};
+    Sizef _size = {};
     BoxConstraints _constraints = {};
 
     // TODO. cached data

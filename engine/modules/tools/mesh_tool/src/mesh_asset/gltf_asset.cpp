@@ -42,13 +42,14 @@ void GltfMeshImporter::ImportMaterials(ImportData* import_data, CookContext* con
     const auto GLTFDirectory = skr::Path(assetPath).parent_directory();
     auto& CookSystem = *skd::asset::GetCookSystem();
 
-    skr::Map<const cgltf_texture*, skr::GUID> ImportedTextures;
+    skr::Map<uint64_t, skr::GUID> ImportedTextures;
     auto ImportTextureOnce = [&](cgltf_texture* t) {
-        if (ImportedTextures.contains(t))
-            return ImportedTextures.find(t).value();
+        auto index = cgltf_texture_index(gltf_data, t);
+        if (ImportedTextures.contains(index))
+            return ImportedTextures.find(index).value();
 
         skr::GUID TextureAssetID = skr::GUID::Create();
-        ImportedTextures.add(t, TextureAssetID);
+        ImportedTextures.add(index, TextureAssetID);
         auto TextureAssetPath = (AssetDirectory / (const char8_t*)t->image->uri).string();
         auto TextureSourcePath = (GLTFDirectory / (const char8_t*)t->image->uri).string();
 
@@ -95,6 +96,13 @@ void GltfMeshImporter::ImportMaterials(ImportData* import_data, CookContext* con
             v.slot_name = u8"BaseColor";
             v.resource = ImportTextureOnce(basecolor);
         }
+        if (auto normal = material.normal_texture.texture)
+        {
+            auto& v = MatImporter->asset->override_values.emplace().ref();
+            v.prop_type = EMaterialPropertyType::TEXTURE;
+            v.slot_name = u8"NormalMap";
+            v.resource = ImportTextureOnce(normal);
+        }
         if (auto metal_rough = pbr.metallic_roughness_texture.texture)
         {
             auto& v = MatImporter->asset->override_values.emplace().ref();
@@ -121,11 +129,18 @@ void GltfMeshImporter::ImportMaterials(ImportData* import_data, CookContext* con
         import_data->import_materials.add_unique(MaterialAssetID);
     }
 
-    for (auto [t, TextureAssetID] : ImportedTextures)
-        CookSystem.EnsureCooked(TextureAssetID);
+    {
+        SkrZoneScopedN("CookGLTFTexture/Materials");
+        skr::Vector<skr::task::event_t> IndirectAssets;
+        for (auto [t, TextureAssetID] : ImportedTextures)
+            IndirectAssets.add(CookSystem.EnsureCooked(TextureAssetID));
 
-    for (auto [t, MaterialAssetID] : ImportedMaterials)
-        CookSystem.EnsureCooked(MaterialAssetID);
+        for (auto [t, MaterialAssetID] : ImportedMaterials)
+            IndirectAssets.add(CookSystem.EnsureCooked(MaterialAssetID));
+
+        for (auto e : IndirectAssets)
+            e.wait(true);
+    }
 }
 
 } // namespace skd::asset

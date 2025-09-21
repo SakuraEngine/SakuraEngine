@@ -6,20 +6,21 @@
 #include "SkrBase/containers/string/string_memory.hpp"
 #include "SkrBase/containers/string/string.hpp"
 #include "SkrBase/containers/string/format.hpp"
+#include <SkrBase/type_info.hpp>
 
 namespace skr
 {
 constexpr uint64_t kStringSSOSize = 31;
 
 // string types
-using String = container::U8String<container::StringMemory<
+using String [[sfinal_alias]] = container::U8String<container::StringMemory<
     skr_char8,      /*type*/
     uint64_t,       /*size type*/
     kStringSSOSize, /*sso size*/
     SkrAllocator    /*allocator*/
     >>;
-using StringView = container::U8StringView<uint64_t>;
-using SerializeConstString = String;
+using StringView [[sfinal_alias]] = container::U8StringView<uint64_t>;
+using SerializeConstString [[sfinal_alias]] = String;
 
 // format
 template <typename... Args>
@@ -32,8 +33,6 @@ inline String format(StringView fmt, Args&&... args)
 {
     return container::format<String>(fmt, std::forward<Args>(args)...);
 }
-
-SKR_STATIC_API bool guid_from_sv(const skr::StringView& str, skr_guid_t& value);
 
 // hash
 template <>
@@ -70,50 +69,36 @@ struct Hash<StringView>
 namespace skr::container
 {
 template <>
-struct Formatter<skr_md5_t>
+struct Formatter<MD5>
 {
     template <typename TString>
-    inline static void format(TString& out, const skr_md5_t& md5, typename TString::ViewType spec)
+    inline static void format(TString& out, const MD5& md5, typename TString::ViewType spec)
     {
-        ::skr::format_to(out,
-            u8"{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-            md5.digest[0],
-            md5.digest[1],
-            md5.digest[2],
-            md5.digest[3],
-            md5.digest[4],
-            md5.digest[5],
-            md5.digest[6],
-            md5.digest[7],
-            md5.digest[8],
-            md5.digest[9],
-            md5.digest[10],
-            md5.digest[11],
-            md5.digest[12],
-            md5.digest[13],
-            md5.digest[14],
-            md5.digest[15]);
+        auto ref = out.add_unsafe(MD5::kHexLength);
+        md5.encode_hex(ref.ptr());
     }
 };
 template <>
-struct Formatter<skr_guid_t>
+struct Formatter<GUID>
 {
     template <typename TString>
-    inline static void format(TString& out, const skr_guid_t& guid, typename TString::ViewType spec)
+    inline static void format(TString& out, const GUID& guid, typename TString::ViewType spec)
     {
-        ::skr::format_to(out,
-            u8"{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-            guid.data1(),
-            guid.data2(),
-            guid.data3(),
-            guid.data4(0),
-            guid.data4(1),
-            guid.data4(2),
-            guid.data4(3),
-            guid.data4(4),
-            guid.data4(5),
-            guid.data4(6),
-            guid.data4(7));
+        auto ref = out.add_unsafe(GUID::kHexSpecLength);
+        guid.encode_spec(ref.ptr());
+    }
+};
+template <>
+struct Formatter<SHA256>
+{
+    template <typename TString>
+    inline static void format(TString& out, const SHA256& sha256, typename TString::ViewType spec)
+    {
+        auto ref = out.add_unsafe(SHA256::kHexLength);
+        sha256.encode_hex(ref.ptr());
     }
 };
 } // namespace skr::container
+
+SKR_TYPE_INFO(skr::String, "214ED643-54BD-4213-BE37-E336A77FDE84");
+SKR_TYPE_INFO(skr::StringView, "B799BA81-6009-405D-9131-E4B6101660DC");

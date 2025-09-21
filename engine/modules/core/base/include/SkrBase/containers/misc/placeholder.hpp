@@ -6,7 +6,8 @@
 namespace skr
 {
 template <uint64_t Size, uint64_t Align>
-struct AlignedStorage {
+struct AlignedStorage
+{
     inline void*       data() noexcept { return reinterpret_cast<void*>(_storage); }
     inline const void* data() const noexcept { return reinterpret_cast<const void*>(_storage); }
 
@@ -15,13 +16,15 @@ private:
 };
 
 template <uint64_t Align>
-struct AlignedStorage<0, Align> {
+struct AlignedStorage<0, Align>
+{
     inline void*       data() noexcept { return nullptr; }
     inline const void* data() const noexcept { return nullptr; }
 };
 
 template <typename T, uint64_t N = 1>
-struct Placeholder : AlignedStorage<sizeof(T) * N, alignof(T)> {
+struct Placeholder : AlignedStorage<sizeof(T) * N, alignof(T)>
+{
     using Super = AlignedStorage<sizeof(T) * N, alignof(T)>;
 
     inline T* data_typed() noexcept

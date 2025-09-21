@@ -5,9 +5,9 @@ namespace input {
 
 InputValueStorage InputModifierShuffle::modify_raw(const InputValueStorage &raw) SKR_NOEXCEPT
 {
-    skr_float4_t v = raw.get_raw();
+    float4 v = raw.get_raw();
     float source[4] = { v.x, v.y, v.z, v.w };
-    skr_float4_t result;
+    float4 result;
     result.x = source[shuffle.shuffle[0]];
     result.y = source[shuffle.shuffle[1]];
     result.z = source[shuffle.shuffle[2]];
@@ -17,8 +17,8 @@ InputValueStorage InputModifierShuffle::modify_raw(const InputValueStorage &raw)
 
 InputValueStorage InputModifierScale::modify_raw(const InputValueStorage &raw) SKR_NOEXCEPT
 {
-    skr_float4_t v = raw.get_raw();
-    skr_float4_t result;
+    float4 v = raw.get_raw();
+    float4 result;
     result.x = v.x * scale.x;
     result.y = v.y * scale.y;
     result.z = v.z * scale.z;

@@ -56,7 +56,7 @@ namespace SB.Core
 
             var FileToCompile = TryGet(Driver.Arguments, "Source") ?? TryGet(Driver.Arguments, "PCHHeader");
             var ObjectFile = TryGet(Driver.Arguments, "Object") ?? TryGet(Driver.Arguments, "PCHObject");
-            var Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, FileToCompile!, Emitter.Name, (Depend depend) =>
+            var Changed = BuildDepends.Solve(Target).OnChanged(Target.Name, FileToCompile!, Emitter.Name, (Depend depend) =>
             {
                 ProcessOptions Options = new ProcessOptions
                 {

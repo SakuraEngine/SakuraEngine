@@ -10,32 +10,33 @@ namespace skr
 using RingBufferMemoryBase = container::RingBufferMemoryBase<uint64_t>;
 
 template <typename T, typename Allocator = SkrAllocator>
-using RingBuffer = container::RingBuffer<container::RingBufferMemory<
-T,                    /*type*/
-RingBufferMemoryBase, /*base*/
-Allocator             /*allocator type*/
->>;
+using RingBuffer [[sfinal_alias]] = container::RingBuffer<container::RingBufferMemory<
+    T,                    /*type*/
+    RingBufferMemoryBase, /*base*/
+    Allocator             /*allocator type*/
+    >>;
 
 template <typename T, uint64_t kCount>
-using FixedRingBuffer = container::RingBuffer<container::FixedRingBufferMemory<
-T,                   /*type*/
-kCount,              /*count*/
-RingBufferMemoryBase /*base*/
->>;
+using FixedRingBuffer [[sfinal_alias]] = container::RingBuffer<container::FixedRingBufferMemory<
+    T,                   /*type*/
+    kCount,              /*count*/
+    RingBufferMemoryBase /*base*/
+    >>;
 
 template <typename T, uint64_t kInlineCount, typename Allocator = SkrAllocator>
-using InlineRingBuffer = container::RingBuffer<container::InlineRingBufferMemory<
-T,                    /*type*/
-kInlineCount,         /*inline count*/
-RingBufferMemoryBase, /*base*/
-Allocator             /*allocator type*/
->>;
+using InlineRingBuffer [[sfinal_alias]] = container::RingBuffer<container::InlineRingBufferMemory<
+    T,                    /*type*/
+    kInlineCount,         /*inline count*/
+    RingBufferMemoryBase, /*base*/
+    Allocator             /*allocator type*/
+    >>;
 } // namespace skr
 
 namespace skr
 {
 template <typename T>
-struct SimpleThreadSafeRingBuffer {
+struct SimpleThreadSafeRingBuffer
+{
     inline SimpleThreadSafeRingBuffer(uint64_t length = 256)
     {
         // resize
@@ -97,9 +98,9 @@ struct SimpleThreadSafeRingBuffer {
         skr_rw_mutex_acquire_r(&_rw_mutex);
         const auto cur_size = skr_atomic_load_acquire(&_size);
         const auto cur_head = skr_atomic_load_acquire(&_head);
-        const auto slot     = (cur_head + 1) % cur_size;
-        const auto old      = _buffer[slot];
-        _buffer[slot]       = value;
+        const auto slot = (cur_head + 1) % cur_size;
+        const auto old = _buffer[slot];
+        _buffer[slot] = value;
         skr_atomic_store_release(&_head, slot);
         skr_rw_mutex_release_r(&_rw_mutex);
         return old;
@@ -109,8 +110,8 @@ struct SimpleThreadSafeRingBuffer {
         skr_rw_mutex_acquire_r(&_rw_mutex);
         const auto cur_size = skr_atomic_load_acquire(&_size);
         const auto cur_head = skr_atomic_load_acquire(&_head);
-        const auto slot     = (cur_head + index) % cur_size;
-        auto       result   = _buffer[slot];
+        const auto slot = (cur_head + index) % cur_size;
+        auto result = _buffer[slot];
         skr_rw_mutex_release_r(&_rw_mutex);
         return result;
     }
@@ -131,9 +132,9 @@ struct SimpleThreadSafeRingBuffer {
     }
 
 private:
-    Vector<T>        _buffer = {};
-    SAtomicU64       _head   = 0;
-    SAtomicU64       _size   = 0;
+    Vector<T> _buffer = {};
+    SAtomicU64 _head = 0;
+    SAtomicU64 _size = 0;
     mutable SRWMutex _rw_mutex;
 };
 } // namespace skr

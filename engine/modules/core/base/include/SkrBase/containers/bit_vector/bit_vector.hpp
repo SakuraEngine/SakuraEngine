@@ -10,7 +10,8 @@
 namespace skr::container
 {
 template <typename Memory>
-struct BitVector final : protected Memory {
+struct BitVector final : protected Memory
+{
     using typename Memory::BitBlockType;
     using typename Memory::SizeType;
     using typename Memory::AllocatorCtorParam;
@@ -66,6 +67,7 @@ struct BitVector final : protected Memory {
     void clear();
     void release(SizeType reserve_capacity = 0);
     void reserve(SizeType expect_capacity);
+    void grow_to(SizeType expect_capacity);
     void resize(SizeType expect_size, bool new_value);
     void resize_unsafe(SizeType expect_size);
 
@@ -313,6 +315,14 @@ SKR_INLINE void BitVector<Memory>::reserve(SizeType expect_capacity)
     if (expect_capacity > capacity())
     {
         _realloc(expect_capacity);
+    }
+}
+template <typename Memory>
+SKR_INLINE void BitVector<Memory>::grow_to(SizeType expect_capacity)
+{
+    if (expect_capacity > capacity())
+    {
+        Memory::grow_to(expect_capacity);
     }
 }
 template <typename Memory>

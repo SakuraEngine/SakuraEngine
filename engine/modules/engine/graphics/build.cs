@@ -31,7 +31,7 @@ public static class SkrGraphics
         if (BuildSystem.TargetOS == OSPlatform.OSX)
         {
             var OCOptions = new CFamilyFileOptions();
-            OCOptions.Arguments.CppFlags(Visibility.Private, "-fobjc-arc");
+            OCOptions.Arguments.CppFlags("-fobjc-arc");
 
             SkrGraphics
                 .AddObjCFiles(OCOptions, "src/build.*.m")
@@ -43,6 +43,8 @@ public static class SkrGraphics
         if (BuildSystem.TargetOS == OSPlatform.Windows)
         {
             SkrGraphics.Defines(Visibility.Private, "UNICODE")
+                .Defines(Visibility.Private, "D3D12MA_D3D12_HEADERS_ALREADY_INCLUDED")
+
                 .Require("D3D12Agility", new PackageConfig { Version = new Version(1, 616, 1) })
                 .Depend(Visibility.Public, "D3D12Agility@D3D12Agility")
 

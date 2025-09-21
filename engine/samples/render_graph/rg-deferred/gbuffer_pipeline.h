@@ -25,10 +25,8 @@ inline CGPURenderPipelineId create_gbuffer_render_pipeline(CGPUDeviceId device)
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = SKR_UTF8("vs");
     ppl_shaders[0].library = gbuffer_vs;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = SKR_UTF8("fs");
     ppl_shaders[1].library = gbuffer_fs;
     CGPURootSignatureDescriptor rs_desc = {};

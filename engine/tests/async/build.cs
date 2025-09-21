@@ -6,15 +6,15 @@ public static class AsyncTests
 {
     static AsyncTests()
     {
-        Test.UnitTest("ThreadsTest")
+        Test.UnitTest("TestThreads")
             .Depend(Visibility.Public, "SkrCore")
             .AddCppFiles("threads/threads.cpp");
             
-        Test.UnitTest("ServiceThreadTest")
+        Test.UnitTest("TestServiceThread")
             .Depend(Visibility.Public, "SkrCore")
             .AddCppFiles("threads/service_thread.cpp");
             
-        Test.UnitTest("JobTest")
+        Test.UnitTest("TestJob")
             .Depend(Visibility.Public, "SkrCore")
             .AddCppFiles("threads/job.cpp");
 
@@ -24,7 +24,7 @@ public static class AsyncTests
             .AddCppFiles("task2/**.cpp");
         */
 
-        Test.UnitTest("MarlTest")
+        Test.UnitTest("TestMarl")
             .EnableUnityBuild()
             .Depend(Visibility.Public, "SkrTask")
             .AddCppFiles("marl-test/**.cpp");

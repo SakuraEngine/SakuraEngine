@@ -2,8 +2,11 @@ namespace skr::CppSL::HLSL
 {
 const wchar_t* kHLSLBufferIntrinsics = LR"__de___l___im__(
 template <typename T> void buffer_write(RWStructuredBuffer<T> buffer, uint index, T value) { buffer[index] = value; }
+template <typename T> void buffer_write(RWTexelBuffer<T> buffer, uint index, T value) { buffer[index] = value; }
 template <typename T> T buffer_read(RWStructuredBuffer<T> buffer, uint index) { return buffer[index]; }
 template <typename T> T buffer_read(StructuredBuffer<T> buffer, uint index) { return buffer[index]; }
+template <typename T> T buffer_read(RWTexelBuffer<T> buffer, uint index) { return buffer[index]; }
+template <typename T> T buffer_read(TexelBuffer<T> buffer, uint index) { return buffer[index]; }
 
 #define byte_buffer_load(b, i)  (b).Load((i))
 #define byte_buffer_load2(b, i) (b).Load2((i))

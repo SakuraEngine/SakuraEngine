@@ -109,6 +109,45 @@ public class VSCodeDebugEmitter : TaskEmitter
             _LaunchConfigs.Add(launchJson);
         }
 
+        // add attach config
+        {
+            var attachConfig = new JsonObject
+            {
+                ["__SB_TAG__"] = true,
+                ["name"] = $"🔗Attach to Process [{Mode}]",
+                ["type"] = Debugger,
+                ["request"] = "attach",
+                ["processId"] = "${command:pickProcess}",
+            };
+
+            if (Debugger == "lldb" || Debugger == "lldb-dap")
+            {
+                attachConfig["sourceMap"] = null;
+                attachConfig["env"] = null;
+                attachConfig["runInTerminal"] = false;
+                if (Debugger == "lldb-dap")
+                {
+                    attachConfig["stopOnEntry"] = false;
+                }
+            }
+            else if (Debugger == "cppdbg")
+            {
+                attachConfig["MIMode"] = "gdb";
+                attachConfig["miDebuggerPath"] = _FindDebugger("gdb");
+                attachConfig["setupCommands"] = BS.TargetOS == OSPlatform.Linux ? new JsonArray
+                {
+                    new JsonObject
+                    {
+                        ["description"] = "Enable pretty-printing",
+                        ["text"] = "-enable-pretty-printing",
+                        ["ignoreFailures"] = true
+                    }
+                } : null;
+            }
+
+            _LaunchConfigs.Add(attachConfig);
+        }
+
         // generate tasks.json
         {
             // get path
@@ -469,9 +508,10 @@ public class VSCodeDebugEmitter : TaskEmitter
     }
     private string _GetTargetProgramDir(Target target)
     {
-        var binaryPath = target.GetBinaryPath(Mode).ToLowerInvariant();
-        var relativeBinaryPath = Path.GetRelativePath(WorkspaceRoot, binaryPath);
-        return Path.Combine("${workspaceFolder}", relativeBinaryPath);
+        var binaryPath = target.GetBinaryDir(Mode);
+        return binaryPath;
+        // var relativeBinaryPath = Path.GetRelativePath(WorkspaceRoot, binaryPath);
+        // return Path.Combine("${workspaceFolder}", relativeBinaryPath);
     }
     // cppvsdbg, cppdbg, lldb-dap, lldb
     private string _GetDefaultDebugger()

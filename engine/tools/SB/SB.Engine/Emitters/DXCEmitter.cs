@@ -11,7 +11,7 @@ namespace SB
         public override IArtifact? PerFileTask(Target Target, FileList FileList, FileOptions? Options, string SourceFile)
         {
             var HLSLFileList = FileList as HLSLFileList;
-            var OutputDirectory = Path.Combine(Engine.BuildPath, ShaderOutputDirectories[Target.Name]);
+            var OutputDirectory = Path.Combine(BuildDirs.BuildDir, ShaderOutputDirectories[Target.Name]);
             return CompileHLSL(Target, SourceFile, HLSLFileList!.Entry, OutputDirectory);
         }
 
@@ -30,14 +30,14 @@ namespace SB
             Directory.CreateDirectory(OutputDirectory);
 
             // SPV
-            bool Changed = Engine.ShaderCompileDepend.OnChanged(Target.Name, SourceFile, "DXC.SPV", (Depend depend) => {
+            bool Changed = EngineDepends.ShaderCompile.OnChanged(Target.Name, SourceFile, "DXC.SPV", (Depend depend) => {
                 var SpvFile = Path.Combine(OutputDirectory, AppendEntryInArtifactPath ? $"{HLSLBaseName}.{Entry}.spv" : $"{HLSLBaseName}.spv");
                 var Arguments = new string[] {
                     "-HV 2021",
                     "-Wno-ignored-attributes",
                     "-spirv",
                     TargetProfile.StartsWith("lib") ? "-Vd" : $"-E {Entry}",
-                    "-fspv-target-env=vulkan1.1",
+                    "-fspv-target-env=vulkan1.2",
                     $"-Fo{SpvFile}",
                     $"-T{TargetProfile}",
                     SourceFile
@@ -51,17 +51,18 @@ namespace SB
             }, new string [] { SourceFile }, null);
 
             // DXIL
-            Changed |= Engine.ShaderCompileDepend.OnChanged(Target.Name, SourceFile, "DXC.DXIL", (Depend depend) => {
+            Changed |= EngineDepends.ShaderCompile.OnChanged(Target.Name, SourceFile, "DXC.DXIL", (Depend depend) => {
                 var DxilFile = Path.Combine(OutputDirectory, AppendEntryInArtifactPath? $"{HLSLBaseName}.{Entry}.dxil" : $"{HLSLBaseName}.dxil");
                 var Arguments = new string[] {
+                    "-O3",
                     "-HV 2021",
                     "-Wno-ignored-attributes",
                     "-all_resources_bound",
-                    TargetProfile.StartsWith("lib") ? "-Vd" : $"-E {Entry}",
+                    TargetProfile.StartsWith("lib") ? "-O3" : $"-E {Entry}",
                     $"-Fo{DxilFile}",
                     $"-T{TargetProfile}",
                     SourceFile,
-                    // "/Zi",
+                    "/Zi",
                     // $"-Fd{DxilFile}.pdb"
                 };
                 int ExitCode = BuildSystem.RunProcess(DXCSetup.DXC!, string.Join(" ", Arguments), out var Output, out var Error);
@@ -119,10 +120,13 @@ namespace SB
     {
         public void Setup()
         {
+            if (BuildSystem.TargetOS != OSPlatform.Windows)
+                return;
+                
             var Installation = Install.Tool("dxc-2025_07_14");
             Installation.Wait();
             DXC = Path.Combine(Installation.Result, BuildSystem.HostOS == OSPlatform.Windows ? "dxc.exe" : "dxc");
-            Directory.CreateDirectory(Path.Combine(Engine.BuildPath, "resources/shaders"));
+            Directory.CreateDirectory(Path.Combine(BuildDirs.BuildDir, "resources/shaders"));
         }
         public static string? DXC { get; private set; }
     }

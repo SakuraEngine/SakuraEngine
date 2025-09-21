@@ -6,7 +6,8 @@
 namespace skr::container
 {
 template <typename Memory>
-struct SparseHashSet : protected SparseHashBase<Memory> {
+struct SparseHashSet : protected SparseHashBase<Memory>
+{
     using Super = SparseHashBase<Memory>;
 
     // sparse vector configure
@@ -84,6 +85,7 @@ struct SparseHashSet : protected SparseHashBase<Memory> {
     using Super::clear;
     using Super::release;
     using Super::reserve;
+    using Super::grow_to;
     using Super::shrink;
     using Super::compact;
     using Super::compact_stable;
@@ -838,7 +840,8 @@ SKR_INLINE const SparseHashSet<Memory>& SparseHashSet<Memory>::readonly() const
 namespace skr::container
 {
 template <typename Memory>
-struct ContainerTraits<SparseHashSet<Memory>> {
+struct ContainerTraits<SparseHashSet<Memory>>
+{
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()

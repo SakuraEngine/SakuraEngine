@@ -12,15 +12,10 @@ struct SKR_RENDERER_API PSOMapKey
 
     CGPURootSignatureId root_signature;
     CGPUShaderEntryDescriptor vertex_shader;
-    skr::Vector<CGPUConstantSpecialization> vertex_specializations;
     CGPUShaderEntryDescriptor tesc_shader;
-    skr::Vector<CGPUConstantSpecialization> tesc_specializations;
     CGPUShaderEntryDescriptor tese_shader;
-    skr::Vector<CGPUConstantSpecialization> tese_specializations;
     CGPUShaderEntryDescriptor geom_shader;
-    skr::Vector<CGPUConstantSpecialization> geom_specializations;
     CGPUShaderEntryDescriptor fragment_shader;
-    skr::Vector<CGPUConstantSpecialization> fragment_specializations;
     CGPUVertexLayout vertex_layout;
     CGPUBlendStateDescriptor blend_state;
     CGPUDepthStateDescriptor depth_state;

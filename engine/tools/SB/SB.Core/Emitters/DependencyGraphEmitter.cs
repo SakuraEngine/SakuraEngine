@@ -12,18 +12,17 @@ namespace SB
     {
         public enum GraphFormat { DOT, Mermaid, PlantUML }
         public enum NodeColorScheme { ByType, ByModule, BySize, ByDependencyCount }
-        
-        public static string OutputDirectory { get; set; } = ".sb/graphs";
+
         public static GraphFormat Format { get; set; } = GraphFormat.DOT;
         public static NodeColorScheme ColorScheme { get; set; } = NodeColorScheme.ByType;
         public static bool IncludeExternalDeps { get; set; } = false;
         public static bool ShowTransitiveDeps { get; set; } = false;
         public static int MaxDepth { get; set; } = -1;
-        
+
         private static readonly Dictionary<string, TargetInfo> targetInfos = new();
         private static readonly HashSet<(string from, string to)> edges = new();
         private static readonly object syncLock = new object();
-        
+
         private class TargetInfo
         {
             public Target Target { get; set; } = null!;
@@ -32,10 +31,14 @@ namespace SB
             public int DirectDependencyCount { get; set; }
             public string ModulePath { get; set; } = "";
         }
-        
+
         public override bool EnableEmitter(Target Target) => true;
         public override bool EmitTargetTask(Target Target) => true;
-        
+
+
+        public static string? OutputDirectory { get; set; }
+
+
         public static void Clear()
         {
             lock (syncLock)
@@ -44,22 +47,22 @@ namespace SB
                 edges.Clear();
             }
         }
-        
+
         public override IArtifact? PerTargetTask(Target Target)
         {
             var info = new TargetInfo
             {
                 Target = Target,
                 ModulePath = Path.GetRelativePath(Environment.CurrentDirectory, Target.Directory).Replace('\\', '/'),
-                SourceFileCount = Target.FileLists.Sum(fl => fl.Files.Count(f => 
+                SourceFileCount = Target.FileLists.Sum(fl => fl.Files.Count(f =>
                     f.EndsWith(".cpp", StringComparison.OrdinalIgnoreCase) ||
                     f.EndsWith(".c", StringComparison.OrdinalIgnoreCase))),
-                DirectDependencyCount = Target.PublicDependencies.Count + 
-                                      Target.PrivateDependencies.Count + 
+                DirectDependencyCount = Target.PublicDependencies.Count +
+                                      Target.PrivateDependencies.Count +
                                       Target.InterfaceDependencies.Count
             };
             info.CodeSize = info.SourceFileCount * 5000;
-            
+
             var deps = new HashSet<string>();
             if (ShowTransitiveDeps)
                 foreach (var depName in Target.Dependencies) deps.Add(depName);
@@ -69,17 +72,17 @@ namespace SB
                 foreach (var depName in Target.PrivateDependencies) deps.Add(depName);
                 foreach (var depName in Target.InterfaceDependencies) deps.Add(depName);
             }
-            
+
             lock (syncLock)
             {
                 targetInfos[Target.Name] = info;
                 foreach (var depName in deps)
                     edges.Add((Target.Name, depName));
             }
-            
+
             return null;
         }
-        
+
         public static void GenerateDependencyGraph()
         {
             if (targetInfos.Count == 0)
@@ -87,11 +90,11 @@ namespace SB
                 Log.Warning("No targets collected. Make sure to run build before generating graph.");
                 return;
             }
-            
-            Directory.CreateDirectory(OutputDirectory);
+
+            Directory.CreateDirectory(OutputDirectory!);
             var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             var filename = $"dependency_graph_{timestamp}";
-            
+
             Dictionary<string, TargetInfo> targetsCopy;
             HashSet<(string from, string to)> edgesCopy;
             lock (syncLock)
@@ -99,8 +102,8 @@ namespace SB
                 targetsCopy = new Dictionary<string, TargetInfo>(targetInfos);
                 edgesCopy = new HashSet<(string from, string to)>(edges);
             }
-            
-            var outputPath = Path.Combine(OutputDirectory, filename);
+
+            var outputPath = Path.Combine(OutputDirectory!, filename);
             switch (Format)
             {
                 case GraphFormat.DOT:
@@ -113,11 +116,11 @@ namespace SB
                     GeneratePlantUML(targetsCopy, edgesCopy, $"{outputPath}.puml");
                     break;
             }
-            
+
             GenerateStats(targetsCopy, edgesCopy, $"{outputPath}_stats.txt");
             Log.Information($"Generated dependency graph with {targetsCopy.Count} targets and {edgesCopy.Count} edges");
         }
-        
+
         private static void GenerateDot(Dictionary<string, TargetInfo> targets, HashSet<(string from, string to)> edges, string path)
         {
             var sb = new StringBuilder();
@@ -126,7 +129,7 @@ namespace SB
             sb.AppendLine("    node [shape=box, style=\"rounded,filled\", fontname=\"Arial\"];");
             sb.AppendLine("    edge [fontname=\"Arial\", fontsize=10];");
             sb.AppendLine();
-            
+
             foreach (var (name, info) in targets)
             {
                 var color = GetNodeColor(info);
@@ -139,11 +142,11 @@ namespace SB
                 };
                 sb.AppendLine($"    \"{name}\" [label=\"{label}\", fillcolor=\"{color}\", shape={shape}];");
             }
-            
+
             sb.AppendLine();
             foreach (var (from, to) in edges)
                 sb.AppendLine($"    \"{from}\" -> \"{to}\" [color=\"darkgray\"];");
-            
+
             // Legend
             sb.AppendLine("\n    subgraph cluster_legend {");
             sb.AppendLine("        label=\"Legend\";");
@@ -156,23 +159,23 @@ namespace SB
             }
             sb.AppendLine("    }");
             sb.AppendLine("}");
-            
+
             File.WriteAllText(path, sb.ToString());
             Log.Information($"Generated DOT file: {path}");
         }
-        
+
         private static void GenerateMermaid(Dictionary<string, TargetInfo> targets, HashSet<(string from, string to)> edges, string path)
         {
             var sb = new StringBuilder();
             sb.AppendLine("graph LR");
             sb.AppendLine();
-            
+
             var moduleGroups = targets.GroupBy(t => t.Value.ModulePath);
             foreach (var module in moduleGroups)
             {
                 if (!string.IsNullOrEmpty(module.Key))
                     sb.AppendLine($"    subgraph {SanitizeId(module.Key)}[\"{module.Key}\"]");
-                
+
                 foreach (var (name, info) in module)
                 {
                     var label = GetNodeLabel(name, info);
@@ -184,23 +187,23 @@ namespace SB
                     };
                     sb.AppendLine($"        {SanitizeId(name)}[\"{label}\"]:::{style}");
                 }
-                
+
                 if (!string.IsNullOrEmpty(module.Key))
                     sb.AppendLine("    end");
             }
-            
+
             sb.AppendLine();
             foreach (var (from, to) in edges)
                 sb.AppendLine($"    {SanitizeId(from)} --> {SanitizeId(to)}");
-            
+
             sb.AppendLine("\n    classDef executable fill:#ffffcc,stroke:#333,stroke-width:2px;");
             sb.AppendLine("    classDef static fill:#ccccff,stroke:#333,stroke-width:2px;");
             sb.AppendLine("    classDef dynamic fill:#ccffcc,stroke:#333,stroke-width:2px;");
-            
+
             File.WriteAllText(path, sb.ToString());
             Log.Information($"Generated Mermaid file: {path}");
         }
-        
+
         private static void GeneratePlantUML(Dictionary<string, TargetInfo> targets, HashSet<(string from, string to)> edges, string path)
         {
             var sb = new StringBuilder();
@@ -208,7 +211,7 @@ namespace SB
             sb.AppendLine("!define RECTANGLE class");
             sb.AppendLine("skinparam componentStyle rectangle");
             sb.AppendLine();
-            
+
             foreach (var (name, info) in targets)
             {
                 var stereotype = info.Target.GetTargetType() switch
@@ -220,17 +223,17 @@ namespace SB
                 var label = GetNodeLabel(name, info);
                 sb.AppendLine($"component \"{label}\" as {name.Replace('-', '_')} {stereotype}");
             }
-            
+
             sb.AppendLine();
             foreach (var (from, to) in edges)
                 sb.AppendLine($"{from.Replace('-', '_')} --> {to.Replace('-', '_')}");
-            
+
             sb.AppendLine("@enduml");
-            
+
             File.WriteAllText(path, sb.ToString());
             Log.Information($"Generated PlantUML file: {path}");
         }
-        
+
         private static void GenerateStats(Dictionary<string, TargetInfo> targets, HashSet<(string from, string to)> edges, string path)
         {
             var sb = new StringBuilder();
@@ -238,21 +241,21 @@ namespace SB
             sb.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             sb.AppendLine($"\nTotal Targets: {targets.Count}");
             sb.AppendLine($"Total Dependencies: {edges.Count}");
-            
+
             sb.AppendLine("\nTarget Types:");
             var typeGroups = targets.GroupBy(t => t.Value.Target.GetTargetType());
             foreach (var group in typeGroups)
                 sb.AppendLine($"  {group.Key}: {group.Count()}");
-            
+
             sb.AppendLine("\nTop 10 Targets by Direct Dependencies:");
             foreach (var (name, info) in targets.OrderByDescending(t => t.Value.DirectDependencyCount).Take(10))
                 sb.AppendLine($"  {name}: {info.DirectDependencyCount} dependencies");
-            
+
             sb.AppendLine("\nTop 10 Most Depended Upon Targets:");
             var dependedUpon = edges.GroupBy(e => e.to).OrderByDescending(g => g.Count()).Take(10);
             foreach (var group in dependedUpon)
                 sb.AppendLine($"  {group.Key}: {group.Count()} dependents");
-            
+
             // Circular dependencies detection
             var cycles = FindCircularDependencies(targets.Keys, edges);
             if (cycles.Any())
@@ -263,24 +266,24 @@ namespace SB
             }
             else
                 sb.AppendLine("\nNo circular dependencies detected ✓");
-            
+
             File.WriteAllText(path, sb.ToString());
             Log.Information($"Generated statistics report: {path}");
         }
-        
+
         private static List<List<string>> FindCircularDependencies(IEnumerable<string> targets, HashSet<(string from, string to)> edges)
         {
             var cycles = new List<List<string>>();
             var visited = new HashSet<string>();
             var recursionStack = new HashSet<string>();
             var path = new List<string>();
-            
+
             void FindCycles(string node)
             {
                 visited.Add(node);
                 recursionStack.Add(node);
                 path.Add(node);
-                
+
                 foreach (var neighbor in edges.Where(e => e.from == node).Select(e => e.to))
                 {
                     if (!visited.Contains(neighbor))
@@ -292,18 +295,18 @@ namespace SB
                             cycles.Add(path.Skip(cycleStart).ToList());
                     }
                 }
-                
+
                 path.RemoveAt(path.Count - 1);
                 recursionStack.Remove(node);
             }
-            
+
             foreach (var target in targets)
                 if (!visited.Contains(target))
                     FindCycles(target);
-            
+
             return cycles;
         }
-        
+
         private static string GetNodeLabel(string name, TargetInfo info)
         {
             var lines = new List<string> { name };
@@ -314,7 +317,7 @@ namespace SB
             lines.Add($"Deps: {info.DirectDependencyCount}");
             return string.Join("\\n", lines);
         }
-        
+
         private static string GetNodeColor(TargetInfo info)
         {
             return ColorScheme switch
@@ -341,7 +344,7 @@ namespace SB
                 _ => "lightgray"
             };
         }
-        
+
         private static string FormatSize(long bytes)
         {
             string[] sizes = { "B", "KB", "MB", "GB" };
@@ -354,7 +357,7 @@ namespace SB
             }
             return $"{size:0.##} {sizes[order]}";
         }
-        
+
         private static string SanitizeId(string id) => id.Replace('-', '_').Replace('/', '_');
     }
 }

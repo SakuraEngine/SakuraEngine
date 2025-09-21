@@ -20,7 +20,7 @@ namespace SB.Core
 
             var InputFiles = Driver.Arguments["Inputs"] as ArgumentList<string>;
             var OutputFile = Driver.Arguments["Output"] as string;
-            bool Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
+            bool Changed = BuildDepends.Solve(Target).OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
             {
                 // AR output must be the first argument
                 var OutputArg = LinkerArgsDict["Output"];

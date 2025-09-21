@@ -286,10 +286,12 @@ CGPURootSignaturePoolId cgpu_create_root_signature_pool(CGPUDeviceId device, con
     cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
     cgpu_assert(device->proc_table_cache->create_root_signature_pool && "create_root_signature_pool Proc Missing!");
     CGPURootSignaturePool* pool = (CGPURootSignaturePool*)device->proc_table_cache->create_root_signature_pool(device, desc);
-    pool->device = device;
+    if (pool != CGPU_NULLPTR)
+    {
+        pool->device = device;
+    }
 
     SkrCZoneEnd(zz);
-
     return pool;
 }
 
@@ -920,6 +922,15 @@ void cgpu_compute_encoder_bind_pipeline(CGPUComputePassEncoderId encoder, CGPUCo
     const CGPUProcComputeEncoderBindPipeline fn_compute_bind_pipeline = device->proc_table_cache->compute_encoder_bind_pipeline;
     cgpu_assert(fn_compute_bind_pipeline && "compute_encoder_bind_pipeline Proc Missing!");
     fn_compute_bind_pipeline(encoder, pipeline);
+}
+
+void cgpu_compute_encoder_set_threadgroup_size(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
+{
+    CGPUDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcComputeEncoderSetThreadgroupSize fn_set_threadgroup_size = device->proc_table_cache->compute_encoder_set_threadgroup_size;
+    cgpu_assert(fn_set_threadgroup_size && "compute_encoder_set_threadgroup_size Proc Missing!");
+    fn_set_threadgroup_size(encoder, X, Y, Z);
 }
 
 void cgpu_compute_encoder_dispatch(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
@@ -1938,6 +1949,51 @@ void cgpu_cmd_build_acceleration_structures(CGPUCommandBufferId cmd, const struc
     cgpu_assert(cmd->device->adapter->instance->raytracing_table->cmd_build_acceleration_structure && "cmd_build_acceleration_structure Proc Missing!");
 
     cmd->device->adapter->instance->raytracing_table->cmd_build_acceleration_structure(cmd, desc);
+
+    SkrCZoneEnd(zz);
+}
+
+CGPURayPipelineId cgpu_create_ray_pipeline(CGPUDeviceId device, const struct CGPURayPipelineDescriptor* desc)
+{
+    SkrCZoneN(zz, "CGPUCreatePSO(R)", 1);
+
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->create_ray_pipeline && "create_ray_pipeline Proc Missing!");
+    CGPURayPipeline* pipeline = (CGPURayPipeline*)device->proc_table_cache->create_ray_pipeline(device, desc);
+    pipeline->device = device;
+
+    SkrCZoneEnd(zz);
+
+    return pipeline;
+}
+
+void cgpu_compute_encoder_bind_ray_pipeline(CGPUComputePassEncoderId encoder, CGPURayPipelineId pipeline)
+{
+    CGPUDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcComputeEncoderBindRayPipeline bind_ray_pipeline = device->proc_table_cache->bind_ray_pipeline;
+    cgpu_assert(bind_ray_pipeline && "bind_ray_pipeline Proc Missing!");
+    bind_ray_pipeline(encoder, pipeline);
+}
+
+void cgpu_compute_encoder_dispatch_rays(CGPUComputePassEncoderId encoder, const struct CGPUDispatchRaysDescriptor* desc)
+{
+    CGPUDeviceId device = encoder->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    const CGPUProcComputeEncoderDispatchRays dispatch_rays = device->proc_table_cache->dispatch_rays;
+    cgpu_assert(dispatch_rays && "dispatch_rays Proc Missing!");
+    dispatch_rays(encoder, desc);
+}
+
+void cgpu_free_ray_pipeline(CGPURayPipelineId pipeline)
+{
+    SkrCZoneN(zz, "CGPUFreePSO(R)", 1);
+
+    cgpu_assert(pipeline != CGPU_NULLPTR && "fatal: call on NULL signature!");
+    const CGPUDeviceId device = pipeline->device;
+    cgpu_assert(device != CGPU_NULLPTR && "fatal: call on NULL device!");
+    cgpu_assert(device->proc_table_cache->free_ray_pipeline && "free_ray_pipeline Proc Missing!");
+    device->proc_table_cache->free_ray_pipeline(pipeline);
 
     SkrCZoneEnd(zz);
 }

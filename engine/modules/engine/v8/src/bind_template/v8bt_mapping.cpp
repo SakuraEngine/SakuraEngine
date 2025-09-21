@@ -31,7 +31,7 @@ V8BTMapping* V8BTMapping::TryCreate(V8Isolate* isolate, const RTTRType* type)
 
     auto* result = SkrNew<V8BTMapping>();
     result->set_isolate(isolate);
-    result->_rttr_type    = type;
+    result->_rttr_type = type;
     result->_default_ctor = type->find_default_ctor();
 
     // each field
@@ -96,8 +96,8 @@ v8::Local<v8::Value> V8BTMapping::to_v8(
     for (const auto& [field_name, field_data] : _fields)
     {
         // conv field to v8
-        void* field_addr     = field_data.solve_address(native_data, _rttr_type);
-        auto  v8_field_value = field_data.bind_tp->to_v8(field_addr);
+        void* field_addr = field_data.solve_address(native_data, _rttr_type);
+        auto v8_field_value = field_data.bind_tp->to_v8(field_addr);
 
         // set object field
         // clang-format off
@@ -111,9 +111,9 @@ v8::Local<v8::Value> V8BTMapping::to_v8(
     return result;
 }
 bool V8BTMapping::to_native(
-    void*                native_data,
+    void* native_data,
     v8::Local<v8::Value> v8_value,
-    bool                 is_init
+    bool is_init
 ) const
 {
     auto isolate = v8::Isolate::GetCurrent();
@@ -186,13 +186,13 @@ bool V8BTMapping::match_param(
     return true;
 }
 void V8BTMapping::push_param_native(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp,
     v8::Local<v8::Value> v8_value
 ) const
 {
-    DtorInvoker dtor        = _rttr_type->dtor_invoker();
-    void*       native_data = stack.alloc_param_raw(
+    DtorInvoker dtor = _rttr_type->dtor_invoker();
+    void* native_data = stack.alloc_param_raw(
         _rttr_type->size(),
         _rttr_type->alignment(),
         param_bind_tp.modifiers.is_decayed_pointer() ? EDynamicStackParamKind::XValue : EDynamicStackParamKind::Direct,
@@ -201,12 +201,12 @@ void V8BTMapping::push_param_native(
     to_native(native_data, v8_value, false);
 }
 void V8BTMapping::push_param_native_pure_out(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
-    DtorInvoker dtor        = _rttr_type->dtor_invoker();
-    void*       native_data = stack.alloc_param_raw(
+    DtorInvoker dtor = _rttr_type->dtor_invoker();
+    void* native_data = stack.alloc_param_raw(
         _rttr_type->size(),
         _rttr_type->alignment(),
         EDynamicStackParamKind::XValue,
@@ -215,7 +215,7 @@ void V8BTMapping::push_param_native_pure_out(
     _init_native(native_data);
 }
 v8::Local<v8::Value> V8BTMapping::read_return_native(
-    DynamicStack&         stack,
+    DynamicStack& stack,
     const V8BTDataReturn& return_bind_tp
 ) const
 {
@@ -229,7 +229,7 @@ v8::Local<v8::Value> V8BTMapping::read_return_native(
     return to_v8(native_data);
 }
 v8::Local<v8::Value> V8BTMapping::read_return_from_out_param(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -240,7 +240,7 @@ v8::Local<v8::Value> V8BTMapping::read_return_from_out_param(
 
 // invoke v8 api
 v8::Local<v8::Value> V8BTMapping::make_param_v8(
-    void*                native_data,
+    void* native_data,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -249,8 +249,8 @@ v8::Local<v8::Value> V8BTMapping::make_param_v8(
 
 // field api
 v8::Local<v8::Value> V8BTMapping::get_field(
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -259,8 +259,8 @@ v8::Local<v8::Value> V8BTMapping::get_field(
 }
 void V8BTMapping::set_field(
     v8::Local<v8::Value> v8_value,
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -275,7 +275,7 @@ v8::Local<v8::Value> V8BTMapping::get_static_field(
     return to_v8(field_addr);
 }
 void V8BTMapping::set_static_field(
-    v8::Local<v8::Value>       v8_value,
+    v8::Local<v8::Value> v8_value,
     const V8BTDataStaticField& field_bind_tp
 ) const
 {
@@ -285,30 +285,30 @@ void V8BTMapping::set_static_field(
 // check api
 void V8BTMapping::solve_invoke_behaviour(
     const V8BTDataParam& param_bind_tp,
-    bool&                appare_in_return,
-    bool&                appare_in_param
+    bool& appare_in_return,
+    bool& appare_in_param
 ) const
 {
     switch (param_bind_tp.inout_flag)
     {
     case ERTTRParamFlag::Out:
-        appare_in_param  = false;
+        appare_in_param = false;
         appare_in_return = true;
         break;
     case ERTTRParamFlag::InOut:
-        appare_in_param  = true;
+        appare_in_param = true;
         appare_in_return = true;
         break;
     case ERTTRParamFlag::In:
     default:
-        appare_in_param  = true;
+        appare_in_param = true;
         appare_in_return = false;
         break;
     }
 }
 bool V8BTMapping::check_param(
     const V8BTDataParam& param_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
 
@@ -316,14 +316,14 @@ bool V8BTMapping::check_param(
 }
 bool V8BTMapping::check_return(
     const V8BTDataReturn& return_bind_tp,
-    V8ErrorCache&         errors
+    V8ErrorCache& errors
 ) const
 {
     return _basic_type_check(return_bind_tp.modifiers, errors);
 }
 bool V8BTMapping::check_field(
     const V8BTDataField& field_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     if (field_bind_tp.modifiers.is_decayed_pointer())
@@ -337,7 +337,7 @@ bool V8BTMapping::check_field(
 }
 bool V8BTMapping::check_static_field(
     const V8BTDataStaticField& field_bind_tp,
-    V8ErrorCache&              errors
+    V8ErrorCache& errors
 ) const
 {
     if (field_bind_tp.modifiers.is_decayed_pointer())
@@ -351,13 +351,11 @@ bool V8BTMapping::check_static_field(
 }
 
 // v8 export
-bool V8BTMapping::has_v8_export_obj(
-) const
+bool V8BTMapping::has_v8_export_obj() const
 {
     return true;
 }
-v8::Local<v8::Value> V8BTMapping::get_v8_export_obj(
-) const
+v8::Local<v8::Value> V8BTMapping::get_v8_export_obj() const
 {
     using namespace ::v8;
 
@@ -392,13 +390,11 @@ void V8BTMapping::dump_ts_def(
     });
     builder.$line(u8"}}");
 }
-String V8BTMapping::get_ts_type_name(
-) const
+String V8BTMapping::get_ts_type_name() const
 {
     return _rttr_type->name();
 }
-bool V8BTMapping::ts_is_nullable(
-) const
+bool V8BTMapping::ts_is_nullable() const
 {
     return false;
 }
@@ -411,7 +407,7 @@ void V8BTMapping::_init_native(
 }
 bool V8BTMapping::_basic_type_check(
     const V8BTDataModifier& modifiers,
-    V8ErrorCache&           errors
+    V8ErrorCache& errors
 ) const
 {
     if (modifiers.is_pointer)

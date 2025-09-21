@@ -1,15 +1,14 @@
 #pragma once
 #include "SkrGui/system/input/gesture/gesture_recognizer.hpp"
-#ifndef __meta__
-    #include "SkrGui/system/input/gesture/pointer_gesture_recognizer.generated.h"
-#endif
+#include "SkrGui/system/input/gesture/pointer_gesture_recognizer.generated.h"
 
 namespace skr::gui
 {
 struct GestureArena;
 
-sreflect_struct(guid = "e4db9750-96ba-4558-8a14-402d1f9a2c7a")
-SKR_GUI_API PointerGestureRecognizer : public GestureRecognizer {
+struct [[sattr(guid = "e4db9750-96ba-4558-8a14-402d1f9a2c7a"
+)]] SKR_GUI_API PointerGestureRecognizer : public GestureRecognizer
+{
     SKR_GENERATE_BODY(PointerGestureRecognizer)
     using Super = GestureRecognizer;
     using Super::Super;

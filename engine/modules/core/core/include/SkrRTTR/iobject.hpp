@@ -1,11 +1,8 @@
 #pragma once
-#include "SkrRTTR/rttr_traits.hpp"
+#include <SkrBase/type_info.hpp>
 #include "SkrRTTR/type.hpp"
-#include "SkrRTTR/rttr_traits.hpp"
 #include <SkrRTTR/type_registry.hpp>
-#ifndef __meta__
-    #include "SkrRTTR/iobject.generated.h"
-#endif
+#include "SkrRTTR/iobject.generated.h"
 
 //!===================================== 比较良好的模式 =====================================
 //! pooling 通过向全局 push 钩子拦截对象的创建来实现，直接内置在 Object 系统中，这样可以有最好的联动和编码体验
@@ -15,8 +12,9 @@
 // iobject
 namespace skr
 {
-sreflect_struct(guid = "3740620f-714d-4d78-b47e-095f256ba4a7")
-SKR_CORE_API IObject
+struct [[sattr(
+    guid = "3740620f-714d-4d78-b47e-095f256ba4a7"
+)]] SKR_CORE_API IObject
 {
     virtual ~IObject() = default;
 

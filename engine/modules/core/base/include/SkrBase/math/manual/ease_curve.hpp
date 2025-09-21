@@ -89,10 +89,10 @@ inline double ease_out_expo(double t)
 }
 inline double ease_inout_expo(double t)
 {
-    return t == 0  ? 0 :
-           t == 1  ? 1 :
-           t < 0.5 ? pow(2, 20 * t - 10) / 2 :
-                     (2 - pow(2, -20 * t + 10)) / 2;
+    return t == 0 ? 0 :
+        t == 1    ? 1 :
+        t < 0.5   ? pow(2, 20 * t - 10) / 2 :
+                    (2 - pow(2, -20 * t + 10)) / 2;
 }
 
 // circ

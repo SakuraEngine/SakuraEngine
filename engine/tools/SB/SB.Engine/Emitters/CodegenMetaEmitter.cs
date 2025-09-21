@@ -12,7 +12,7 @@ namespace SB
         public string[]? AllGeneratedMetaFiles { get; internal set; }
     }
 
-    [Setup<MetaSetup>]
+    // [Setup<MetaSetup>]
     public class CodegenMetaEmitter : TaskEmitter
     {
         public CodegenMetaEmitter(IToolchain Toolchain)
@@ -25,15 +25,16 @@ namespace SB
         {
             // Ensure output file
             var MetaAttribute = Target.GetAttribute<CodegenMetaAttribute>()!;
-            MetaAttribute.MetaDirectory = Path.Combine(Target.GetStorePath(BS.GeneratedSourceStore), "meta_database");
+            MetaAttribute.MetaDirectory = Path.Combine(Target.GetBuildGenDir(), "meta_database");
             Directory.CreateDirectory(MetaAttribute.MetaDirectory);
-            var BatchDirectory = Path.Combine(Target.GetStorePath(BS.GeneratedSourceStore), "ReflectionBatch");
+            var BatchDirectory = Path.Combine(Target.GetBuildGenDir(), "ReflectionBatch");
             Directory.CreateDirectory(BatchDirectory);
 
             // Batch headers to a source file
             var Headers = Target.FileList<MetaHeaderList>().Files;
             var BatchFile = Path.Combine(BatchDirectory, "ReflectionBatch.cpp");
-            BS.CppCompileDepends(Target).OnChanged(Target.Name, BatchFile, Name, (Depend depend) => {
+            BuildDepends.Solve(Target).OnChanged(Target.Name, BatchFile, Name, (Depend depend) =>
+            {
                 Directory.CreateDirectory(BatchDirectory);
                 File.WriteAllLines(BatchFile, Headers.Select(H => $"#include \"{H}\""));
                 depend.ExternalFiles.Add(BatchFile);
@@ -64,14 +65,19 @@ namespace SB
             MetaArgs.AddRange(CompilerArgs);
 
             // Run meta.exe
-            bool Changed = Engine.CodegenDepend.OnChanged(Target.Name, MetaAttribute.MetaDirectory, Name, (Depend depend) =>
+            bool Changed = EngineDepends.Codegen.OnChanged(Target.Name, MetaAttribute.MetaDirectory, Name, (Depend depend) =>
             {
                 Directory.Delete(MetaAttribute.MetaDirectory, true);
                 Directory.CreateDirectory(MetaAttribute.MetaDirectory);
 
-                var EXE = Path.Combine(MetaSetup.Installation!.Result, BS.HostOS == OSPlatform.Windows ? "meta.exe" : "meta");
+                // var EXE = Path.Combine(MetaSetup.Installation!.Result, BS.HostOS == OSPlatform.Windows ? "meta.exe" : "meta");
+                var EXE = Path.Combine(BuildDirs.TempDir, "tools", BS.HostOS == OSPlatform.Windows ? "meta.exe" : "meta");
 
                 int ExitCode = BS.RunProcess(EXE, string.Join(" ", MetaArgs), out var OutputInfo, out var ErrorInfo);
+
+                if (!string.IsNullOrWhiteSpace(OutputInfo))
+                    Log.Verbose("meta.exe {MetaArgs}:\n{OutputInfo}", string.Join(" ", MetaArgs), OutputInfo);
+
                 if (ExitCode != 0)
                     throw new TaskFatalError($"meta.exe {BatchFile} failed with fatal error!", $"meta.exe: {ErrorInfo}");
                 else if (OutputInfo.Contains("warning LNK"))
@@ -90,17 +96,17 @@ namespace SB
         public static volatile int Time = 0;
     }
 
-    public class MetaSetup : ISetup
-    {
-        public void Setup()
-        {
-            Installation = Install.Tool("meta_v1.0.3-llvm_19.1.7");
-            Installation!.Wait();
-        }
-        public static Task<string>? Installation;
-    }
+    // public class MetaSetup : ISetup
+    // {
+    //     public void Setup()
+    //     {
+    //         Installation = Install.Tool("meta_v1.0.3-llvm_19.1.7");
+    //         Installation!.Wait();
+    //     }
+    //     public static Task<string>? Installation;
+    // }
 
-    public class MetaHeaderList : FileList {}
+    public class MetaHeaderList : FileList { }
 
     public static partial class TargetExtensions
     {

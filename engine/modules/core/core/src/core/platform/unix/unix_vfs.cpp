@@ -23,7 +23,7 @@ ESkrFileMode mode, const char8_t* password, skr_vfile_t* out_file)
     {
         if ((mode & SKR_FM_READ_WRITE) == SKR_FM_READ_WRITE)
         {
-            modeStr = skr_vfs_overwirte_filemode_to_string(mode);
+            modeStr = skr_vfs_overwrite_filemode_to_string(mode);
             cfile = fopen(filePathStr.c_str_raw(), (const char*)modeStr);
         }
     }

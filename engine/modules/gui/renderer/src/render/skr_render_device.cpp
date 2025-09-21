@@ -96,12 +96,12 @@ void SkrRenderDevice::init()
     const uint32_t uv_offset = static_cast<uint32_t>(offsetof(PaintVertex, clipUV));
     const uint32_t uv2_offset = static_cast<uint32_t>(offsetof(PaintVertex, clipUV2));
     const uint32_t color_offset = static_cast<uint32_t>(offsetof(PaintVertex, color));
-    _vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 0, pos_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, texcoord_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[2] = { u8"AA", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, aa_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[3] = { u8"UV", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[4] = { u8"UV_Two", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv2_offset, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[5] = { u8"COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 0, pos_offset, sizeof(float4), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, texcoord_offset, sizeof(float2), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[2] = { u8"AA", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, aa_offset, sizeof(float2), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[3] = { u8"UV", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv_offset, sizeof(float2), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[4] = { u8"UV_Two", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv2_offset, sizeof(float2), CGPU_INPUT_RATE_VERTEX };
+    _vertex_layout.attributes[5] = { u8"COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(float4), CGPU_INPUT_RATE_VERTEX };
     _vertex_layout.attributes[6] = { u8"TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     _vertex_layout.attributes[7] = { u8"PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
     _vertex_layout.attributes[8] = { u8"DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
@@ -201,10 +201,8 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = SKR_UTF8("main");
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = SKR_UTF8("main");
     ppl_shaders[1].library = fragment_shader;
 

@@ -21,7 +21,7 @@ namespace SB
             sw.Start();
 
             CFamily Language = FileList.Is<ObjCppFileList>() ? CFamily.ObjCpp : FileList.Is<ObjCFileList>() ? CFamily.ObjC : FileList.Is<CppFileList>() ? CFamily.Cpp : CFamily.C;
-            var SourceDependencies = Path.Combine(Target.GetStorePath(BS.DepsStore), BS.GetUniqueTempFileName(SourceFile, Target.Name + this.Name, "source.deps.json"));
+            var SourceDependencies = Path.Combine(Target.GetBuildSrcDepsDir(), BS.GetUniqueTempFileName(SourceFile, this.Name, "source.deps.json"));
             var ObjectFile = GetObjectFilePath(Target, SourceFile);
             var CompilerDriver = Toolchain.Compiler.CreateArgumentDriver(Language, false)
                 .AddArguments(Target.Arguments)
@@ -46,7 +46,7 @@ namespace SB
             return R;
         }
 
-        public static string GetObjectFilePath(Target Target, string SourceFile) => Path.Combine(Target.GetStorePath(BS.ObjsStore), BS.GetUniqueTempFileName(SourceFile, Target.Name, "obj"));
+        public static string GetObjectFilePath(Target Target, string SourceFile) => Path.Combine(Target.GetBuildObjsDir(), BS.GetUniqueTempFileName(SourceFile, Target.Name, "obj"));
 
         private IToolchain Toolchain { get; }
         public static volatile int Time = 0;

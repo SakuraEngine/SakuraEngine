@@ -5,8 +5,8 @@ ByteAddressBuffer GPUSceneInstances;
 ByteAddressBuffer MaterialTable;
 ByteAddressBuffer PrimitiveTable;
 
-RWTexture2D<float> output_texture;
-Accel SceneTLAS;
+RWTexture2D output_texture;
+RaytracingAccelerationStructure SceneTLAS;
 
 // Push constants - camera parameters
 struct CameraConstants 
@@ -19,13 +19,14 @@ struct CameraConstants
 [[push_constant]]
 ConstantBuffer<CameraConstants> camera_constants;
 
+TexelBuffer<uint> IndexBuffers[0];
 ByteAddressBuffer VertexBuffers[0];
 Texture2D<> MaterialTextures[0];
 
 [[group(1)]] SamplerState tex_sampler;
 
 // Ray tracing constants
-trait RayTracingConstants {
+struct RayTracingConstants {
     static constexpr uint32 MAX_BOUNCES = 1;
     static constexpr float EPSILON = 0.001f;
     static constexpr float MAX_DISTANCE = 100000.0f;
@@ -74,24 +75,57 @@ float4 trace_scene(uint2 pixel_coord, uint2 screen_size)
     query.TraceRayInline(SceneTLAS, 0xff, primary_ray);
     while (query.Proceed())
     {
-        if (query.CandidateStatus() == HitType::HitTriangle)
+        if (query.CandidateStatus() == HitStatus::HitTriangle)
             query.CommitTriangle();        
     }
     
     // Check hit status
-    if (query.CommittedStatus() == HitType::HitTriangle) {
-        uint instance_id = query.CommittedInstanceID();
+    if (query.CommittedStatus() == HitStatus::HitTriangle) {
+        uint instance_id = query.CommittedInstanceIndex();
+        
+        // 添加实例索引边界检查
+        if (instance_id == ~0u) {
+            return float4(0.f, 0.f, 1.f, 1.f); // 返回蓝色表示无效实例
+        }
+        
         const auto instance_row = skr::gpu::Row<skr::gpu::Instance>(instance_id); 
         const auto instance = instance_row.Load(GPUSceneInstances);
-        const auto prim = instance.primitives.Load(PrimitiveTable, query.CommittedGeometryIndex());
-        const auto mat = instance.materials.Load(MaterialTable, prim.material_index);
-        const auto tri = prim.triangles.Load(VertexBuffers, query.CommittedPrimitiveIndex());
+        float4 color = float4(1.f, 1.f, 1.f, 1.f);
+        
+        uint geometry_index = query.CommittedGeometryIndex();
+        // 添加几何索引边界检查
+        if (geometry_index >= (instance.primitives.Start() + instance.primitives.Count())) {
+            return float4(1.f, 1.f, 0.f, 1.f); // 返回黄色表示几何索引错误
+        }
+        
+        const auto prim = instance.primitives.Load(PrimitiveTable, geometry_index);
+        const auto mat = prim.material.Load(MaterialTable);
+        const auto prim_idx = query.CommittedPrimitiveIndex();
+        
+        // 添加边界检查以防止缓冲区越界访问
+        if (prim_idx >= (prim.indices.Start() + prim.indices.Count())) {
+            return float4(1.f, 0.f, 0.f, 1.f); // 返回红色表示错误
+        }
+        
+        const uint3 tri = uint3(
+            prim.indices.Load(IndexBuffers, 3 * prim_idx),
+            prim.indices.Load(IndexBuffers, 3 * prim_idx + 1),
+            prim.indices.Load(IndexBuffers, 3 * prim_idx + 2)
+        );
+        
+        // 检查顶点索引是否在有效范围内
+        if (tri[0] >= (prim.positions.Start() + prim.positions.Count()) || 
+            tri[1] >= (prim.positions.Count() + prim.positions.Count()) || 
+            tri[2] >= (prim.positions.Count() + prim.positions.Count())) 
+        {
+            return float4(0.f, 1.f, 0.f, 1.f); // 返回绿色表示顶点索引错误
+        }
+        
         const auto uv_a = prim.uvs.Load(VertexBuffers, tri[0]);
         const auto uv_b = prim.uvs.Load(VertexBuffers, tri[1]);
         const auto uv_c = prim.uvs.Load(VertexBuffers, tri[2]);
         const auto uv = interpolate(query.CommittedTriangleBarycentrics(), uv_a, uv_b, uv_c);
         const auto pos_a = prim.positions.Load(VertexBuffers, tri[0]);
-        float4 color = float4(1.f, 1.f, 1.f, 1.f);
         if (mat.basecolor_tex != ~0)
             color = MaterialTextures[mat.basecolor_tex].Sample(tex_sampler, uv);
         else
@@ -112,7 +146,7 @@ float4 trace_scene(uint2 pixel_coord, uint2 screen_size)
 
 // Compute shader entry point
 [[compute_shader("cs_main")]]
-[[kernel_2d(16, 16)]]
+[[numthreads(16, 16, 1)]]
 void compute_main([[sv_thread_id]] uint3 thread_id) 
 {
     uint2 screen_size = uint2(camera_constants.screenSize);

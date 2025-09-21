@@ -1,21 +1,20 @@
 #pragma once
 #include "SkrGui/framework/element/element.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/element/component_element.generated.h"
-#endif
+#include "SkrGui/framework/element/component_element.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "8344aca9-b204-4b4a-8e16-18e4219039be")
-SKR_GUI_API ComponentElement : public Element {
+struct [[sattr(guid = "8344aca9-b204-4b4a-8e16-18e4219039be"
+)]] SKR_GUI_API ComponentElement : public Element
+{
     SKR_GENERATE_BODY(ComponentElement)
     using Super = Element;
     using Super::Super;
 
     // lifecycle & tree
     virtual void first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT override;
-    void         visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;
+    void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;
 
     // build & update
     void perform_rebuild() SKR_NOEXCEPT override;

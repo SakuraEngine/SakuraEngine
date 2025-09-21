@@ -16,8 +16,8 @@
 namespace skr::helper
 {
 inline static bool match_params(
-    span<const V8BTDataParam>                      params,
-    uint32_t                                       solved_param_count,
+    Span<const V8BTDataParam> params,
+    uint32_t solved_param_count,
     const ::v8::FunctionCallbackInfo<::v8::Value>& v8_stack
 )
 {
@@ -28,7 +28,7 @@ inline static bool match_params(
     for (size_t i = 0; i < params.size(); i++)
     {
         auto& param_data = params[i];
-        auto  v8_arg     = v8_stack[i];
+        auto v8_arg = v8_stack[i];
 
         // skip pure out param
         if (param_data.inout_flag == ERTTRParamFlag::Out) { continue; }
@@ -41,14 +41,14 @@ inline static bool match_params(
     return true;
 }
 inline static v8::Local<v8::Value> read_return(
-    DynamicStack&             stack,
-    span<const V8BTDataParam> params,
-    const V8BTDataReturn&     return_bind_tp,
-    uint32_t                  solved_return_count
+    DynamicStack& stack,
+    Span<const V8BTDataParam> params,
+    const V8BTDataReturn& return_bind_tp,
+    uint32_t solved_return_count
 )
 {
     auto* isolate = v8::Isolate::GetCurrent();
-    auto  context = isolate->GetCurrentContext();
+    auto context = isolate->GetCurrentContext();
 
     if (solved_return_count == 1)
     { // return single value
@@ -79,7 +79,7 @@ inline static v8::Local<v8::Value> read_return(
     else
     { // return param array
         v8::Local<v8::Array> out_array = v8::Array::New(isolate);
-        uint32_t             cur_index = 0;
+        uint32_t cur_index = 0;
 
         // try read return value
         if (!return_bind_tp.is_void)
@@ -124,9 +124,9 @@ namespace skr
 {
 //===============================V8BTDataField===============================
 void V8BTDataField::setup(
-    V8Isolate*           isolate,
+    V8Isolate* isolate,
     const RTTRFieldData* field_data,
-    const RTTRType*      owner
+    const RTTRType* owner
 )
 {
     {
@@ -135,16 +135,16 @@ void V8BTDataField::setup(
         bind_tp = isolate->solve_bind_tp(type_sig_view);
     }
     field_owner = owner;
-    rttr_data   = field_data;
+    rttr_data = field_data;
     modifiers.solve(field_data->type.view());
     bind_tp->check_field(*this, errors);
 }
 
 //===============================V8BTDataStaticField===============================
 void V8BTDataStaticField::setup(
-    V8Isolate*                 isolate,
+    V8Isolate* isolate,
     const RTTRStaticFieldData* field_data,
-    const RTTRType*            owner
+    const RTTRType* owner
 )
 {
     {
@@ -153,16 +153,16 @@ void V8BTDataStaticField::setup(
         bind_tp = isolate->solve_bind_tp(type_sig_view);
     }
     field_owner = owner;
-    rttr_data   = field_data;
+    rttr_data = field_data;
     modifiers.solve(field_data->type.view());
     bind_tp->check_static_field(*this, errors);
 }
 
 //===============================V8BTDataParam===============================
 void V8BTDataParam::setup(
-    V8Isolate*           isolate,
+    V8Isolate* isolate,
     const RTTRParamData* param_data,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 )
 {
     {
@@ -171,14 +171,14 @@ void V8BTDataParam::setup(
         bind_tp = isolate->solve_bind_tp(type_sig_view);
     }
     rttr_data = param_data;
-    index     = param_data->index;
+    index = param_data->index;
 
     // solve modifier
     {
         auto type_sig_view = param_data->type.view();
         modifiers.solve(type_sig_view);
         bool has_param_out = flag_all(param_data->flag, ERTTRParamFlag::Out);
-        bool has_param_in  = flag_all(param_data->flag, ERTTRParamFlag::In);
+        bool has_param_in = flag_all(param_data->flag, ERTTRParamFlag::In);
 
         // check pointer level
         if (type_sig_view.decayed_pointer_level() > 1)
@@ -221,15 +221,15 @@ void V8BTDataParam::setup(
 }
 
 void V8BTDataParam::setup(
-    V8Isolate*        isolate,
+    V8Isolate* isolate,
     const StackProxy* proxy,
-    int32_t           index,
-    V8ErrorCache&     errors
+    int32_t index,
+    V8ErrorCache& errors
 )
 {
     RTTRParamData param_data = {};
-    param_data.type          = proxy->signature;
-    param_data.index         = index;
+    param_data.type = proxy->signature;
+    param_data.index = index;
     format_to(param_data.name, u8"#{}", index);
     setup(isolate, &param_data, errors);
     rttr_data = nullptr;
@@ -237,9 +237,9 @@ void V8BTDataParam::setup(
 
 //===============================V8BTDataParam===============================
 void V8BTDataReturn::setup(
-    V8Isolate*        isolate,
+    V8Isolate* isolate,
     TypeSignatureView signature,
-    V8ErrorCache&     errors
+    V8ErrorCache& errors
 )
 {
     {
@@ -258,13 +258,13 @@ void V8BTDataReturn::setup(
 
 //===============================V8BTDataFunctionBase===============================
 bool V8BTDataFunctionBase::call_v8_read_return(
-    span<const StackProxy>    params,
-    StackProxy                return_value,
+    Span<const StackProxy> params,
+    StackProxy return_value,
     v8::MaybeLocal<v8::Value> v8_return_value
 ) const
 {
     auto* isolate = v8::Isolate::GetCurrent();
-    auto  context = isolate->GetCurrentContext();
+    auto context = isolate->GetCurrentContext();
 
     if (return_count == 0)
     {
@@ -341,9 +341,9 @@ bool V8BTDataFunctionBase::call_v8_read_return(
     }
 }
 void V8BTDataFunctionBase::call_v8_setup(
-    V8Isolate*             isolate,
-    span<const StackProxy> params,
-    StackProxy             return_value
+    V8Isolate* isolate,
+    Span<const StackProxy> params,
+    StackProxy return_value
 )
 {
     uint32_t param_index = 0;
@@ -391,8 +391,8 @@ bool V8BTDataMethod::match_param(
 }
 void V8BTDataMethod::call(
     const ::v8::FunctionCallbackInfo<::v8::Value>& v8_stack,
-    void*                                          obj,
-    const RTTRType*                                obj_type
+    void* obj,
+    const RTTRType* obj_type
 ) const
 {
     DynamicStack native_stack;
@@ -446,13 +446,13 @@ void V8BTDataMethod::call(
     }
 }
 void V8BTDataMethod::setup(
-    V8Isolate*            isolate,
+    V8Isolate* isolate,
     const RTTRMethodData* method_data,
-    const RTTRType*       owner
+    const RTTRType* owner
 )
 {
     method_owner = owner;
-    rttr_data    = method_data;
+    rttr_data = method_data;
 
     // setup info
     return_data.setup(isolate, method_data->ret_type, errors);
@@ -528,13 +528,13 @@ void V8BTDataStaticMethod::call(
     }
 }
 void V8BTDataStaticMethod::setup(
-    V8Isolate*                  isolate,
+    V8Isolate* isolate,
     const RTTRStaticMethodData* method_data,
-    const RTTRType*             owner
+    const RTTRType* owner
 )
 {
     method_owner = owner;
-    rttr_data    = method_data;
+    rttr_data = method_data;
     return_data.setup(isolate, method_data->ret_type, errors);
     for (const auto* param : method_data->param_data)
     {
@@ -554,9 +554,9 @@ void V8BTDataStaticMethod::setup(
 
 //===============================V8BTDataProperty===============================
 void V8BTDataProperty::setup_getter(
-    V8Isolate*            isolate,
+    V8Isolate* isolate,
     const RTTRMethodData* method_data,
-    const RTTRType*       owner
+    const RTTRType* owner
 )
 {
     getter.setup(isolate, method_data, owner);
@@ -579,9 +579,9 @@ void V8BTDataProperty::setup_getter(
     }
 }
 void V8BTDataProperty::setup_setter(
-    V8Isolate*            isolate,
+    V8Isolate* isolate,
     const RTTRMethodData* method_data,
-    const RTTRType*       owner
+    const RTTRType* owner
 )
 {
     setter.setup(isolate, method_data, owner);
@@ -647,9 +647,9 @@ void V8BTDataProperty::check_conflict()
 
 //===============================V8BTDataStaticProperty===============================
 void V8BTDataStaticProperty::setup_getter(
-    V8Isolate*                  isolate,
+    V8Isolate* isolate,
     const RTTRStaticMethodData* method_data,
-    const RTTRType*             owner
+    const RTTRType* owner
 )
 {
     getter.setup(isolate, method_data, owner);
@@ -672,9 +672,9 @@ void V8BTDataStaticProperty::setup_getter(
     }
 }
 void V8BTDataStaticProperty::setup_setter(
-    V8Isolate*                  isolate,
+    V8Isolate* isolate,
     const RTTRStaticMethodData* method_data,
-    const RTTRType*             owner
+    const RTTRType* owner
 )
 {
     setter.setup(isolate, method_data, owner);
@@ -751,7 +751,7 @@ bool V8BTDataCtor::match(
 }
 void V8BTDataCtor::call(
     const ::v8::FunctionCallbackInfo<::v8::Value>& v8_stack,
-    void*                                          obj
+    void* obj
 ) const
 {
     DynamicStack native_stack;
@@ -773,7 +773,7 @@ void V8BTDataCtor::call(
     rttr_data->dynamic_stack_invoke(obj, native_stack);
 }
 void V8BTDataCtor::setup(
-    V8Isolate*          isolate,
+    V8Isolate* isolate,
     const RTTRCtorData* ctor_data
 )
 {

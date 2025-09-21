@@ -126,13 +126,17 @@ void CGPUUtil_InitRSParamTables(CGPURootSignature* RS, const struct CGPURootSign
                 all_resources.emplace_back(resource);
             }
         }
-        // Pipeline Type
-        if (reflection->stage & CGPU_SHADER_STAGE_COMPUTE)
-            RS->pipeline_type = CGPU_PIPELINE_TYPE_COMPUTE;
-        else if (reflection->stage & CGPU_SHADER_STAGE_RAYTRACING)
-            RS->pipeline_type = CGPU_PIPELINE_TYPE_RAYTRACING;
-        else
-            RS->pipeline_type = CGPU_PIPELINE_TYPE_GRAPHICS;
+        RS->shader_stages |= reflection->stage;
+    }
+    // Determine pipeline type
+    RS->pipeline_type = CGPU_PIPELINE_TYPE_NONE;
+    if (RS->shader_stages & CGPU_SHADER_STAGE_VERT || RS->shader_stages & CGPU_SHADER_STAGE_FRAG)
+    {
+        RS->pipeline_type = CGPU_PIPELINE_TYPE_GRAPHICS;
+    }
+    else if (RS->shader_stages & CGPU_SHADER_STAGE_COMPUTE)
+    {
+        RS->pipeline_type = CGPU_PIPELINE_TYPE_COMPUTE;
     }
     // Merge
     cgpu::BTreeSet<uint32_t> valid_sets;

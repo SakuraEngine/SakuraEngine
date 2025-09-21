@@ -11,28 +11,28 @@ Diagnostics:
 If:
   PathMatch: .*/.*
 CompileFlags:
-  CompilationDatabase: .sb/compile_commands/cpp/
+  CompilationDatabase: build/.sb/compile_commands/cpp/
 
 ---
 
 If:
   PathMatch: engine/tools/shader_compiler/ShaderSTL/.*
 CompileFlags:
-  CompilationDatabase: .sb/compile_commands/shaders/
+  CompilationDatabase: build/.sb/compile_commands/shaders/
 
 ---
 
 If:
   PathMatch: .*/.*.cxx
 CompileFlags:
-  CompilationDatabase: .sb/compile_commands/shaders/
+  CompilationDatabase: build/.sb/compile_commands/shaders/
 
 ---
 
 If:
   PathMatch: .*/.*.hxx
 CompileFlags:
-  CompilationDatabase: .sb/compile_commands/shaders/
+  CompilationDatabase: build/.sb/compile_commands/shaders/
   Add: [ -x, c++-header ]
 
 Diagnostics:

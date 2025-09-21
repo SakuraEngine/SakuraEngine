@@ -22,6 +22,7 @@ function _gen_class_body(opt: GenMatrixOption) {
   const c_decl_cpp_b = opt.c_decl_cpp_builder;
   const c_decl_c_b = opt.c_decl_c_builder;
   const traits_b = opt.traits_builder;
+  const memory_traits_b = opt.memory_traits_builder;
   const b = opt.builder;
   const base_name = opt.base_name;
   const comp_name = opt.component_name;
@@ -79,6 +80,15 @@ function _gen_class_body(opt: GenMatrixOption) {
     traits_b.$line(`};`)
   }
   traits_b.$line(``)
+
+  // generate memory traits
+  memory_traits_b.$line(`// ${base_name} matrix, component: ${comp_name}`);
+  for (const dim of matrix_dims) {
+    memory_traits_b.$line(`template<>`);
+    memory_traits_b.$line(`struct MemoryTraits<::skr::math::${base_name}${dim}x${dim}> : MemoryTraitsPOD {`);
+    memory_traits_b.$line(`};`);
+  }
+  memory_traits_b.$line(``);
 
   // generate class body
   for (const dim of matrix_dims) {

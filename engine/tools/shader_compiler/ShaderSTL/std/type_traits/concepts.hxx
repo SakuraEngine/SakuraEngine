@@ -1,14 +1,13 @@
 #pragma once
-#include "./../attributes.hxx"
 #include "builtins.hxx"
 
-trait BufferFlags
+struct BufferFlags
 {
     static constexpr uint32 ReadOnly = 1;
     static constexpr uint32 ReadWrite = 2;
 };
 
-trait TextureFlags
+struct TextureFlags
 {
     static constexpr uint32 ReadOnly = 1;
     static constexpr uint32 ReadWrite = 2;
@@ -24,10 +23,19 @@ template <typename Type, uint32 size>
 struct Array;
 
 template <typename Type, uint32 cache_flags>
-struct Buffer;
+struct SBuffer;
+
+template <typename Type, uint32 cache_flags>
+struct TBuffer;
+
+template <typename T, uint32 cache_flags>
+struct BBuffer;
+
+template <typename Type>
+struct ConstantBuffer;
 
 struct Ray;
-struct Accel;
+struct RaytracingAccelerationStructure;
 struct CommittedHit;
 struct TriangleHit;
 struct ProceduralHit;
@@ -36,7 +44,7 @@ struct IndirectBuffer;
 namespace detail
 {
 template <class T>
-trait vec_or_matrix : public cppsl::false_type
+struct vec_or_matrix : public cppsl::false_type
 {
     using scalar_type = T;
     static constexpr bool is_vec = false;
@@ -44,7 +52,7 @@ trait vec_or_matrix : public cppsl::false_type
 };
 
 template <class T, uint64 N>
-trait vec_or_matrix<vec<T, N>> : public cppsl::true_type
+struct vec_or_matrix<vec<T, N>> : public cppsl::true_type
 {
     using scalar_type = T;
     static constexpr bool is_vec = true;
@@ -52,7 +60,7 @@ trait vec_or_matrix<vec<T, N>> : public cppsl::true_type
 };
 
 template <uint64 N>
-trait vec_or_matrix<matrix<N>> : public cppsl::true_type
+struct vec_or_matrix<matrix<N>> : public cppsl::true_type
 {
     using scalar_type = float;
     static constexpr bool is_vec = false;
@@ -60,12 +68,12 @@ trait vec_or_matrix<matrix<N>> : public cppsl::true_type
 };
 #ifdef DEBUG
 template <typename T>
-trait is_char
+struct is_char
 {
     static constexpr bool value = false;
 };
 template <size_t n>
-trait is_char<const char (&)[n]>
+struct is_char<const char (&)[n]>
 {
     static constexpr bool value = true;
 };
@@ -94,9 +102,27 @@ template <typename U, uint32 N>
 inline constexpr bool is_array_v<Array<U, N>> = true;
 
 template <typename T>
-inline constexpr bool is_buffer_v = false;
+inline constexpr bool is_tbuffer_v = false;
 template <typename U, uint32 N>
-inline constexpr bool is_buffer_v<Buffer<U, N>> = true;
+inline constexpr bool is_tbuffer_v<TBuffer<U, N>> = true;
+
+template <typename T>
+inline constexpr bool is_sbuffer_v = false;
+template <typename U, uint32 N>
+inline constexpr bool is_sbuffer_v<SBuffer<U, N>> = true;
+
+template <typename T>
+inline constexpr bool is_bbuffer_v = false;
+template <typename T, uint32 N>
+inline constexpr bool is_bbuffer_v<BBuffer<T, N>> = true;
+
+template <typename T>
+inline constexpr bool is_cbuffer_v = false;
+template <typename U>
+inline constexpr bool is_cbuffer_v<ConstantBuffer<U>> = true;
+
+template <typename T>
+inline constexpr bool is_buffer_v = is_tbuffer_v<T> || is_sbuffer_v<T> || is_bbuffer_v<T> || is_cbuffer_v<T>;
 
 template <typename T>
 inline constexpr bool is_rwbuffer_v = is_buffer_v<T> && (T::flags == BufferFlags::ReadWrite);
@@ -142,6 +168,18 @@ concept matrix = is_matrix_v<T>;
 
 template <typename T>
 concept array = is_array_v<T>;
+
+template <typename T>
+concept tbuffer = is_tbuffer_v<T>;
+
+template <typename T>
+concept sbuffer = is_sbuffer_v<T>;
+
+template <typename T>
+concept bbuffer = is_bbuffer_v<T>;
+
+template <typename T>
+concept cbuffer = is_cbuffer_v<T>;
 
 template <typename T>
 concept buffer = is_buffer_v<T>;

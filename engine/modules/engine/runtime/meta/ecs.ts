@@ -24,7 +24,7 @@ class _Gen {
     const _gen_api = `${header.parent.config.api}_API`;
 
     b.$line(`// BEGIN ECS GENERATED`)
-    b.$line(`#include "SkrRT/sugoi/sugoi.h"`)
+    b.$line(`#include "SkrRuntime/sugoi/sugoi.h"`)
     _gen_records.forEach(record => {
       const record_config = record.ml_configs.ecs as RecordConfig;
       b.$line(`template<>`)
@@ -48,9 +48,9 @@ class _Gen {
 
     // title
     b.$line(`// BEGIN ECS GENERATED`)
-    b.$line(`#include "SkrRT/sugoi/sugoi.h"`)
-    b.$line(`#include "SkrRT/sugoi/array.hpp"`)
-    b.$line(`#include "SkrRT/sugoi/serde.hpp"`)
+    b.$line(`#include "SkrRuntime/sugoi/sugoi.h"`)
+    b.$line(`#include "SkrRuntime/sugoi/array.hpp"`)
+    b.$line(`#include "SkrRuntime/sugoi/serde.hpp"`)
     b.$line(`#include "SkrCore/exec_static.hpp"`)
 
     // sugoi id of
@@ -129,6 +129,10 @@ class _Gen {
             b.$line(`desc.resourceFieldsCount = 0;`)
             b.$line(`desc.resourceFields = 0;`)
           }
+
+          // comp callbacks
+          b.$line(`// component callbacks`)
+          b.$line(`sugoi::SetSerdeCallback<${record.name}>(desc);`);
 
           // custom logic
           b.$line(`// custom logic`)

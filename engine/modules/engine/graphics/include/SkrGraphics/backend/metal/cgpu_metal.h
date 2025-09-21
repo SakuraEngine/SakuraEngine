@@ -83,13 +83,19 @@ CGPU_API CGPURootSignaturePoolId cgpu_create_root_signature_pool_metal(CGPUDevic
 CGPU_API void cgpu_free_root_signature_pool_metal(CGPURootSignaturePoolId pool);
 CGPU_API CGPURootSignatureId cgpu_create_root_signature_metal(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
 CGPU_API void cgpu_free_root_signature_metal(CGPURootSignatureId signature);
-CGPU_API CGPUDescriptorSetId cgpu_create_descriptor_set_metal(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
-CGPU_API void cgpu_update_descriptor_set_metal(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
-CGPU_API void cgpu_free_descriptor_set_metal(CGPUDescriptorSetId set);
 CGPU_API CGPUComputePipelineId cgpu_create_compute_pipeline_metal(CGPUDeviceId device, const CGPUComputePipelineDescriptor* desc);
 CGPU_API void cgpu_free_compute_pipeline_metal(CGPUComputePipelineId pipeline);
 CGPU_API CGPUQueryPoolId cgpu_create_query_pool_metal(CGPUDeviceId device, const struct CGPUQueryPoolDescriptor* desc);
 CGPU_API void cgpu_free_query_pool_metal(CGPUQueryPoolId pool);
+
+// Descriptor Set/Buffer
+CGPU_API CGPUDescriptorSetId cgpu_create_descriptor_set_metal(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
+CGPU_API void cgpu_update_descriptor_set_metal(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
+CGPU_API void cgpu_free_descriptor_set_metal(CGPUDescriptorSetId set);
+CGPU_API CGPUDescriptorBufferId cgpu_create_descriptor_buffer_metal(CGPUDeviceId device, const struct CGPUDescriptorBufferDescriptor* desc);
+CGPU_API void cgpu_update_descriptor_buffer_metal(CGPUDescriptorBufferId buffer, const struct CGPUDescriptorBufferElement* elements, uint32_t count);
+CGPU_API void cgpu_copy_descriptor_buffer_metal(CGPUDescriptorBufferId src, CGPUDescriptorBufferId dest, CGPUBufferRange src_range, CGPUBufferRange dst_range);
+CGPU_API void cgpu_free_descriptor_buffer_metal(CGPUDescriptorBufferId buffer);
 
 // Queue APIs
 CGPU_API CGPUQueueId cgpu_get_queue_metal(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
@@ -124,6 +130,8 @@ CGPU_API CGPUTextureId cgpu_create_texture_metal(CGPUDeviceId device, const stru
 CGPU_API void cgpu_free_texture_metal(CGPUTextureId texture);
 CGPU_API CGPUTextureViewId cgpu_create_texture_view_metal(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc);
 CGPU_API void cgpu_free_texture_view_metal(CGPUTextureViewId view);
+CGPU_API CGPUBufferViewId cgpu_create_buffer_view_metal(CGPUDeviceId device, const struct CGPUBufferViewDescriptor* desc);
+CGPU_API void cgpu_free_buffer_view_metal(CGPUBufferViewId view);
 
 // Swapchain APIs
 CGPU_API CGPUSwapChainId cgpu_create_swapchain_metal(CGPUDeviceId device, const struct CGPUSwapChainDescriptor* desc);
@@ -133,6 +141,7 @@ CGPU_API void cgpu_free_swapchain_metal(CGPUSwapChainId swapchain);
 // CMDs
 CGPU_API void cgpu_cmd_begin_metal(CGPUCommandBufferId cmd);
 CGPU_API void cgpu_cmd_transfer_buffer_to_buffer_metal(CGPUCommandBufferId cmd, const struct CGPUBufferToBufferTransfer* desc);
+CGPU_API void cgpu_cmd_transfer_buffer_to_texture_metal(CGPUCommandBufferId cmd, const struct CGPUBufferToTextureTransfer* desc);
 CGPU_API void cgpu_cmd_transfer_texture_to_texture_metal(CGPUCommandBufferId cmd, const struct CGPUTextureToTextureTransfer* desc);
 CGPU_API void cgpu_cmd_fill_buffer_metal(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc);
 CGPU_API void cgpu_cmd_fill_buffer_n_metal(CGPUCommandBufferId cmd, CGPUBufferId buffer, const struct CGPUFillBufferDescriptor* desc, uint32_t count);
@@ -147,9 +156,11 @@ CGPU_API void cgpu_cmd_end_metal(CGPUCommandBufferId cmd);
 
 // Compute CMDs
 CGPU_API CGPUComputePassEncoderId cgpu_cmd_begin_compute_pass_metal(CGPUCommandBufferId cmd, const struct CGPUComputePassDescriptor* desc);
+CGPU_API void cgpu_compute_encoder_bind_descriptor_buffer_metal(CGPUComputePassEncoderId encoder, CGPUDescriptorBufferId buffer, const char8_t* set_name);
 CGPU_API void cgpu_compute_encoder_bind_descriptor_set_metal(CGPUComputePassEncoderId encoder, CGPUDescriptorSetId set);
 CGPU_API void cgpu_compute_encoder_push_constants_metal(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
 CGPU_API void cgpu_compute_encoder_bind_pipeline_metal(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
+CGPU_API void cgpu_compute_encoder_set_threadgroup_size_metal(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 CGPU_API void cgpu_compute_encoder_dispatch_metal(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 CGPU_API void cgpu_cmd_end_compute_pass_metal(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
 

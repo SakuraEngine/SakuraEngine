@@ -3,52 +3,59 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/framework/slot.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/render_object/multi_child_render_object.generated.h"
-#endif
+#include "SkrGui/framework/render_object/multi_child_render_object.generated.h"
 
 namespace skr::gui
 {
-sreflect_interface(
+struct [[sattr(
     guid = "409eaa24-5549-46e3-87c1-81649576d2cd"
-)
-SKR_GUI_API IMultiChildRenderObject : virtual public skr::IObject {
+)]] SKR_GUI_API IMultiChildRenderObject : virtual public skr::IObject
+{
     SKR_GENERATE_BODY(IMultiChildRenderObject)
     virtual ~IMultiChildRenderObject() = default;
 
-    virtual GUID accept_child_type() const SKR_NOEXCEPT                                    = 0;
-    virtual void add_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT           = 0;
-    virtual void remove_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT        = 0;
+    virtual GUID accept_child_type() const SKR_NOEXCEPT = 0;
+    virtual void add_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT = 0;
+    virtual void remove_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT = 0;
     virtual void move_child(NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT = 0;
-    virtual void flush_updates() SKR_NOEXCEPT                                              = 0;
+    virtual void flush_updates() SKR_NOEXCEPT = 0;
 };
 
 template <typename TChild, typename TSlotData>
-struct SlotStorage {
+struct SlotStorage
+{
     // slot data
     TSlotData data = {};
 
     // child data
-    Slot    desired_slot = {}; // used for slot update
-    TChild* child        = nullptr;
+    Slot desired_slot = {}; // used for slot update
+    TChild* child = nullptr;
 
     inline SlotStorage() SKR_NOEXCEPT = default;
-    inline SlotStorage(Slot slot, TChild* child) SKR_NOEXCEPT : desired_slot(slot), child(child) {}
+    inline SlotStorage(Slot slot, TChild* child) SKR_NOEXCEPT : desired_slot(slot)
+        , child(child)
+    {
+    }
 };
 
 template <typename TChild>
-struct SlotStorage<TChild, void> {
-    Slot    desired_slot = {}; // used for slot update
-    TChild* child        = nullptr;
+struct SlotStorage<TChild, void>
+{
+    Slot desired_slot = {}; // used for slot update
+    TChild* child = nullptr;
 
     inline SlotStorage() SKR_NOEXCEPT = default;
-    inline SlotStorage(Slot slot, TChild* child) SKR_NOEXCEPT : desired_slot(slot), child(child) {}
+    inline SlotStorage(Slot slot, TChild* child) SKR_NOEXCEPT : desired_slot(slot)
+        , child(child)
+    {
+    }
 };
 
 template <typename TSelf, typename TChild, typename TSlotData>
-struct MultiChildRenderObjectMixin {
+struct MultiChildRenderObjectMixin
+{
     Array<SlotStorage<TChild, TSlotData>> _children;
-    bool                                  _need_flush_updates = false;
+    bool _need_flush_updates = false;
 
     inline GUID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
     {
@@ -66,13 +73,13 @@ struct MultiChildRenderObjectMixin {
         auto& child_slot = _children[child->slot().index];
         if (child_slot.desired_slot != slot) { SKR_GUI_LOG_ERROR(u8"slot miss match when remove child"); }
         child_slot.child->unmount();
-        child_slot.child    = nullptr;
+        child_slot.child = nullptr;
         _need_flush_updates = true;
     }
     inline void move_child(TSelf& self, NotNull<RenderObject*> child, Slot from, Slot to) SKR_NOEXCEPT
     {
         _children[child->slot().index].desired_slot = to;
-        _need_flush_updates                         = true;
+        _need_flush_updates = true;
     }
     inline void flush_updates(TSelf& self) SKR_NOEXCEPT
     {
@@ -112,9 +119,9 @@ struct MultiChildRenderObjectMixin {
     inline void _sort_slots()
     {
         _children.sort(
-        [](const auto& lhs, const auto& rhs) {
-            return lhs.desired_slot.index < rhs.desired_slot.index;
-        });
+            [](const auto& lhs, const auto& rhs) {
+                return lhs.desired_slot.index < rhs.desired_slot.index;
+            });
     }
     inline void visit_children(const TSelf& self, RenderObject::VisitFuncRef visitor) const SKR_NOEXCEPT
     {
@@ -136,7 +143,7 @@ struct MultiChildRenderObjectMixin {
     /*===============> Begin Multi Child Render Object Mixin <===============*/             \
 private:                                                                                    \
     MultiChildRenderObjectMixin<__SELF, __CHILD, __SLOT_DATA>                               \
-    _multi_child_render_object_mix_in = {};                                                 \
+        _multi_child_render_object_mix_in = {};                                             \
                                                                                             \
 public:                                                                                     \
     GUID accept_child_type() const SKR_NOEXCEPT override                                    \

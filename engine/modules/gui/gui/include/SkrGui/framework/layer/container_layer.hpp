@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/framework/layer/layer.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/layer/container_layer.generated.h"
-#endif
+#include "SkrGui/framework/layer/container_layer.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "ea23bfe8-33db-4277-a415-bf059bf76f46")
-SKR_GUI_API ContainerLayer : public Layer {
+struct [[sattr(guid = "ea23bfe8-33db-4277-a415-bf059bf76f46"
+)]] SKR_GUI_API ContainerLayer : public Layer
+{
     SKR_GENERATE_BODY(ContainerLayer)
 
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;

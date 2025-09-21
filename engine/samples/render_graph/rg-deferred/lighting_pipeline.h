@@ -15,7 +15,6 @@ CGPUComputePipelineId create_lighting_compute_pipeline(CGPUDeviceId device)
     CGPUShaderLibraryId lighting_cs = cgpu_create_shader_library(device, &cs_desc);
     free(cs_bytes);
     CGPUShaderEntryDescriptor pipeline_cs = {};
-    pipeline_cs.stage = CGPU_SHADER_STAGE_COMPUTE;
     pipeline_cs.entry = SKR_UTF8("cs");
     pipeline_cs.library = lighting_cs;
     const char8_t* push_constant_name = SKR_UTF8("push_constants");
@@ -56,10 +55,8 @@ CGPURenderPipelineId create_lighting_render_pipeline(CGPUDeviceId device, CGPUSa
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = SKR_UTF8("vs");
     ppl_shaders[0].library = screen_vs;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = SKR_UTF8("fs");
     ppl_shaders[1].library = lighting_fs;
     const char8_t* push_constant_name = SKR_UTF8("push_constants");

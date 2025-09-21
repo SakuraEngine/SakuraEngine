@@ -1,4 +1,4 @@
-#include "SkrRT/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/sugoi.h"
 #include "./context.hpp"
 
 sugoi_context_t* g_sugoi_ctx;

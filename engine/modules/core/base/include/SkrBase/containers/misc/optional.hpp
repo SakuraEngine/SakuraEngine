@@ -5,11 +5,13 @@
 
 namespace skr::container
 {
-struct Nullopt {
+struct Nullopt
+{
 };
 
 template <typename T>
-struct Optional {
+struct Optional
+{
     using DataType = T;
     static_assert(!std::is_same_v<T, void>, "Optional<void> is not allowed");
 
@@ -55,6 +57,10 @@ struct Optional {
     const T&  value() const&;
     T&&       value() &&;
     const T&& value() const&&;
+    T&        value_unchecked() &;
+    const T&  value_unchecked() const&;
+    T&&       value_unchecked() &&;
+    const T&& value_unchecked() const&&;
     template <typename U = T>
     T value_or(U&& default_value) const&;
     template <typename U = T>
@@ -310,40 +316,68 @@ inline bool Optional<T>::has_value() const
 template <typename T>
 inline T& Optional<T>::operator*()
 {
+    SKR_ASSERT(has_value());
     return *_data_ptr();
 }
 template <typename T>
 inline const T& Optional<T>::operator*() const
 {
+    SKR_ASSERT(has_value());
     return *_data_ptr();
 }
 template <typename T>
 T* Optional<T>::operator->()
 {
+    SKR_ASSERT(has_value());
     return _data_ptr();
 }
 template <typename T>
 const T* Optional<T>::operator->() const
 {
+    SKR_ASSERT(has_value());
     return _data_ptr();
 }
 template <typename T>
 inline T& Optional<T>::value() &
 {
+    SKR_ASSERT(has_value());
     return *_data_ptr();
 }
 template <typename T>
 inline const T& Optional<T>::value() const&
 {
+    SKR_ASSERT(has_value());
     return *_data_ptr();
 }
 template <typename T>
 inline T&& Optional<T>::value() &&
 {
+    SKR_ASSERT(has_value());
     return std::move(*_data_ptr());
 }
 template <typename T>
 inline const T&& Optional<T>::value() const&&
+{
+    SKR_ASSERT(has_value());
+    return std::move(*_data_ptr());
+}
+template <typename T>
+inline T& Optional<T>::value_unchecked() &
+{
+    return *_data_ptr();
+}
+template <typename T>
+inline const T& Optional<T>::value_unchecked() const&
+{
+    return *_data_ptr();
+}
+template <typename T>
+inline T&& Optional<T>::value_unchecked() &&
+{
+    return std::move(*_data_ptr());
+}
+template <typename T>
+inline const T&& Optional<T>::value_unchecked() const&&
 {
     return std::move(*_data_ptr());
 }

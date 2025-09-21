@@ -1,9 +1,9 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/log.h"
 #include "SkrCore/platform/vfs.h"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrCore/serialize/json_archive.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 #include "SkrToolCore/project/project.hpp"
-#include "SkrSerde/json_serde.hpp"
 
 namespace skd
 {
@@ -109,9 +109,7 @@ bool SProject::OpenProject(const skr::String& project_name, const skr::Path& roo
             else
             {
                 // Unknown variable, keep as-is
-                SKR_LOG_WARN(u8"Unknown variable '%s' in path: %s",
-                    skr::String(varName).c_str(),
-                    path.c_str());
+                SKR_LOG_WARN(u8"Unknown variable '%s' in path: %s", skr::String(varName).c_str(), path.c_str());
                 result.append(currentView.subview(varStart.index(), varEnd.index() + 3));
             }
 
@@ -126,7 +124,6 @@ bool SProject::OpenProject(const skr::String& project_name, const skr::Path& roo
         }
         return r;
     };
-
 
     name = project_name;
 
@@ -186,7 +183,7 @@ bool SProject::SaveAssetMeta(const URI& uri, const skr::String& content) noexcep
     auto asset_file = skr_vfs_fopen(asset_vfs, uri.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_ALWAYS_NEW);
     auto written = skr_vfs_fwrite(asset_file, content.data(), 0, content.size());
     SKR_ASSERT(written == content.size() && "Failed to write all bytes!");
-    skr_vfs_fclose( asset_file);
+    skr_vfs_fclose(asset_file);
     return true;
 }
 
@@ -202,7 +199,7 @@ bool SProject::LoadAssetSourceFile(const URI& uri, skr::Vector<uint8_t>& content
 
 bool SProject::OpenProject(const URI& projectFilePath) noexcept
 {
-    auto projectPath = skr::Path{projectFilePath};
+    auto projectPath = skr::Path{ projectFilePath };
     skd::SProjectConfig cfg;
     {
         // Create a temporary VFS for reading the project file
@@ -210,16 +207,15 @@ bool SProject::OpenProject(const URI& projectFilePath) noexcept
         temp_vfs_desc.app_name = u8"TempProjectLoader";
         temp_vfs_desc.mount_type = SKR_MOUNT_TYPE_ABSOLUTE;
         auto temp_vfs = skr_create_vfs(&temp_vfs_desc);
-        
-        auto projectFile = skr_vfs_fopen(temp_vfs, (const char8_t*)projectPath.string().c_str(), 
-                                         SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
+
+        auto projectFile = skr_vfs_fopen(temp_vfs, (const char8_t*)projectPath.string().c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
         if (!projectFile)
         {
             SKR_LOG_ERROR(u8"Failed to open project file: %s", projectPath.string().c_str());
             skr_free_vfs(temp_vfs);
             return false;
         }
-        
+
         // read string from file
         auto fileSize = skr_vfs_fsize(projectFile);
         skr::String projectFileContent;
@@ -228,11 +224,15 @@ bool SProject::OpenProject(const URI& projectFilePath) noexcept
         skr_vfs_fclose(projectFile);
         skr_free_vfs(temp_vfs);
 
-        skr::archive::JsonReader reader(projectFileContent.view());
-        if (!skr::json_read(&reader, cfg))
+        // deserialize
         {
-            SKR_LOG_ERROR(u8"Failed to parse project file: %s", projectPath.string().c_str());
-            return false;
+            auto reader = skr::ArReadJson::ReadBuffer(projectFileContent.data(), projectFileContent.size());
+            reader.value(cfg);
+            if (reader.is_failed())
+            {
+                SKR_LOG_ERROR(u8"Failed to parse project file: %s", projectPath.string().c_str());
+                return false;
+            }
         }
     }
     auto root = projectPath.parent_directory().string();
@@ -241,7 +241,7 @@ bool SProject::OpenProject(const URI& projectFilePath) noexcept
 }
 
 bool SProject::CloseProject() noexcept
-{   
+{
     return true;
 }
 

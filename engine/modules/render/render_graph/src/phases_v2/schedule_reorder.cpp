@@ -231,12 +231,12 @@ StackVector<ResourceNode*> ExecutionReorderPhase::get_shared_resources(PassNode*
     const auto* info1 = pass_info_analysis.get_pass_info(pass1);
     const auto* info2 = pass_info_analysis.get_pass_info(pass2);
 
-    for (const auto& access : info1->resource_info.all_resource_accesses)
+    for (const auto& access : info1->resource_info.resource_accesses)
     {
         resources1.add(access.resource);
     }
     
-    for (const auto& access : info2->resource_info.all_resource_accesses)
+    for (const auto& access : info2->resource_info.resource_accesses)
     {
         if (resources1.contains(access.resource))
         {

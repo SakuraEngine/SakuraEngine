@@ -2,9 +2,7 @@
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/key.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/build_owner.generated.h"
-#endif
+#include "SkrGui/framework/build_owner.generated.h"
 
 namespace skr::gui
 {
@@ -13,8 +11,9 @@ struct InputManager;
 
 // 三颗控件树的总控制器，管理所有控件树的 update/layout/paint
 // 同时提供环境 InputManager/WindowManager
-sreflect_struct(guid = "602d1ec3-3dad-46a1-bdfe-e21de87136c0")
-SKR_GUI_API BuildOwner final {
+struct [[sattr(guid = "602d1ec3-3dad-46a1-bdfe-e21de87136c0"
+)]] SKR_GUI_API BuildOwner final
+{
     BuildOwner(NotNull<INativeDevice*> native_device) SKR_NOEXCEPT;
 
     // schedule
@@ -29,8 +28,8 @@ SKR_GUI_API BuildOwner final {
 
     // getter
     inline INativeDevice* native_device() const SKR_NOEXCEPT { return _native_device; }
-    inline TimerManager*  timer_manager() const SKR_NOEXCEPT { return _timer_manager; }
-    inline InputManager*  input_manager() const SKR_NOEXCEPT { return _input_manager; }
+    inline TimerManager* timer_manager() const SKR_NOEXCEPT { return _timer_manager; }
+    inline InputManager* input_manager() const SKR_NOEXCEPT { return _input_manager; }
 
     // setter
     inline void set_timer_manager(TimerManager* timer_manager) SKR_NOEXCEPT { _timer_manager = timer_manager; }
@@ -45,9 +44,9 @@ SKR_GUI_API BuildOwner final {
 
 private:
     // dirty array
-    Array<Element*>      _dirty_elements       = {};
+    Array<Element*> _dirty_elements = {};
     Array<RenderObject*> _nodes_needing_layout = {};
-    Array<RenderObject*> _nodes_needing_paint  = {};
+    Array<RenderObject*> _nodes_needing_paint = {};
 
     // service
     TimerManager* _timer_manager = nullptr;

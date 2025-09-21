@@ -88,7 +88,7 @@ struct InputDevice_SDL3Mouse : public CommonInputDeviceBase<InputReading_SDL3Mou
     }
 
     const EInputKind       kinds[1] = { EInputKind::InputKindMouse };
-    span<const EInputKind> ReportKinds() const SKR_NOEXCEPT final
+    Span<const EInputKind> ReportKinds() const SKR_NOEXCEPT final
     {
         return { kinds, 1 };
     }

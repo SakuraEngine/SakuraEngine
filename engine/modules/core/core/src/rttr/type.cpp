@@ -1,6 +1,7 @@
-#include "SkrRTTR/type.hpp"
-#include "SkrCore/log.hpp"
-#include "SkrRTTR/export/extern_methods.hpp"
+#include <SkrRTTR/type.hpp>
+#include <SkrCore/log.hpp>
+#include <SkrRTTR/export/extern_methods.hpp>
+#include <SkrRTTR/type_registry.hpp>
 
 namespace skr
 {
@@ -804,6 +805,28 @@ RTTRInvokerSwap RTTRType::find_swap() const
     tb.write_ref();
     tb.write_type_id(type_id()); // param 2: T&
     return find_extern_method({ .name = { SkrCoreExternMethods::Swap }, .signature = tb.view() });
+}
+RTTRInvokerSerdeRead RTTRType::find_serde_read() const
+{
+    TypeSignatureBuilder tb;
+    tb.write_function_signature(2);
+    tb.write_type_id(type_id_of<void>()); // return
+    tb.write_ref();
+    tb.write_type_id(type_id_of<ArchiveRead>()); // param 1: ArchiveRead&
+    tb.write_ref();
+    tb.write_type_id(type_id()); // param 2: T&
+    return find_extern_method({ .name = { SkrCoreExternMethods::SerdeRead }, .signature = tb.view() });
+}
+RTTRInvokerSerdeWrite RTTRType::find_serde_write() const
+{
+    TypeSignatureBuilder tb;
+    tb.write_function_signature(2);
+    tb.write_type_id(type_id_of<void>()); // return
+    tb.write_ref();
+    tb.write_type_id(type_id_of<ArchiveWrite>()); // param 1: ArchiveWrite&
+    tb.write_const_ref();
+    tb.write_type_id(type_id()); // param 2: const T&
+    return find_extern_method({ .name = { SkrCoreExternMethods::SerdeWrite }, .signature = tb.view() });
 }
 
 // flag & attribute

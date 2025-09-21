@@ -6,7 +6,8 @@ namespace skr
 {
 // type as value
 template <class T>
-struct type_t {
+struct type_t
+{
     using type = T;
 };
 // typelist via function type

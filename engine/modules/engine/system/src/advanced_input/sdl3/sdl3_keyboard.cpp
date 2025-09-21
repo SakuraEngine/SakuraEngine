@@ -19,7 +19,7 @@ struct InputReading_SDL3Keyboard : public CommonInputReading {
     {
     }
 
-    bool Equal(skr::span<uint8_t> write_span)
+    bool Equal(skr::Span<uint8_t> write_span)
     {
         if (ScanCodes.size() != write_span.size())
             return false;
@@ -83,7 +83,7 @@ struct InputDevice_SDL3Keyboard : public CommonInputDeviceBase<InputReading_SDL3
     }
 
     const EInputKind       kinds[1] = { EInputKind::InputKindKeyboard };
-    span<const EInputKind> ReportKinds() const SKR_NOEXCEPT final
+    Span<const EInputKind> ReportKinds() const SKR_NOEXCEPT final
     {
         return { kinds, 1 };
     }

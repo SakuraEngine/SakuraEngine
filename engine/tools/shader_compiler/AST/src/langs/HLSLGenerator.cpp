@@ -15,6 +15,14 @@ inline static String GetStageName(ShaderStage stage)
         return L"pixel";
     case ShaderStage::Compute:
         return L"compute";
+    case ShaderStage::RayGen:
+        return L"raygeneration";
+    case ShaderStage::ClosestHit:
+        return L"closesthit";
+    case ShaderStage::Miss:
+        return L"miss";
+    case ShaderStage::AnyHit:
+        return L"anyhit";
     default:
         assert(false && "Unknown shader stage");
         return L"unknown_stage";
@@ -60,6 +68,8 @@ static const std::unordered_map<SemanticType, String> SystemValueMap = {
     { SemanticType::GroupID, L"SV_GroupID" },
     { SemanticType::ThreadPositionInGroup, L"SV_GroupThreadID" },
     { SemanticType::ThreadIndexInGroup, L"SV_GroupIndex" },
+
+    { SemanticType::RayPayload, L"SV_RayPayload" },
 
     { SemanticType::ViewID, L"SV_ViewID" }
 };
@@ -109,19 +119,7 @@ inline static const String& GetInterpolationString(InterpolationMode Interpolati
 
 String HLSLGenerator::GetTypeName(const TypeDecl* type)
 {
-    if (auto asTexture = dynamic_cast<const TextureTypeDecl*>(type))
-    {
-        // cast <{T}> to <{T}4>
-        const auto& name = type->name();
-        const auto pos = name.find(L'>');
-        if (pos != String::npos)
-        {
-            String result = name;
-            result.insert(pos, L"4");
-            return result;
-        }
-    }
-    else if (auto array = dynamic_cast<const ArrayTypeDecl*>(type))
+    if (auto array = dynamic_cast<const ArrayTypeDecl*>(type))
     {
         if (array->element_type()->is_resource() && (array->count() == 0))
         {
@@ -262,7 +260,7 @@ void HLSLGenerator::VisitBinaryExpr(SourceBuilderNew& sb, const BinaryExpr* bina
 {
     auto ltype = binary->left()->type();
     auto rtype = binary->right()->type();
-    bool is_vec_mat_op = (ltype->is_vector() && rtype->is_matrix()) || (ltype->is_matrix() && rtype->is_vector());
+    bool is_vec_mat_op = (ltype->is_vector() && rtype->is_matrix()) || (ltype->is_matrix() && rtype->is_vector()) || (ltype->is_matrix() && rtype->is_matrix());
     if (is_vec_mat_op && (binary->op() == BinaryOp::MUL))
     {
         sb.append(L"mul(");
@@ -486,7 +484,12 @@ void HLSLGenerator::VisitConstructor(SourceBuilderNew& sb, const ConstructorDecl
     auto _return = pAST->Return(_this->ref());
 
     // Generate wrapper static function
-    auto WrapperBody = pAST->Block({ _this, _init, _return });
+    CompoundStmt* WrapperBody = nullptr;
+    if (ctor->body() == nullptr)
+        WrapperBody = pAST->Block({ _this, _return });
+    else
+        WrapperBody = pAST->Block({ _this, _init, _return });
+    
     auto CtorWrapper = pAST->DeclareMethod(const_cast<skr::CppSL::TypeDecl*>(typeDecl), 
         L"New", typeDecl, ctor->parameters(), WrapperBody
     );
@@ -547,8 +550,23 @@ bool HLSLGenerator::SupportConstructor() const
     return false;
 }
 
+bool HLSLGenerator::HLSL_RemoveEmptyResourceInit(const ConstructorDecl::MemberInit* init) const
+{
+    if (const bool IsResource = init->field->type().is_resource())
+    {
+        if (const auto Ctor = dynamic_cast<const CppSL::ConstructExpr*>(init->init_expr))
+        {
+            return Ctor->args().size() == 0;
+        }
+    }
+    return false;
+}
+
 static const skr::CppSL::String kHLSLHeader = LR"(
 using uint64 = uint64_t;
+
+template <typename T> using TexelBuffer = Buffer<T>;
+template <typename T> using RWTexelBuffer = RWBuffer<T>;
 
 template<typename T> T fract(T x){return x - floor(x);}
 template<typename T> float length_squared(T x) { return dot(x,x); }
@@ -558,9 +576,6 @@ template <typename T> using Bindless = T[];
 
 template <typename B, typename T> T atomic_fetch_add(B buffer, uint offset, T value) { T prev = 0; InterlockedAdd(buffer[offset], value, prev); return prev; }
 template <typename G, typename T> T atomic_fetch_add(inout G shared_v, T value) { T prev = 0; InterlockedAdd(shared_v, value, prev); return prev; }
-
-// template <typename TEX> float4 texture2d_sample(TEX tex, uint2 uv, uint filter, uint address) { return float4(1, 1, 1, 1); }
-// template <typename TEX> float4 texture3d_sample(TEX tex, uint3 uv, uint filter, uint address) { return float4(1, 1, 1, 1); }
 )";
 
 extern const wchar_t* kHLSLBufferIntrinsics;
@@ -569,8 +584,6 @@ extern const wchar_t* kHLSLRayIntrinsics;
 
 void HLSLGenerator::RecordBuiltinHeader(SourceBuilderNew& sb, const AST& ast)
 {
-    GenerateSRTs(ast);
-
     sb.append(kHLSLHeader);
     sb.append(kHLSLBufferIntrinsics);
     sb.append(kHLSLTextureIntrinsics);
@@ -619,256 +632,6 @@ void HLSLGenerator::GenerateArrayHelpers(SourceBuilderNew& sb, const AST& ast)
     {
         sb.append_line();
     }
-}
-
-struct SparseSequence {
-    std::set<uint32_t> used_numbers;
-    
-    bool TryAllocate(uint32_t number) {
-        auto [it, inserted] = used_numbers.insert(number);
-        return inserted; // 如果成功插入返回 true，否则返回 false
-    }
-    
-    uint32_t Allocate() {
-        uint32_t candidate = 0;
-        for (uint32_t used : used_numbers) {
-            if (used > candidate) {
-                break; // 找到了空隙
-            }
-            candidate = used + 1;
-        }
-        used_numbers.insert(candidate);
-        return candidate;
-    }
-    
-    bool IsUsed(uint32_t number) const {
-        return used_numbers.find(number) != used_numbers.end();
-    }
-};
-
-struct BindTable {
-    SparseSequence space_allocator;
-    std::map<uint32_t, SparseSequence> register_allocators;
-    uint32_t shared_space = UINT32_MAX; // 用于非 unique_space 的共享 space
-    
-    bool RegisterBinding(uint32_t space, uint32_t reg) 
-    {
-        // 1. 处理 space 分配
-        if (space != UINT32_MAX && reg != UINT32_MAX) {
-            // 1. 用户完全指定了 space 和 register
-            bool success1 = space_allocator.TryAllocate(space);
-            bool success2 = register_allocators[space].TryAllocate(reg);
-            return success1 && success2;
-        }
-        return false;
-    }
-
-    std::pair<uint32_t, uint32_t> AllocateBinding(bool unique_space, uint32_t space, uint32_t reg) {
-        uint32_t final_space = space;
-        uint32_t final_register = reg;
-        
-        // 2. 自动分配 space
-        if (space == UINT32_MAX) {
-            reg = UINT32_MAX;
-            if (unique_space) {
-                // 2.1 unique_space: 每次分配新的 space
-                final_space = space_allocator.Allocate();
-            } else {
-                // 2.1 非 unique_space: 使用共享 space
-                if (shared_space == UINT32_MAX) {
-                    // 第一次分配共享 space
-                    shared_space = space_allocator.Allocate();
-                }
-                final_space = shared_space;
-            }
-        } else {
-            // space 已指定，确保它被占用
-            space_allocator.TryAllocate(space);
-            final_space = space;
-        }
-        
-        // 2.2 自动分配 register
-        if (reg == UINT32_MAX) {
-            final_register = register_allocators[final_space].Allocate();
-        } else {
-            // register 已指定，在对应 space 中占用
-            register_allocators[final_space].TryAllocate(reg);
-            final_register = reg;
-        }
-        
-        return {final_space, final_register};
-    }
-};
-
-void HLSLGenerator::GenerateSRTs(const AST& ast)
-{
-    // 清空绑定表
-    binding_table_.clear();
-    
-    BindTable alloc_table;
-    
-    // 用于存储待分配的资源
-    std::vector<const VarDecl*> regular_resources;
-    std::vector<const VarDecl*> push_resources;
-    std::vector<const VarDecl*> bindless_resources;
-    std::map<const VarDecl*, std::pair<uint32_t, uint32_t>> fixed_bindings; // var -> (space, binding)
-    std::map<const VarDecl*, std::pair<uint32_t, uint32_t>> auto_bindings; // var -> (space, binding)
-    
-    // 第一遍：收集所有全局资源并分类
-    for (auto var : ast.global_vars())
-    {
-        const TypeDecl* varType = &var->type();
-        if (auto asResource = varType->is_resource())
-        {
-            bool is_bindless = false;
-            bool is_push = false;
-            if (auto asArray = dynamic_cast<const ArrayTypeDecl*>(varType))
-            {
-                if (asArray->count() == 0 && dynamic_cast<const ResourceTypeDecl*>(asArray->element_type()))
-                    is_bindless = true;
-            }
-            is_push = FindAttr<PushConstantAttr>(var->attrs());
-            if (const auto resourceBind = FindAttr<ResourceBindAttr>(var->attrs()))
-            {
-                if (is_push)
-                    push_resources.push_back(var);
-                else if (is_bindless)
-                    bindless_resources.push_back(var);
-                else
-                    regular_resources.push_back(var);
-
-                uint32_t space = resourceBind->group();
-                uint32_t binding = resourceBind->binding();
-                
-                // 检查是否有固定槽位
-                if (space != ~0 && binding != ~0)
-                {
-                    alloc_table.RegisterBinding(space, binding);
-                    fixed_bindings[var] = {space, binding};
-                }
-                else
-                {
-                    auto_bindings[var] = { space, binding };
-                }
-            }
-        }
-
-    }
-    
-    // 第一步：处理有固定槽位的资源
-    for (const auto& [var, slot] : fixed_bindings)
-    {
-        binding_table_[var] = {slot.second, slot.first, false, false};
-    }
-    
-    // 第二步：分配常规资源
-    for (auto var : regular_resources)
-    {
-        if (const auto resourceBind = FindAttr<ResourceBindAttr>(var->attrs()))
-        {
-            uint32_t space = resourceBind->group();
-            uint32_t binding = resourceBind->binding();
-            if ((space != UINT32_MAX) || (binding == UINT32_MAX))
-            {
-                auto [new_space, new_binding] = alloc_table.AllocateBinding(false, space, binding);
-                binding_table_[var] = {new_binding, new_space, false, false};
-            }
-        }
-    }
-    
-    // 3.1 分配 bindless 资源
-    for (auto var : bindless_resources)
-    {
-        if (const auto resourceBind = FindAttr<ResourceBindAttr>(var->attrs()))
-        {
-            uint32_t space = resourceBind->group();
-            uint32_t binding = resourceBind->binding();
-            if ((space != UINT32_MAX) || (binding == UINT32_MAX))
-            {
-                auto [new_space, new_binding] = alloc_table.AllocateBinding(true, space, binding);
-                binding_table_[var] = {new_binding, new_space, false, true};
-            }
-        }
-    }
-    
-    // 3.2 分配 push constant
-    for (auto var : push_resources)
-    {
-        if (const auto resourceBind = FindAttr<ResourceBindAttr>(var->attrs()))
-        {
-            uint32_t space = resourceBind->group();
-            uint32_t binding = resourceBind->binding();
-            if ((space != UINT32_MAX) || (binding == UINT32_MAX))
-            {
-                auto [new_space, new_binding] = alloc_table.AllocateBinding(true, space, binding);
-                binding_table_[var] = {new_binding, new_space, true, false};
-            }
-        }
-    }
-
-    // 第四步：检查 push 和 bindless 的 space 中是否有其他资源
-    // 收集每个 space 中的资源
-    std::map<uint32_t, std::vector<const VarDecl*>> space_resources;
-    std::map<uint32_t, const VarDecl*> push_spaces;      // space -> push resource
-    std::map<uint32_t, const VarDecl*> bindless_spaces;  // space -> bindless resource
-    
-    for (const auto& [var, binding_info] : binding_table_)
-    {
-        space_resources[binding_info.space].push_back(var);
-        
-        // 记录 push 和 bindless 占用的 space
-        if (binding_info.is_push)
-        {
-            push_spaces[binding_info.space] = var;
-        }
-        else if (binding_info.is_bindless)
-        {
-            bindless_spaces[binding_info.space] = var;
-        }
-    }
-    
-    // 检查 push constant space 中是否有其他资源
-    for (const auto& [space, push_var] : push_spaces)
-    {
-        const auto& resources_in_space = space_resources[space];
-        if (resources_in_space.size() > 1)
-        {
-            // Push constant 的 space 中有其他资源，报错
-            String error_msg = L"Push constant '" + push_var->name() + 
-                             L"' at space " + std::to_wstring(space) + 
-                             L" conflicts with other resources: ";
-            for (auto res : resources_in_space)
-            {
-                if (res != push_var)
-                {
-                    error_msg += L"'" + res->name() + L"' ";
-                }
-            }
-            ast.ReportFatalError(error_msg);
-        }
-    }
-    
-    // 检查 bindless resource space 中是否有其他资源
-    for (const auto& [space, bindless_var] : bindless_spaces)
-    {
-        const auto& resources_in_space = space_resources[space];
-        if (resources_in_space.size() > 1)
-        {
-            // Bindless resource 的 space 中有其他资源，报错
-            String error_msg = L"Bindless resource '" + bindless_var->name() + 
-                             L"' at space " + std::to_wstring(space) + 
-                             L" conflicts with other resources: ";
-            for (auto res : resources_in_space)
-            {
-                if (res != bindless_var)
-                {
-                    error_msg += L"'" + res->name() + L"' ";
-                }
-            }
-            ast.ReportFatalError(error_msg);
-        }
-    }
-
 }
 
 } // namespace skr::CppSL::HLSL

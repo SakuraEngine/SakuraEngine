@@ -3,7 +3,7 @@
 #include "./../types/ray.hxx"
 #include "./../raytracing/ray_query.hxx"
 
-struct [[builtin("accel")]] Accel {
+struct [[builtin("accel")]] RaytracingAccelerationStructure {
     [[callop("RAY_TRACING_INSTANCE_TRANSFORM")]] float4x4 instance_transform(uint32 index);
     [[callop("RAY_TRACING_INSTANCE_USER_ID")]] uint32 instance_user_id(uint32 index);
     [[callop("RAY_TRACING_INSTANCE_VISIBILITY_MASK")]] uint32 instance_visibility_mask(uint32 index);
@@ -17,3 +17,5 @@ struct [[builtin("accel")]] Accel {
     [[callop("RAY_TRACING_QUERY_ALL")]] RayQueryAll query_all(Ray ray, uint32 mask = ~0);
     [[callop("RAY_TRACING_QUERY_ANY")]] RayQueryAny query_any(Ray ray, uint32 mask = ~0);
 };
+
+using AccelerationStructure = RaytracingAccelerationStructure;

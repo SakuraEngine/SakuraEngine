@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/sugoi/type_registry.hpp"
+#include "SkrRuntime/sugoi/type_registry.hpp"
 
 #include <SkrContainers/hashmap.hpp>
 #include <SkrContainers/vector.hpp>

@@ -32,12 +32,13 @@ inline void copy_ring_buffer(T* dst, const T* src, TSize src_capacity, TSize src
     SKR_ASSERT(src_back != src_front && src_back - src_front <= src_capacity && "src buffer data is invalid");
 
     process_ring_buffer_data(
-    src_capacity,
-    src_front,
-    src_back,
-    [&dst, &src](TSize dst_offset, TSize src_offset, TSize size) {
-        ::skr::memory::copy(dst + dst_offset, src + src_offset, size);
-    });
+        src_capacity,
+        src_front,
+        src_back,
+        [&dst, &src](TSize dst_offset, TSize src_offset, TSize size) {
+            ::skr::memory::copy(dst + dst_offset, src + src_offset, size);
+        }
+    );
 }
 template <typename T, typename TSize>
 inline void move_ring_buffer(T* dst, T* src, TSize src_capacity, TSize src_front, TSize src_back) noexcept
@@ -45,12 +46,13 @@ inline void move_ring_buffer(T* dst, T* src, TSize src_capacity, TSize src_front
     SKR_ASSERT(src_back != src_front && src_back - src_front <= src_capacity && "src buffer data is invalid");
 
     process_ring_buffer_data(
-    src_capacity,
-    src_front,
-    src_back,
-    [&dst, &src](TSize dst_offset, TSize src_offset, TSize size) {
-        ::skr::memory::move(dst + dst_offset, src + src_offset, size);
-    });
+        src_capacity,
+        src_front,
+        src_back,
+        [&dst, &src](TSize dst_offset, TSize src_offset, TSize size) {
+            ::skr::memory::move(dst + dst_offset, src + src_offset, size);
+        }
+    );
 }
 template <typename T, typename TSize>
 inline void destruct_ring_buffer(T* buffer, TSize capacity, TSize front, TSize back) noexcept
@@ -58,11 +60,12 @@ inline void destruct_ring_buffer(T* buffer, TSize capacity, TSize front, TSize b
     SKR_ASSERT(back != front && back - front <= capacity && "buffer data is invalid");
 
     process_ring_buffer_data(
-    capacity,
-    front,
-    back,
-    [&buffer](TSize dst_offset, TSize src_offset, TSize size) {
-        ::skr::memory::destruct(buffer + src_offset, size);
-    });
+        capacity,
+        front,
+        back,
+        [&buffer](TSize dst_offset, TSize src_offset, TSize size) {
+            ::skr::memory::destruct(buffer + src_offset, size);
+        }
+    );
 }
 } // namespace skr::container

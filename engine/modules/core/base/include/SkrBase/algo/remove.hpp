@@ -47,7 +47,8 @@ SKR_INLINE T remove_all(T begin, T end, TP&& p = TP())
 
             // update flag
             do_remove = !do_remove;
-        } while (read < end);
+        }
+        while (read < end);
         return write;
     }
     return end;

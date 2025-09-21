@@ -81,33 +81,33 @@ inline EVertexAttribute GetVertexAttributeFromRawVertexStreamType(ERawVertexStre
     }
 }
 
-skr::span<const uint8_t> GetRawPrimitiveIndicesView(const SRawPrimitive* primitve, uint32_t& index_stride)
+skr::Span<const uint8_t> GetRawPrimitiveIndicesView(const SRawPrimitive* primitive, uint32_t& index_stride)
 {
-    index_stride = (uint32_t)primitve->index_stream.stride;
+    index_stride = (uint32_t)primitive->index_stream.stride;
 
-    const auto buffer_view = primitve->index_stream.buffer_view;
+    const auto buffer_view = primitive->index_stream.buffer_view;
     const auto buffer_data = buffer_view.data();
-    const auto indices_count = primitve->index_stream.count;
-    return skr::span<const uint8_t>(buffer_data + primitve->index_stream.offset, index_stride * indices_count);
+    const auto indices_count = primitive->index_stream.count;
+    return skr::Span<const uint8_t>(buffer_data + primitive->index_stream.offset, index_stride * indices_count);
 }
 
-skr::span<const uint8_t> GetRawPrimitiveAttributeView(const SRawPrimitive* primitve, ERawVertexStreamType type, uint32_t idx, uint32_t& stride)
+skr::Span<const uint8_t> GetRawPrimitiveAttributeView(const SRawPrimitive* primitive, ERawVertexStreamType type, uint32_t idx, uint32_t& stride)
 {
-    for (uint32_t i = 0; i < primitve->vertex_streams.size(); i++)
+    for (uint32_t i = 0; i < primitive->vertex_streams.size(); i++)
     {
-        const auto& attribute = primitve->vertex_streams[i];
+        const auto& attribute = primitive->vertex_streams[i];
         if (attribute.type == type && attribute.index == idx)
         {
             stride = (uint32_t)attribute.stride;
 
             const auto buffer_data = attribute.buffer_view.data();
-            return skr::span<const uint8_t>(buffer_data + attribute.offset, attribute.stride * attribute.count);
+            return skr::Span<const uint8_t>(buffer_data + attribute.offset, attribute.stride * attribute.count);
         }
     }
     return {};
 }
 
-skr::span<const uint8_t> GetRawPrimitiveAttributeView(const SRawPrimitive* primitve, const char* semantics, uint32_t idx, uint32_t& stride, ERawVertexStreamType& out_type)
+skr::Span<const uint8_t> GetRawPrimitiveAttributeView(const SRawPrimitive* primitive, const char* semantics, uint32_t idx, uint32_t& stride, ERawVertexStreamType& out_type)
 {
     const auto kVertexStreamTypesCount = static_cast<uint32_t>(ERawVertexStreamType::Count);
     for (uint32_t type = 0; type < kVertexStreamTypesCount; type++)
@@ -117,16 +117,16 @@ skr::span<const uint8_t> GetRawPrimitiveAttributeView(const SRawPrimitive* primi
         if (semantics_sv.starts_with(refStr))
         {
             out_type = static_cast<ERawVertexStreamType>(type);
-            return GetRawPrimitiveAttributeView(primitve, (ERawVertexStreamType)type, idx, stride);
+            return GetRawPrimitiveAttributeView(primitive, (ERawVertexStreamType)type, idx, stride);
         }
     }
     return {};
 }
 
-void EmplaceRawPrimitiveIndexBuffer(const SRawPrimitive* primitve, skr::Vector<uint8_t>& buffer, IndexBufferEntry& index_buffer)
+void EmplaceRawPrimitiveIndexBuffer(const SRawPrimitive* primitive, skr::Vector<uint8_t>& buffer, IndexBufferEntry& index_buffer)
 {
     uint32_t index_stride = 0;
-    const auto ib_view = GetRawPrimitiveIndicesView(primitve, index_stride);
+    const auto ib_view = GetRawPrimitiveIndicesView(primitive, index_stride);
 
     index_buffer.buffer_index = 0;
     index_buffer.first_index = 0; // TODO: ?
@@ -134,13 +134,19 @@ void EmplaceRawPrimitiveIndexBuffer(const SRawPrimitive* primitve, skr::Vector<u
     index_buffer.index_count = (uint32_t)ib_view.size() / index_stride;
     index_buffer.stride = index_stride;
     buffer.append(ib_view.data(), ib_view.size());
+
+    // GPU needs to align 16 bytes
+    while (buffer.size() % 16 != 0)
+    {
+        buffer.add(0);
+    }
 }
 
-void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, ERawVertexStreamType type, uint32_t idx, skr::Vector<uint8_t>& buffer, VertexBufferEntry& out_vbv)
+void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitive, ERawVertexStreamType type, uint32_t idx, skr::Vector<uint8_t>& buffer, VertexBufferEntry& out_vbv)
 {
-    skr::span<const uint8_t> vertex_attribtue_slice = {};
+    skr::Span<const uint8_t> vertex_attribtue_slice = {};
     uint32_t attribute_stride = 0;
-    vertex_attribtue_slice = GetRawPrimitiveAttributeView(primitve, type, idx, attribute_stride);
+    vertex_attribtue_slice = GetRawPrimitiveAttributeView(primitive, type, idx, attribute_stride);
 
     // out_vbv.attribute = kRawAttributeTypeLUT[static_cast<uint32_t>(type)];
     out_vbv.attribute = GetVertexAttributeFromRawVertexStreamType(type);
@@ -156,14 +162,20 @@ void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, ERa
         out_vbv.vertex_count = vertex_attribtue_slice.size() / out_vbv.stride;
         buffer.append(vertex_attribtue_slice.data(), vertex_attribtue_slice.size());
     }
+
+    // GPU needs to align 16 bytes
+    while (buffer.size() % 16 != 0)
+    {
+        buffer.add(0);
+    }
 }
 
-void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, const char* semantics, uint32_t idx, skr::Vector<uint8_t>& buffer, VertexBufferEntry& out_vbv)
+void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitive, const char* semantics, uint32_t idx, skr::Vector<uint8_t>& buffer, VertexBufferEntry& out_vbv)
 {
-    skr::span<const uint8_t> vertex_attribtue_slice = {};
+    skr::Span<const uint8_t> vertex_attribtue_slice = {};
     uint32_t attribute_stride = 0;
     ERawVertexStreamType type;
-    vertex_attribtue_slice = GetRawPrimitiveAttributeView(primitve, semantics, idx, attribute_stride, type);
+    vertex_attribtue_slice = GetRawPrimitiveAttributeView(primitive, semantics, idx, attribute_stride, type);
 
     // out_vbv.attribute = kRawAttributeTypeLUT[static_cast<uint32_t>(type)];
     out_vbv.attribute = GetVertexAttributeFromRawVertexStreamType(type);
@@ -178,6 +190,12 @@ void EmplaceRawPrimitiveVertexBufferAttribute(const SRawPrimitive* primitve, con
         out_vbv.vertex_count = vertex_attribtue_slice.size() / out_vbv.stride;
         buffer.append(vertex_attribtue_slice.data(), vertex_attribtue_slice.size());
     }
+
+    // GPU needs to align 16 bytes
+    while (buffer.size() % 16 != 0)
+    {
+        buffer.add(0);
+    }
 }
 
 void EmplaceAllRawMeshIndices(const SRawMesh* mesh, skr::Vector<uint8_t>& buffer, skr::Vector<MeshPrimitive>& out_primitives)
@@ -191,7 +209,7 @@ void EmplaceAllRawMeshIndices(const SRawMesh* mesh, skr::Vector<uint8_t>& buffer
     }
 }
 
-void EmplaceRawMeshVerticesWithRange(skr::span<const EVertexAttribute> range, uint32_t buffer_idx, const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, skr::Vector<MeshPrimitive>& out_primitives)
+void EmplaceRawMeshVerticesWithRange(skr::Span<const EVertexAttribute> range, uint32_t buffer_idx, const SRawMesh* mesh, const CGPUVertexLayout* layout, skr::Vector<uint8_t>& buffer, skr::Vector<MeshPrimitive>& out_primitives)
 {
     if (layout != nullptr)
     {

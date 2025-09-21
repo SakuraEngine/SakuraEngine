@@ -4,10 +4,19 @@
 
 int main(int argc, const char **argv)
 {
+    std::string permutation = "";
     std::vector<std::string> args;
     for (int i = 0; i < argc; ++i)
     {
-        args.emplace_back(argv[i]);
+        auto arg = std::string_view(argv[i]);
+        if (arg.starts_with("--permutation="))
+        {
+            permutation = arg.substr(arg.find_first_of('=') + 1);
+        }
+        else
+        {
+            args.emplace_back(argv[i]);
+        }
     }
     args.emplace_back("--");
     args.emplace_back("-x");
@@ -16,6 +25,7 @@ int main(int argc, const char **argv)
     args.emplace_back("-fsyntax-only");
     args.emplace_back("-D__CPPSL__");
     // swizzle uses reference member in union
+    args.emplace_back("-Wno-unknown-attributes");
     args.emplace_back("-fms-extensions");
     args.emplace_back("-fms-compatibility-version=17.1.1");
     args.emplace_back("-Wno-microsoft-union-member-reference");
@@ -27,11 +37,12 @@ int main(int argc, const char **argv)
     }
     
     auto compiler = skr::CppSL::ShaderCompiler::Create(args_ptr.size(), args_ptr.data());
+    compiler->SetPermutationId(permutation);
+    
     int exit_code = 0;
     if (compiler)
     {
         exit_code = compiler->Run();
-        const auto& AST = compiler->GetAST();
         skr::CppSL::ShaderCompiler::Destroy(compiler);
     }
     return exit_code;

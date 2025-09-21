@@ -25,7 +25,6 @@ C++ 源码 → Clang AST → Shader AST → HLSL/MSL/GLSL
 struct ShaderCompiler {
     static ShaderCompiler* Create(int argc, const char **argv);
     virtual int Run() = 0;
-    virtual const AST& GetAST() const = 0;
 };
 
 // 实现类使用 Clang Tooling

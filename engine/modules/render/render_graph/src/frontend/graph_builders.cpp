@@ -273,7 +273,16 @@ RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::read(const cha
 
 RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_pipeline(CGPUComputePipelineId pipeline) SKR_NOEXCEPT
 {
+    SKR_ASSERT(node.ray_pipeline == nullptr && "Can't set both compute & ray pipeline");
     node.pipeline = pipeline;
+    node.root_signature = pipeline->root_signature;
+    return *this;
+}
+
+RenderGraph::ComputePassBuilder& RenderGraph::ComputePassBuilder::set_ray_pipeline(CGPURayPipelineId pipeline) SKR_NOEXCEPT
+{
+    SKR_ASSERT(node.pipeline == nullptr && "Can't set both compute & ray pipeline");
+    node.ray_pipeline = pipeline;
     node.root_signature = pipeline->root_signature;
     return *this;
 }
@@ -511,7 +520,7 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::import(CGPUBufferId buff
     return *this;
 }
 
-RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::allocate_dedicated() SKR_NOEXCEPT
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::heap_dedicated() SKR_NOEXCEPT
 {
     node.descriptor.flags |= CGPU_BUFFER_FLAG_DEDICATED_BIT;
     return *this;
@@ -577,7 +586,7 @@ RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_index_buffer() SKR_NO
     return *this;
 }
 
-RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_uniform_buffer() SKR_NOEXCEPT
+RenderGraph::BufferBuilder& RenderGraph::BufferBuilder::as_constant_buffer() SKR_NOEXCEPT
 {
     node.descriptor.usages |= CGPU_BUFFER_USAGE_CONSTANT_BUFFER;
     node.descriptor.start_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
@@ -635,7 +644,6 @@ RenderGraph::TextureBuilder::TextureBuilder(RenderGraph& graph, TextureNode& nod
 {
     node.descriptor.sample_count = CGPU_SAMPLE_COUNT_1;
     node.descriptor.usages = CGPU_TEXTURE_USAGE_SHADER_READ;
-    node.descriptor.is_restrict_dedicated = false;
 }
 
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::set_name(const char8_t* name) SKR_NOEXCEPT
@@ -668,7 +676,7 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::import(CGPUTextureId t
         node.descriptor.height = texInfo->height;
         node.descriptor.depth = texInfo->depth;
         node.descriptor.format = (ECGPUFormat)texInfo->format;
-        node.descriptor.array_size = texInfo->array_size_minus_one + 1;
+        node.descriptor.array_size = texInfo->array_size;
         node.descriptor.sample_count = texInfo->sample_count;
     }
     node.init_state = init_state;
@@ -689,6 +697,12 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::extent(uint64_t width,
 RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::format(ECGPUFormat format) SKR_NOEXCEPT
 {
     node.descriptor.format = format;
+    return *this;
+}
+
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::mip_count(uint32_t size) SKR_NOEXCEPT
+{
+    node.descriptor.mip_levels = size;
     return *this;
 }
 
@@ -725,9 +739,15 @@ RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allow_depth_stencil() 
     return *this;
 }
 
-RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::allocate_dedicated() SKR_NOEXCEPT
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::heap_dedicated() SKR_NOEXCEPT
 {
-    node.descriptor.flags |= CGPU_TEXTURE_FLAG_DEDICATED_BIT;
+    node.descriptor.flags |= CGPU_TEXTURE_FLAG_HEAP_DEDICATED_BIT;
+    return *this;
+}
+
+RenderGraph::TextureBuilder& RenderGraph::TextureBuilder::driver_dedicated() SKR_NOEXCEPT
+{
+    node.descriptor.flags |= CGPU_TEXTURE_FLAG_DRIVER_DEDICATED_BIT;
     return *this;
 }
 
@@ -745,6 +765,8 @@ TextureHandle RenderGraph::create_texture(const TextureSetupFunction& setup) SKR
     resources.add(newTex);
     graph->insert(newTex);
     TextureBuilder builder(*this, *newTex);
+    builder.mip_count(1);
+    builder.array(1);
     setup(*this, builder);
     // set default gc tag
     if (newTex->tags == kRenderGraphInvalidResourceTag) 

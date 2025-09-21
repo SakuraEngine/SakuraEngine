@@ -1,5 +1,5 @@
 #include "SkrProfile/profile.h"
-#include "SkrRT/sugoi/sugoi_config.h"
+#include "SkrRuntime/sugoi/sugoi_config.h"
 #include "./stack.hpp"
 
 namespace sugoi

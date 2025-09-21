@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/config.h"
+#include "SkrRuntime/config.h"
 #include "SkrBase/config.h"
 extern "C" {
 #include "lua.h"

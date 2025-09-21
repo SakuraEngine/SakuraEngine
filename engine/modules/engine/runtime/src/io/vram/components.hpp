@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/io/vram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
+#include "SkrRuntime/io/vram_io.hpp"
 #include "./../ram/ram_service.hpp"
 #include "./../components/component.hpp"
 
@@ -14,7 +14,7 @@ namespace io
 
 template <>
 struct CID<struct VRAMUploadComponent> {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct VRAMUploadComponent final : public IORequestComponent {
 public:
@@ -47,7 +47,7 @@ protected:
 
 template <>
 struct CID<struct VRAMDStorageComponent> {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct VRAMDStorageComponent final : public IORequestComponent {
     VRAMDStorageComponent(IIORequest* const request) SKR_NOEXCEPT;
@@ -102,7 +102,7 @@ private:
 
 template <>
 struct CID<struct VRAMBufferComponent> {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct VRAMBufferComponent final : public IORequestComponent {
     VRAMBufferComponent(IIORequest* const request) SKR_NOEXCEPT;
@@ -128,7 +128,7 @@ struct VRAMBufferComponent final : public IORequestComponent {
 
 template <>
 struct CID<struct VRAMTextureComponent> {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct VRAMTextureComponent final : public IORequestComponent {
     VRAMTextureComponent(IIORequest* const request) SKR_NOEXCEPT;
@@ -155,25 +155,25 @@ struct VRAMTextureComponent final : public IORequestComponent {
     uint32_t slice_count = 0;
 };
 
-constexpr skr_guid_t CID<struct VRAMUploadComponent>::Get()
+constexpr GUID CID<struct VRAMUploadComponent>::Get()
 {
     using namespace skr::literals;
     return u8"15a2c517-fc77-4938-90df-2842a75b82a9"_guid;
 }
 
-constexpr skr_guid_t CID<struct VRAMDStorageComponent>::Get()
+constexpr GUID CID<struct VRAMDStorageComponent>::Get()
 {
     using namespace skr::literals;
     return u8"5063c4b2-a197-496d-b058-b7a71656c8c1"_guid;
 }
 
-constexpr skr_guid_t CID<struct VRAMBufferComponent>::Get()
+constexpr GUID CID<struct VRAMBufferComponent>::Get()
 {
     using namespace skr::literals;
     return u8"78e4e3f0-5983-43b0-8567-f1a2653f8ea0"_guid;
 }
 
-constexpr skr_guid_t CID<struct VRAMTextureComponent>::Get()
+constexpr GUID CID<struct VRAMTextureComponent>::Get()
 {
     using namespace skr::literals;
     return u8"2d517d3b-3c08-4e6d-9b2b-189b0f591171"_guid;

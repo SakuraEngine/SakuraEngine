@@ -1,9 +1,7 @@
 #include <std/std.hxx>
 
-
-
 [[group(0)]]
-Texture2D<float> input_color;
+Texture2D input_color;
 
 [[group(1)]]
 Sampler texture_sampler;

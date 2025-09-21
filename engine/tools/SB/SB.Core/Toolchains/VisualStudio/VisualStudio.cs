@@ -23,9 +23,9 @@ namespace SB.Core
     public partial class VisualStudio : IToolchain
     {
         // https://blog.pcitron.fr/2022/01/04/dont-use-vcvarsall-vsdevcmd/
-        public bool FastFind => VSVersion == 2022;
+        public bool FastFind => VSVersion >= 2022;
 
-        public VisualStudio(int VSVersion = 2022, Architecture? HostArch = null, Architecture? TargetArch = null)
+        public VisualStudio(int VSVersion, Architecture? HostArch = null, Architecture? TargetArch = null)
         {
             this.VSVersion = VSVersion;
             this.HostArch = HostArch ?? HostInformation.HostArch;
@@ -170,6 +170,15 @@ namespace SB.Core
                 cmd.StartInfo.Environment.Add("VSCMD_ARG_TGT_ARCH", archStringMap[TargetArch]);
                 cmd.StartInfo.Environment.Add("VSCMD_ARG_APP_PLAT", "Desktop");
                 cmd.StartInfo.Environment.Add("VSINSTALLDIR", VSInstallDir!.Replace("/", "\\"));
+                
+                // 强制使用最新的工具链版本
+                var latestToolsetVersion = FindLatestToolsetVersion();
+                if (!string.IsNullOrEmpty(latestToolsetVersion))
+                {
+                    cmd.StartInfo.Environment.Add("VSCMD_ARG_VCVARS_VER", latestToolsetVersion);
+                    Log.Information("Forcing toolset version to latest: {Version}", latestToolsetVersion);
+                }
+                
                 cmd.StartInfo.Arguments = $"/c set > \"{oldEnvPath}\" && \"{VCVarsBat}\" && \"{WindowsSDKBat}\" && set > \"{newEnvPath}\"";
             }
             else
@@ -260,6 +269,12 @@ namespace SB.Core
                             ClangCLPath = file;
                     }
                 }
+
+                // 如果在标准路径中没有找到link.exe，尝试更广泛的搜索
+                if (string.IsNullOrEmpty(LINKPath))
+                {
+                    LINKPath = FindLinkerInAlternativePaths(vcPaths);
+                }
                 // clang-cl may be installed in a different user path
                 if (!File.Exists(ClangCLPath))
                 {
@@ -316,9 +331,119 @@ namespace SB.Core
         public string? ClangCLPath { get; private set; }
         public string? LINKPath { get; private set; }
 
+        /// <summary>
+        /// 在备用路径中查找链接器
+        /// </summary>
+        private string FindLinkerInAlternativePaths(IEnumerable<string> vcPaths)
+        {
+            var searchPaths = new List<string>();
+            
+            // 添加VC路径（移除MSVC限制，允许在任何VC路径中查找）
+            foreach (var path in vcPaths)
+            {
+                if (Directory.Exists(path))
+                {
+                    searchPaths.Add(path);
+                }
+            }
+            
+            // 添加常见的Visual Studio工具链路径
+            var commonToolchainPaths = new[]
+            {
+                @"C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC",
+                @"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC",
+                @"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC",
+                @"C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC",
+                @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Tools\MSVC",
+                @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC",
+                @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC",
+                @"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC"
+            };
+            
+            foreach (var basePath in commonToolchainPaths)
+            {
+                if (Directory.Exists(basePath))
+                {
+                    try
+                    {
+                        var versionDirs = Directory.GetDirectories(basePath);
+                        foreach (var versionDir in versionDirs)
+                        {
+                            searchPaths.Add(Path.Combine(versionDir, "bin", "Hostx64", "x64"));
+                            searchPaths.Add(Path.Combine(versionDir, "bin", "Hostx86", "x86"));
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略访问异常
+                    }
+                }
+            }
+            
+            // 查找link.exe
+            foreach (var searchPath in searchPaths.Where(Directory.Exists).Distinct())
+            {
+                var linkPath = Path.Combine(searchPath, "link.exe");
+                if (File.Exists(linkPath))
+                {
+                    Log.Information("Found LINK.exe at alternative path: {LinkPath}", linkPath);
+                    return linkPath;
+                }
+            }
+            
+            return "";
+        }
+
+
         #region HelpersForTools
         public static bool IsValidRT(string what) => ValidRuntimeArguments.Contains(what);
         private static readonly string[] ValidRuntimeArguments = ["MT", "MTd", "MD", "MDd"];
+        #endregion
+
+        #region ToolsetVersion
+        /// <summary>
+        /// 查找最新的工具链版本
+        /// </summary>
+        private string FindLatestToolsetVersion()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(VSInstallDir))
+                    return "";
+
+                var toolsDir = Path.Combine(VSInstallDir, "VC", "Tools", "MSVC");
+                if (!Directory.Exists(toolsDir))
+                    return "";
+
+                // 查找所有工具链版本目录
+                var versions = new List<Version>();
+                foreach (var dir in Directory.GetDirectories(toolsDir))
+                {
+                    var dirName = Path.GetFileName(dir);
+                    if (Version.TryParse(dirName, out var version))
+                    {
+                        // 检查是否包含必要的工具文件
+                        var clExePath = Path.Combine(dir, "bin", "Hostx64", "x64", "cl.exe");
+                        if (File.Exists(clExePath))
+                        {
+                            versions.Add(version);
+                        }
+                    }
+                }
+
+                if (versions.Count == 0)
+                    return "";
+
+                // 返回最新版本
+                var latestVersion = versions.OrderByDescending(v => v).First();
+                return latestVersion.ToString();
+            }
+            catch (Exception ex)
+            {
+                Log.Verbose("Failed to find latest toolset version: {Message}", ex.Message);
+                return "";
+            }
+        }
         #endregion
     }
 

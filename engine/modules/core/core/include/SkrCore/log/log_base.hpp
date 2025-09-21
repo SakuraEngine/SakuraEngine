@@ -83,11 +83,11 @@ struct SKR_CORE_API LogConstants
     };
     static_assert(sizeof(kLogLevelsLUT) / sizeof(kLogLevelsLUT[0]) == (int)skr::logging::LogLevel::kCount, "kLogLevelsLUT size mismatch");
 
-    static const skr_guid_t kDefaultPatternId;
-    static const skr_guid_t kDefaultConsolePatternId;
-    static const skr_guid_t kDefaultConsoleSinkId;
-    static const skr_guid_t kDefaultFilePatternId;
-    static const skr_guid_t kDefaultFileSinkId;
+    static const GUID kDefaultPatternId;
+    static const GUID kDefaultConsolePatternId;
+    static const GUID kDefaultConsoleSinkId;
+    static const GUID kDefaultFilePatternId;
+    static const GUID kDefaultFileSinkId;
 };
 
 } // namespace logging

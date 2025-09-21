@@ -30,6 +30,4 @@
 #define ext_call(name) clang::annotate("skr-shader", "ext_call", (name))
 #define expr(name) clang::annotate("skr-shader", "expr", (name))
 
-#define trait struct [[ignore]]
-
 #define groupshared [[clang::annotate("skr-shader", "groupshared")]]

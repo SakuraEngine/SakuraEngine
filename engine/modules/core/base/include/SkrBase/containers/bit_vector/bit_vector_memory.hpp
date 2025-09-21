@@ -10,7 +10,8 @@
 namespace skr::container
 {
 template <typename TBitBlock, typename TSize, typename Allocator>
-struct BitVectorMemory : public Allocator {
+struct BitVectorMemory : public Allocator
+{
     using BitBlockType       = TBitBlock;
     using SizeType           = TSize;
     using AllocatorCtorParam = typename Allocator::CtorParam;
@@ -150,17 +151,21 @@ struct BitVectorMemory : public Allocator {
 
         if (new_size > _capacity)
         {
-            // as small as better
-            SizeType new_capacity = default_get_grow<char>(new_size, _capacity);
-            SKR_ASSERT(new_capacity > _capacity);
-            if (new_capacity >= _capacity)
-            {
-                realloc(Algo::num_blocks(new_capacity));
-            }
+            grow_to(new_size);
         }
 
         _size = new_size;
         return old_size;
+    }
+    inline void grow_to(SizeType new_size) noexcept
+    {
+        // as small as better
+        SizeType new_capacity = default_get_grow<char>(new_size, _capacity);
+        SKR_ASSERT(new_capacity > _capacity);
+        if (new_capacity >= _capacity)
+        {
+            realloc(Algo::num_blocks(new_capacity));
+        }
     }
     inline void shrink() noexcept
     {

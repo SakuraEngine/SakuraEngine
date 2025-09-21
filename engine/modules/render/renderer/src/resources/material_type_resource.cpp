@@ -11,7 +11,7 @@ struct MaterialTypeFactoryImpl : public MaterialTypeFactory
     {
     }
 
-    skr_guid_t GetResourceType() override
+    GUID GetResourceType() override
     {
         return ::skr::type_id_of<MaterialTypeResource>();
     }

@@ -2,14 +2,12 @@
 #include "SkrToolCore/cook_system/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/material_asset.hpp"
-#include "SkrSerde/json_serde.hpp"
 
 namespace skd::asset
 {
 
 MaterialImporter::MaterialImporter()
 {
-
 }
 
 MaterialImporter::~MaterialImporter()
@@ -36,10 +34,10 @@ void* MaterialImporter::Import(skr::io::IRAMService* ioService, CookContext* con
             return nullptr;
         }
         '*/
-        skr::String jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
-        skr::archive::JsonReader jsonVal(jString.view());
+
+        auto reader = skr::ArReadJson::ReadBuffer(blob->get_data(), blob->get_size());
         auto mat_asset = SkrNew<MaterialAsset>();
-        skr::json_read(&jsonVal, *mat_asset);
+        reader.value(*mat_asset);
         return mat_asset;
     }
     return asset.get();
@@ -49,7 +47,6 @@ void MaterialImporter::Destroy(void* resource)
 {
     if (asset)
     {
-
     }
     else
     {
@@ -113,8 +110,8 @@ bool MaterialCooker::Cook(CookContext* ctx)
                     // TODO: override
                 }
                 // calculate hashes and record
-                auto switch_indices_span = skr::span<uint32_t>(variant.switch_indices.data(), variant.switch_indices.size());
-                auto option_indices_span = skr::span<uint32_t>(variant.option_indices.data(), variant.option_indices.size());
+                auto switch_indices_span = skr::Span<uint32_t>(variant.switch_indices.data(), variant.switch_indices.size());
+                auto option_indices_span = skr::Span<uint32_t>(variant.option_indices.data(), variant.option_indices.size());
                 const auto switch_hash = ShaderOptionSequence::calculate_stable_hash(shader_collection->switch_sequence, switch_indices_span);
                 const auto option_hash = ShaderOptionSequence::calculate_stable_hash(shader_collection->option_sequence, option_indices_span);
 

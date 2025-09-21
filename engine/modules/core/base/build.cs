@@ -16,9 +16,11 @@ public static class SkrBase
             .IncludeDirs(Visibility.Public, "include")
             .Depend(Visibility.Public, "phmap@phmap")
             .Require("phmap", new PackageConfig { Version = new Version(1, 3, 11) })
+            .AddCFiles(new CFamilyFileOptions { DisableUnityBuild = true }, "src/SkrBase/crypt/*.c")
             .AddCFiles("src/**/build.*.c")
             .AddCppFiles("src/**/build.*.cpp")
-            .AddNatvisFiles("dbg/*.natvis");
+            .AddNatvisFiles("dbg/*.natvis")
+            .ClangCl_CXFlags(Visibility.Public, "-Wno-format-security");
 
         // 添加平台特定的文件系统实现
         if (BuildSystem.TargetOS == OSPlatform.Windows)

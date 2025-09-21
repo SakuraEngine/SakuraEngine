@@ -120,14 +120,13 @@ namespace SB
                                 continue;
                             }
                         }
-                        var FlagsP = InheritBehavior ? $"Visibility Visibility, " : "";
                         var ArgumentsContainer = InheritBehavior ? "GetArgumentsContainer(Visibility)" : "FinalArguments";
                         var PropertyP = $"params {Param.Type.GetFullTypeName()} {Param.Name}";
                         var ParamP = PathBehavior ? $"@this.HandlePath({Param.Name})" : Param.Name;
                         if (Param.Type.GetUnderlyingTypeIfIsArgumentList(out var ElementType))
                         {
                             sourceBuilder.Append($@"
-        public static void {MethodName}(this ArgumentDictionary @this, {FlagsP}params {ElementType!.GetFullTypeName()}[] {Param.Name}) {{ @this.AppendToArgumentList<{ElementType!.GetFullTypeName()}>(""{MethodName}"", {ParamP}); }}
+        public static void {MethodName}(this ArgumentDictionary @this, params {ElementType!.GetFullTypeName()}[] {Param.Name}) {{ @this.AppendToArgumentList<{ElementType!.GetFullTypeName()}>(""{MethodName}"", {ParamP}); }}
 ");
                         }
                         else
@@ -135,7 +134,7 @@ namespace SB
                             if (InheritBehavior)
                                 throw new Exception($"{MethodName} fails: Single param setters should not have inherit behavior!");
                             sourceBuilder.Append($@"
-        public static void {MethodName}(this ArgumentDictionary @this, {FlagsP}{Param.Type.GetFullTypeName()} {Param.Name}) {{ @this.Override(""{MethodName}"", {ParamP}); }}"
+        public static void {MethodName}(this ArgumentDictionary @this, {Param.Type.GetFullTypeName()} {Param.Name}) {{ @this.Override(""{MethodName}"", {ParamP}); }}"
 );
                         }
                     }
@@ -165,14 +164,13 @@ namespace SB
                             }
                         }
                         var FlagsP = InheritBehavior ? $"Visibility Visibility, " : "";
-                        var FlagsA = InheritBehavior ? $"Visibility, " : "";
                         var ArgumentsContainer = InheritBehavior ? "GetArgumentsContainer(Visibility)" : "PrivateArguments";
                         var PropertyP = $"params {Param.Type.GetFullTypeName()} {Param.Name}";
 
                         if (Param.Type.GetUnderlyingTypeIfIsArgumentList(out var ElementType))
                         {
                             sourceBuilder.Append($@"
-        public static SB.Target {MethodName}(this TargetSetters @this, {FlagsP}params {ElementType!.GetFullTypeName()}[] {Param.Name}) {{ @this.{ArgumentsContainer}.{MethodName}({FlagsA}{Param.Name}); return (SB.Target)@this; }}
+        public static SB.Target {MethodName}(this TargetSetters @this, {FlagsP}params {ElementType!.GetFullTypeName()}[] {Param.Name}) {{ @this.{ArgumentsContainer}.{MethodName}({Param.Name}); return (SB.Target)@this; }}
 ");
                         }
                         else
@@ -180,7 +178,7 @@ namespace SB
                             if (InheritBehavior)
                                 throw new Exception($"{MethodName} fails: Single param setters should not have inherit behavior!");
                             sourceBuilder.Append($@"
-        public static SB.Target {MethodName}(this TargetSetters @this, {FlagsP}{Param.Type.GetFullTypeName()} {Param.Name}) {{ @this.{ArgumentsContainer}.{MethodName}({FlagsA}{Param.Name}); return (SB.Target)@this; }}"
+        public static SB.Target {MethodName}(this TargetSetters @this, {FlagsP}{Param.Type.GetFullTypeName()} {Param.Name}) {{ @this.{ArgumentsContainer}.{MethodName}({Param.Name}); return (SB.Target)@this; }}"
 );
                         }
                     }

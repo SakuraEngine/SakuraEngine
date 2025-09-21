@@ -35,6 +35,9 @@ struct GPUBarrier
             ECGPUResourceState after_state = CGPU_RESOURCE_STATE_UNDEFINED;
             bool is_begin = false;
             bool is_end = false;
+            uint32_t mip_level = 0;
+            uint32_t array_level = 0;
+            bool is_subresource = false;
         } transition;
         MemoryAliasTransition aliasing;
     };
@@ -70,15 +73,7 @@ struct BarrierGenerationResult
 // 屏障生成配置
 struct BarrierGenerationConfig
 {
-    bool enable_barrier_batch_ = false;           // 启用调试输出
-    // 调试选项
-    bool enable_debug_output = false;           // 启用调试输出
-    bool validate_barrier_correctness = true;   // 验证屏障正确性
     
-    // 性能调优
-    uint32_t max_barriers_per_batch = 16;      // 每批最大屏障数
-    float barrier_cost_threshold = 2.5f;       // 屏障成本阈值（单位：微秒）
-    bool enable_split_barriers = true;         // 启用分离屏障优化
 };
 
 // 屏障生成Phase（整合SSIS和内存别名结果）
@@ -93,24 +88,18 @@ public:
         const BarrierGenerationConfig& config = {});
     ~BarrierGenerationPhase() override = default;
 
-    // IRenderGraphPhase 接口
     void on_execute(RenderGraph* graph, RenderGraphFrameExecutor* executor, RenderGraphProfiler* profiler) SKR_NOEXCEPT override;
 
-    // 查询接口
     const BarrierGenerationResult& get_result() const { return barrier_result_; }
-    
-    // 主要查询接口
     const StackVector<BarrierBatch>& get_pass_barrier_batches(PassNode* pass) const;
     
-    // 屏障统计
     uint32_t get_total_barriers() const;
     uint32_t get_total_batches() const;
     float get_estimated_barrier_cost() const { return barrier_result_.estimated_barrier_cost; }
     uint32_t get_optimized_barriers_count() const { return barrier_result_.optimized_away_barriers; }
+    BarrierBatch& get_or_create_barrier_batch(PassNode* pass, EBarrierType batch_type) SKR_NOEXCEPT;
     
-    // 调试接口
     void dump_barrier_analysis() const SKR_NOEXCEPT;
-    void validate_barrier_correctness() const SKR_NOEXCEPT;
 
 private:
     // 核心屏障生成算法
@@ -120,32 +109,14 @@ private:
     void generate_resource_transition_barriers(RenderGraph* graph) SKR_NOEXCEPT;
     void batch_barriers() SKR_NOEXCEPT;
     
-    // 辅助方法
-    float estimate_barrier_cost(const GPUBarrier& barrier) const SKR_NOEXCEPT;
-    void calculate_barrier_statistics() SKR_NOEXCEPT;
-    
     // 屏障创建辅助
     GPUBarrier create_cross_queue_barrier(const CrossQueueSyncPoint& sync_point) const SKR_NOEXCEPT;
     GPUBarrier create_aliasing_barrier(const MemoryAliasTransition& transition) const SKR_NOEXCEPT;
-    
-    // 队列能力检测
-    bool is_state_transition_supported_on_queue(uint32_t queue_index, ECGPUResourceState before_state, ECGPUResourceState after_state) const SKR_NOEXCEPT;
-    bool can_use_split_barriers(uint32_t transmitting_queue, uint32_t receiving_queue, ECGPUResourceState before_state, ECGPUResourceState after_state) const SKR_NOEXCEPT;
     
     // 状态转换计算
     ECGPUResourceState calculate_combined_read_state(const StackVector<ECGPUResourceState>& read_states) const SKR_NOEXCEPT;
     ECGPUResourceState get_resource_state_for_usage(ResourceNode* resource, PassNode* pass, bool is_write) const SKR_NOEXCEPT;
     
-    // 辅助方法
-    bool are_passes_adjacent_or_synchronized(PassNode* source_pass, PassNode* target_pass) const SKR_NOEXCEPT;
-    
-    // 屏障生成方法
-    void generate_normal_transition(ResourceNode* resource, ECGPUResourceState before_state, ECGPUResourceState after_state, PassNode* source_pass, PassNode* target_pass) SKR_NOEXCEPT;
-    void generate_split_barrier(ResourceNode* resource, ECGPUResourceState before_state, ECGPUResourceState after_state, PassNode* source_pass, PassNode* target_pass) SKR_NOEXCEPT;
-    
-    // 辅助函数
-    BarrierBatch& get_or_create_barrier_batch(PassNode* pass, EBarrierType batch_type) SKR_NOEXCEPT;
-
 private:
     // 配置
     BarrierGenerationConfig config_;

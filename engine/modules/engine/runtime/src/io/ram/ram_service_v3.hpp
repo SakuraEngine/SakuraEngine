@@ -2,7 +2,7 @@
 #include "ram_batch.hpp"
 #include "ram_request.hpp"
 #include "ram_buffer.hpp"
-#include "SkrRT/goap/planner.hpp"
+#include "SkrRuntime/goap/planner.hpp"
 #include "SkrBase/containers/lru/lru.hpp"
 
 namespace skr {

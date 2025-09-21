@@ -1,4 +1,4 @@
-#include "SkrRT/ecs/world.hpp"
+#include "SkrRuntime/ecs/world.hpp"
 
 namespace skr::ecs
 {
@@ -67,12 +67,12 @@ sugoi_query_t* AccessBuilder::create_query(sugoi_storage_t* storage) SKR_NOEXCEP
             meta_filter.all_meta.length = meta_entities.size();
         }
         /*
-		if (none_meta.size())
-		{
-			meta_filter.none_meta.data = none_meta.data();
-			meta_filter.none_meta.length = none_meta.size();
-		}
-		*/
+        if (none_meta.size())
+        {
+            meta_filter.none_meta.data = none_meta.data();
+            meta_filter.none_meta.length = none_meta.size();
+        }
+        */
         sugoiQ_set_meta(q, &meta_filter);
     }
     return q;
@@ -129,8 +129,7 @@ AccessBuilder& AccessBuilder::_add_has_filter(TypeIndex type, bool write)
         types.add(type);
         all.add(type);
         ops.add({
-            .phase = -1,
-            .readonly = !write
+            .phase = -1, .readonly = !write
             // seems these two attributes should be deprecated
             // .atomic = (mode == EAccessMode::Atomic),
             // .randomAccess = (mode == EAccessMode::Random) ? SOS_UNSEQ : SOS_SEQ
@@ -269,17 +268,12 @@ QueryBuilderResult QueryBuilder::commit() SKR_NOEXCEPT
 
 namespace skr
 {
-
-bool BinSerde<ecs::ECSWorld>::read(SBinaryReader* r, skr::ecs::ECSWorld& world)
+void Serialize<ecs::ECSWorld>::read(ArchiveRead& r, skr::ecs::ECSWorld& world)
 {
-    sugoiS_deserialize(world.storage, r);
-    return true;
+    sugoiS_deserialize(world.storage, &r);
 }
-
-bool BinSerde<ecs::ECSWorld>::write(SBinaryWriter* w, const skr::ecs::ECSWorld& world)
+void Serialize<ecs::ECSWorld>::write(ArchiveWrite& w, const skr::ecs::ECSWorld& world)
 {
-    sugoiS_serialize(world.storage, w);
-    return true;
+    sugoiS_serialize(world.storage, &w);
 }
-
 } // namespace skr

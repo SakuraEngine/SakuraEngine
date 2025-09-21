@@ -169,19 +169,19 @@ const bool PassNode::after(const PassNode* other) const
     return _;
 }
 
-skr::span<TextureReadEdge*> PassNode::tex_read_edges()
+skr::Span<TextureReadEdge*> PassNode::tex_read_edges()
 {
-    return skr::span<TextureReadEdge*>(in_texture_edges.data(), in_texture_edges.size());
+    return skr::Span<TextureReadEdge*>(in_texture_edges.data(), in_texture_edges.size());
 }
 
-skr::span<TextureRenderEdge*> PassNode::tex_write_edges()
+skr::Span<TextureRenderEdge*> PassNode::tex_write_edges()
 {
-    return skr::span<TextureRenderEdge*>(out_texture_edges.data(), out_texture_edges.size());
+    return skr::Span<TextureRenderEdge*>(out_texture_edges.data(), out_texture_edges.size());
 }
 
-skr::span<TextureReadWriteEdge*> PassNode::tex_readwrite_edges()
+skr::Span<TextureReadWriteEdge*> PassNode::tex_readwrite_edges()
 {
-    return skr::span<TextureReadWriteEdge*>(inout_texture_edges.data(), inout_texture_edges.size());
+    return skr::Span<TextureReadWriteEdge*>(inout_texture_edges.data(), inout_texture_edges.size());
 }
 
 void PassNode::foreach_textures(skr::stl_function<void(TextureNode*, TextureEdge*)> f)
@@ -194,19 +194,19 @@ void PassNode::foreach_textures(skr::stl_function<void(TextureNode*, TextureEdge
         f(e->get_texture_node(), e);
 }
 
-skr::span<BufferReadEdge*> PassNode::buf_read_edges()
+skr::Span<BufferReadEdge*> PassNode::buf_read_edges()
 {
-    return skr::span<BufferReadEdge*>(in_buffer_edges.data(), in_buffer_edges.size());
+    return skr::Span<BufferReadEdge*>(in_buffer_edges.data(), in_buffer_edges.size());
 }
 
-skr::span<BufferReadWriteEdge*> PassNode::buf_readwrite_edges()
+skr::Span<BufferReadWriteEdge*> PassNode::buf_readwrite_edges()
 {
-    return skr::span<BufferReadWriteEdge*>(out_buffer_edges.data(), out_buffer_edges.size());
+    return skr::Span<BufferReadWriteEdge*>(out_buffer_edges.data(), out_buffer_edges.size());
 }
 
-skr::span<PipelineBufferEdge*> PassNode::buf_ppl_edges()
+skr::Span<PipelineBufferEdge*> PassNode::buf_ppl_edges()
 {
-    return skr::span<PipelineBufferEdge*>(ppl_buffer_edges.data(), ppl_buffer_edges.size());
+    return skr::Span<PipelineBufferEdge*>(ppl_buffer_edges.data(), ppl_buffer_edges.size());
 }
 
 void PassNode::foreach_buffers(skr::stl_function<void(BufferNode*, BufferEdge*)> f)
@@ -219,9 +219,9 @@ void PassNode::foreach_buffers(skr::stl_function<void(BufferNode*, BufferEdge*)>
         f(e->get_buffer_node(), e);
 }
 
-skr::span<AccelerationStructureReadEdge*> PassNode::acceleration_structure_read_edges()
+skr::Span<AccelerationStructureReadEdge*> PassNode::acceleration_structure_read_edges()
 {
-    return skr::span<AccelerationStructureReadEdge*>(in_acceleration_structure_edges.data(), in_acceleration_structure_edges.size());
+    return skr::Span<AccelerationStructureReadEdge*>(in_acceleration_structure_edges.data(), in_acceleration_structure_edges.size());
 }
 
 void PassNode::foreach_acceleration_structures(skr::stl_function<void(AccelerationStructureNode*, AccelerationStructureEdge*)> f)

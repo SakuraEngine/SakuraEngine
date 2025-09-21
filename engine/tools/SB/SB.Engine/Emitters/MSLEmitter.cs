@@ -11,7 +11,7 @@ namespace SB
         public override IArtifact? PerFileTask(Target Target, FileList FileList, FileOptions? Options, string SourceFile)
         {
             var MetalFileList = FileList as MetalFileList;
-            var OutputDirectory = Path.Combine(Engine.BuildPath, ShaderOutputDirectories[Target.Name]);
+            var OutputDirectory = Path.Combine(BuildDirs.BuildDir, ShaderOutputDirectories[Target.Name]);
             return CompileMetal(Target, SourceFile, MetalFileList!.Entry, OutputDirectory);
         }
 
@@ -30,7 +30,7 @@ namespace SB
             Directory.CreateDirectory(OutputDirectory);
 
             // Compile to AIR (Apple Intermediate Representation)
-            bool Changed = Engine.ShaderCompileDepend.OnChanged(Target.Name, SourceFile, "MSL.AIR", (Depend depend) => {
+            bool Changed = EngineDepends.ShaderCompile.OnChanged(Target.Name, SourceFile, "MSL.AIR", (Depend depend) => {
                 var AirFile = Path.Combine(OutputDirectory, AppendEntryInArtifactPath ? $"{MetalBaseName}.{Entry}.air" : $"{MetalBaseName}.air");
                 
                 // Determine Metal standard version based on macOS version
@@ -56,7 +56,7 @@ namespace SB
             }, new string[] { SourceFile }, null);
 
             // Link AIR to create Metal library
-            Changed |= Engine.ShaderCompileDepend.OnChanged(Target.Name, SourceFile, "MSL.METALLIB", (Depend depend) => {
+            Changed |= EngineDepends.ShaderCompile.OnChanged(Target.Name, SourceFile, "MSL.METALLIB", (Depend depend) => {
                 var AirFile = Path.Combine(OutputDirectory, AppendEntryInArtifactPath ? $"{MetalBaseName}.{Entry}.air" : $"{MetalBaseName}.air");
                 var MetallibFile = Path.Combine(OutputDirectory, AppendEntryInArtifactPath ? $"{MetalBaseName}.{Entry}.metallib" : $"{MetalBaseName}.metallib");
                 
@@ -138,7 +138,7 @@ namespace SB
                 throw new TaskFatalError("Xcode command line tools not found!", "Please install Xcode and run 'xcode-select --install'");
             }
 
-            Directory.CreateDirectory(Path.Combine(Engine.BuildPath, "resources/shaders"));
+            Directory.CreateDirectory(Path.Combine(BuildDirs.BuildDir, "resources/shaders"));
         }
     }
 }

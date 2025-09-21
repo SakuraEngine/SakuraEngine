@@ -1,7 +1,7 @@
 #pragma once
-#include "SkrRT/config.h"
 #include "SkrBase/config.h"
 #include "SkrCore/blob.hpp"
+#include "SkrRuntime/config.h"
 
 SKR_DECLARE_TYPE_ID_FWD(skr, IImageInterface, skr_image_interface)
 SKR_DECLARE_TYPE_ID_FWD(skr, IImageEncoder, skr_image_encoder)
@@ -20,6 +20,7 @@ typedef enum EImageCoderFormat
     IMAGE_CODER_FORMAT_TGA           = 7,
     IMAGE_CODER_FORMAT_HDR           = 8,
     IMAGE_CODER_FORMAT_TIFF          = 9,
+    IMAGE_CODER_FORMAT_DDS           = 10,
 
     IMAGE_CODER_FORMAT_COUNT,
     IMAGE_CODER_FORMAT_MAX_ENUM_BIT = 0x7FFFFFFF

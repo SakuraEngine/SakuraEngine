@@ -1,5 +1,5 @@
-#include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/resource/resource_header.hpp"
+#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_header.hpp"
 #include "SkrBase/misc/debug.h"
 #include "SkrRTTR/type_registry.hpp"
 #include "SkrRTTR/type.hpp"
@@ -8,30 +8,38 @@
 
 namespace skr
 {
-
-bool ResourceFactory::Deserialize(SResourceRecord* record, SBinaryReader* reader)
+bool ResourceFactory::Deserialize(SResourceRecord* record, skr::ArchiveRead* reader)
 {
     if (auto type = skr::get_type_from_guid(record->header.type))
     {
-        auto p_obj = sakura_malloc_aligned(type->size(), type->alignment());
-        // find & call ctor
+        // allocate memory
+        void* p_obj = type->alloc();
+
+        // call ctor
         {
-            auto ctor_data = type->find_default_ctor();
-            ctor_data.invoke(p_obj);
+            auto found_ctor = type->find_default_ctor();
+            if (found_ctor.is_valid())
+                found_ctor.invoke(p_obj);
         }
+
+        // read
         {
-            using ReadBinProc = bool(void* o, void* r);
-            auto read_bin_data = type->find_extern_method_t<ReadBinProc>(
-                skr::SkrCoreExternMethods::ReadBin,
-                ETypeSignatureCompareFlag::Strict);
-            if (!read_bin_data.invoke(p_obj, reader))
+            auto found_serde_read = type->find_serde_read();
+            if (found_serde_read.is_valid())
             {
-                // TODO: CALL DTOR IF FAILED
-                SKR_UNIMPLEMENTED_FUNCTION();
-                sakura_free_aligned(p_obj, type->alignment());
-                p_obj = nullptr;
+                found_serde_read.invoke(*reader, p_obj);
             }
         }
+
+        // destroy if failed
+        if (reader->is_failed())
+        {
+            auto dtor = type->dtor_invoker();
+            if (dtor)
+                dtor(p_obj);
+            type->free(p_obj);
+        }
+
         record->resource = p_obj;
         return true;
     }

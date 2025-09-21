@@ -1,8 +1,8 @@
 #include "cpp_style.hpp"
 #include "SkrTask/parallel_for.hpp"
-#include "SkrRT/ecs/world.hpp"
-#include "SkrRT/ecs/query.hpp"
-#include "SkrRT/sugoi/storage.hpp"
+#include "SkrRuntime/ecs/world.hpp"
+#include "SkrRuntime/ecs/query.hpp"
+#include "SkrRuntime/sugoi/storage.hpp"
 
 struct AllocateEntites
 {

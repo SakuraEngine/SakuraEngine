@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/io/io.h"
+#include "SkrRuntime/io/io.h"
 #include "../components/component.hpp"
 
 #include "SkrProfile/profile.h"
@@ -30,7 +30,7 @@ typedef enum SkrAsyncIOFinishStep
 template <>
 struct CID<struct IOStatusComponent> 
 {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct SKR_RUNTIME_API IOStatusComponent : public IORequestComponent
 {
@@ -127,7 +127,7 @@ protected:
     void* finish_callback_datas[SKR_IO_FINISH_POINT_COUNT];
 };
 
-constexpr skr_guid_t CID<struct IOStatusComponent>::Get()
+constexpr GUID CID<struct IOStatusComponent>::Get()
 {
     using namespace skr::literals;
     return u8"3db75617-8027-464b-b241-e4e59f83fd61"_guid;

@@ -764,7 +764,6 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     CGPUAdapter_Vulkan* A = (CGPUAdapter_Vulkan*)device->adapter;
 
     bool owns_image = false;
-    bool is_allocation_dedicated = false;
     bool can_alias_alloc = false;
     bool is_imported = false;
 
@@ -866,8 +865,10 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
         else
         {
             // Allocate texture memory
-            if (desc->flags & CGPU_TEXTURE_FLAG_DEDICATED_BIT)
+            if (desc->flags & CGPU_TEXTURE_FLAG_HEAP_DEDICATED_BIT)
                 mem_reqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+            if (desc->flags & CGPU_TEXTURE_FLAG_DRIVER_DEDICATED_BIT)
+                mem_reqs.flags &= ~VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
             mem_reqs.usage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
             
             // Check if texture should be allocated from a memory pool
@@ -920,7 +921,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             VmaAllocationInfo alloc_info = { 0 };
             if (!is_imported && isSinglePlane)
             {
-                if (!desc->is_restrict_dedicated && !is_imported && !(desc->flags & CGPU_TEXTURE_FLAG_EXPORT_BIT))
+                if (!(desc->flags & CGPU_TEXTURE_FLAG_DRIVER_DEDICATED_BIT) && !is_imported && !(desc->flags & CGPU_TEXTURE_FLAG_EXPORT_BIT))
                 {
                     mem_reqs.flags |= VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
                 }
@@ -937,7 +938,6 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
             if (win32Name != CGPU_NULLPTR) 
                 cgpu_free(win32Name);
 #endif
-            is_allocation_dedicated = mem_reqs.flags & VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
             can_alias_alloc = mem_reqs.flags & VMA_ALLOCATION_CREATE_CAN_ALIAS_BIT;
         }
     }
@@ -988,8 +988,6 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     T->pVkPackedMappings = pVkPackedMappings;
     info->owns_image = owns_image;
     info->aspect_mask = aspect_mask;
-    info->is_allocation_dedicated = is_allocation_dedicated;
-    info->is_restrict_dedicated = desc->is_restrict_dedicated;
     info->is_aliasing = (desc->flags & CGPU_TEXTURE_FLAG_ALIASING_RESOURCE);
     info->can_alias = can_alias_alloc || info->is_aliasing;
     if (pVkDeviceMemory) T->pVkDeviceMemory = pVkDeviceMemory;
@@ -1000,7 +998,7 @@ CGPUTextureId cgpu_create_texture_vulkan(CGPUDeviceId device, const struct CGPUT
     info->depth = desc->depth;
     info->mip_levels = desc->mip_levels;
     info->is_cube = cubemapRequired;
-    info->array_size_minus_one = arraySize - 1;
+    info->array_size = arraySize;
     info->format = desc->format;
     info->is_imported = is_imported;
     info->is_tiled = (desc->flags & CGPU_TEXTURE_FLAG_TILED_RESOURCE) ? 1 : 0;
@@ -1057,8 +1055,8 @@ CGPUTileMapping_Vulkan* VkUtil_TileMappingAt(CGPUTileTextureSubresourceMapping_V
 
 CGPUTileTextureSubresourceMapping_Vulkan* VkUtil_GetSubresTileMappings(CGPUTexture_Vulkan* T, uint32_t mip_level, uint32_t array_index)
 {
-    SKR_ASSERT(mip_level < T->super.info->mip_levels && array_index < T->super.info->array_size_minus_one + 1);
-    return T->pVkTileMappings + (mip_level * (T->super.info->array_size_minus_one + 1) + array_index);
+    SKR_ASSERT(mip_level < T->super.info->mip_levels && array_index < T->super.info->array_size);
+    return T->pVkTileMappings + (mip_level * (T->super.info->array_size) + array_index);
 }
 
 void VkUtil_UnmapTileMappingAt(CGPUTexture_Vulkan* T, CGPUTileTextureSubresourceMapping_Vulkan* subres, uint32_t x, uint32_t y, uint32_t z)
@@ -1541,8 +1539,7 @@ bool cgpu_try_bind_aliasing_texture_vulkan(CGPUDeviceId device, const struct CGP
 
         cgpu_assert(AliasingInfo->is_aliasing && "aliasing texture need to be created as aliasing!");
         if (Aliased->pVkImage != VK_NULL_HANDLE && Aliased->pVkAllocation != VK_NULL_HANDLE &&
-            Aliasing->pVkImage != VK_NULL_HANDLE &&
-            !AliasedInfo->is_restrict_dedicated && AliasingInfo->is_aliasing)
+            Aliasing->pVkImage != VK_NULL_HANDLE && AliasingInfo->is_aliasing)
         {
             VkMemoryRequirements aliasingMemReq;
             VkMemoryRequirements aliasedMemReq;

@@ -1,11 +1,11 @@
 #include "SkrContainers/hashmap.hpp"
 #include "SkrCore/memory/memory.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/resource/resource_handle.h"
+#include "SkrRuntime/resource/resource_handle.h"
 
 #include "SkrCore/log.h"
 #include "SkrCore/platform/vfs.h"
-#include "SkrRT/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/sugoi.h"
 
 #include "SkrLua/skr_lua.h"
 #include "SkrLua/bind.hpp"
@@ -295,19 +295,19 @@ void bind_skr_guid(lua_State* L)
 {
     luaL_Reg metamethods[] = {
         { "__tostring", +[](lua_State* L) -> int {
-             auto guid = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
+             auto guid = (GUID*)luaL_checkudata(L, 1, "GUID");
              lua_pushstring(L, skr::format(u8"{}", *guid).c_str());
              return 1;
          } },
         { "__eq", +[](lua_State* L) -> int {
-             auto guid1 = (skr_guid_t*)luaL_checkudata(L, 1, "skr_guid_t");
-             auto guid2 = (skr_guid_t*)luaL_checkudata(L, 2, "skr_guid_t");
+             auto guid1 = (GUID*)luaL_checkudata(L, 1, "GUID");
+             auto guid2 = (GUID*)luaL_checkudata(L, 2, "GUID");
              lua_pushboolean(L, *guid1 == *guid2);
              return 1;
          } },
         { nullptr, nullptr }
     };
-    luaL_newmetatable(L, "skr_guid_t");
+    luaL_newmetatable(L, "GUID");
     luaL_register(L, nullptr, metamethods);
     lua_pop(L, 1);
 }
@@ -350,9 +350,9 @@ void bind_skr_resource_handle(lua_State* L)
     // resource constructor
     lua_pushcfunction(
     L, +[](lua_State* L) -> int {
-        if (luaL_testudata(L, 1, "skr_guid_t"))
+        if (luaL_testudata(L, 1, "GUID"))
         {
-            const skr_guid_t*      guid     = skr::lua::check_guid(L, 1);
+            const GUID*      guid     = skr::lua::check_guid(L, 1);
             SResourceHandle* resource = (SResourceHandle*)lua_newuserdatadtor(L, sizeof(SResourceHandle), dtor_resource_handle);
             new (resource) SResourceHandle(*guid);
             luaL_setmetatable(L, "SResourceHandle");
@@ -362,8 +362,7 @@ void bind_skr_resource_handle(lua_State* L)
         {
             auto                   str      = (const char8_t*)lua_tostring(L, 1);
             SResourceHandle* resource = (SResourceHandle*)lua_newuserdatadtor(L, sizeof(SResourceHandle), dtor_resource_handle);
-            skr_guid_t guid;
-            skr::guid_from_sv(skr::StringView(str), guid);
+            GUID guid = *GUID::DecodeAuto(str);
             new (resource) SResourceHandle(guid);
             luaL_setmetatable(L, "SResourceHandle");
             return 1;
@@ -563,21 +562,21 @@ void bind_skr_log(lua_State* L)
 
 namespace skr::lua
 {
-int push_guid(lua_State* L, const skr_guid_t* guid)
+int push_guid(lua_State* L, const GUID* guid)
 {
-    auto ud = (skr_guid_t*)lua_newuserdata(L, sizeof(skr_guid_t));
+    auto ud = (GUID*)lua_newuserdata(L, sizeof(GUID));
     *ud     = *guid;
-    luaL_getmetatable(L, "skr_guid_t");
+    luaL_getmetatable(L, "GUID");
     lua_setmetatable(L, -2);
     return 1;
 }
 
-const skr_guid_t* check_guid(lua_State* L, int index)
+const GUID* check_guid(lua_State* L, int index)
 {
-    return (skr_guid_t*)luaL_checkudata(L, index, "skr_guid_t");
+    return (GUID*)luaL_checkudata(L, index, "GUID");
 }
 
-const skr_guid_t* opt_guid(lua_State* L, int index, const skr_guid_t* def)
+const GUID* opt_guid(lua_State* L, int index, const GUID* def)
 {
     if (lua_isnoneornil(L, index))
         return def;

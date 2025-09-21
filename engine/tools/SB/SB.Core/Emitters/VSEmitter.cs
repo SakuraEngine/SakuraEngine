@@ -28,35 +28,37 @@ namespace SB
     public class VSEmitter : TaskEmitter
     {
         #region Constants
-        
+
         // XML Namespaces and GUIDs
         private const string VS_NAMESPACE = "http://schemas.microsoft.com/developer/msbuild/2003";
         private const string CPP_PROJECT_GUID = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
         private const string SOLUTION_FOLDER_GUID = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
-        
+
         // Build Configurations
         private static readonly string[] Configurations = { "Debug", "Release" };
         private static readonly string[] Platforms = { "x64", "Win32" };
-        
+
         // File Extensions
         private static readonly string[] SourceExtensions = { ".cpp", ".cc", ".c", ".m", ".mm" };
         private static readonly string[] HeaderExtensions = { ".h", ".hpp", ".hxx", ".inl", ".inc" };
-        
+
         // Compiler Settings
         private static readonly string[] CompilerSettingKeys = { "CppVersion", "WarningLevel", "OptimizationLevel", "RTTI", "Exception" };
-        
+
         #endregion
 
         public VSEmitter(IToolchain Toolchain) => this.Toolchain = Toolchain;
 
-        public static string OutputDirectory { get; set; } = ".sb/VisualStudio";
         public static string RootDirectory { get; set; } = "./";
         public static int SolutionFolderDepth { get; set; } = 2;
 
-        public override bool EnableEmitter(Target Target) => 
-            Target.HasFilesOf<CppFileList>() || 
-            Target.HasFilesOf<CFileList>() || 
-            Target.HasFilesOf<ObjCppFileList>() || 
+        public static string? OutputDirectory { get; set; }
+
+
+        public override bool EnableEmitter(Target Target) =>
+            Target.HasFilesOf<CppFileList>() ||
+            Target.HasFilesOf<CFileList>() ||
+            Target.HasFilesOf<ObjCppFileList>() ||
             Target.HasFilesOf<ObjCFileList>();
 
         public override bool EmitTargetTask(Target Target) => true;
@@ -65,7 +67,7 @@ namespace SB
         {
             // Create output directory structure
             var relativeTargetPath = Path.GetRelativePath(RootDirectory, Target.Directory);
-            var projectOutputDir = Path.Combine(OutputDirectory, relativeTargetPath);
+            var projectOutputDir = Path.Combine(OutputDirectory!, relativeTargetPath);
             Directory.CreateDirectory(projectOutputDir);
 
             // Collect all source files and generate compile arguments
@@ -85,7 +87,7 @@ namespace SB
 
             // Extract compile arguments using ArgumentDriver
             ExtractCompileArguments(Target, projectInfo);
-            
+
             // Scan include directories for header files
             ScanIncludeDirectories(Target, projectInfo);
 
@@ -104,12 +106,12 @@ namespace SB
         {
             var fileList = Target.FileList<T>();
             if (fileList == null) return;
-            
+
             foreach (var file in fileList.Files)
             {
                 var ext = Path.GetExtension(file).ToLower();
                 var fullPath = GetAbsolutePath(file, Target.Directory);
-                
+
                 if (SourceExtensions.Contains(ext))
                     projectInfo.SourceFiles.Add(fullPath);
                 else if (HeaderExtensions.Contains(ext))
@@ -124,12 +126,12 @@ namespace SB
                 .Select(path => Path.IsPathFullyQualified(path) ? path : Path.GetFullPath(Path.Combine(targetDir, path)))
                 .Where(path => IsSubdirectory(targetDir, path))
                 .ToList();
-            
+
             // Create a normalized set of existing headers to avoid duplicates
             var normalizedExistingHeaders = new HashSet<string>(
                 projectInfo.HeaderFiles.Select(h => Path.GetFullPath(h).ToLowerInvariant()),
                 StringComparer.OrdinalIgnoreCase);
-            
+
             // Scan each relevant include directory for header files
             foreach (var includeDir in relevantIncludes)
             {
@@ -139,7 +141,7 @@ namespace SB
                     {
                         var headers = Directory.GetFiles(includeDir, "*.*", SearchOption.AllDirectories)
                             .Where(file => HeaderExtensions.Contains(Path.GetExtension(file).ToLower()));
-                        
+
                         foreach (var header in headers)
                         {
                             var normalizedPath = Path.GetFullPath(header).ToLowerInvariant();
@@ -157,7 +159,7 @@ namespace SB
                 }
             }
         }
-        
+
         private void ExtractCompileArguments(Target Target, VSProjectInfo projectInfo)
         {
             // Create ArgumentDriver to extract compile settings
@@ -186,7 +188,7 @@ namespace SB
         private void GenerateVcxproj(Target Target, VSProjectInfo projectInfo)
         {
             var ns = XNamespace.Get(VS_NAMESPACE);
-            
+
             var project = new XElement(ns + "Project",
                 new XAttribute("DefaultTargets", "Build"),
                 new XAttribute("ToolsVersion", "15.0"));
@@ -212,7 +214,9 @@ namespace SB
                     ("ConfigurationType", "Makefile"),
                     ("UseDebugLibraries", config == "Debug" ? "true" : "false"),
                     ("PlatformToolset", "v143"),
-                    ("CharacterSet", "Unicode")
+                    ("CharacterSet", "Unicode"),
+                    // 确保项目总是被认为是过期的，需要重新构建
+                    ("BuildInParallel", "false")
                 }, "Configuration"));
             });
 
@@ -242,7 +246,23 @@ namespace SB
                             new XAttribute("Include", GetFileProjectPath(file, projectInfo))))));
             }
 
+            // 注意：不需要添加 None 项，因为 ClCompile 和 ClInclude 项已经足够让 Visual Studio 跟踪依赖关系
+            // Visual Studio 会根据这些文件的修改时间来决定是否需要重新构建
+
             project.Add(CreateImport(ns, @"$(VCTargetsPath)\Microsoft.Cpp.targets"));
+
+            // 添加自定义 MSBuild target 来强制 Rider 每次都执行构建
+            project.Add(new XElement(ns + "Target",
+                new XAttribute("Name", "AlwaysBuild"),
+                new XAttribute("BeforeTargets", "Build"),
+                new XElement(ns + "Message",
+                    new XAttribute("Text", "Forcing build check for Rider compatibility"),
+                    new XAttribute("Importance", "low")),
+                // 创建一个虚拟的输出文件，让 MSBuild 认为总是需要重新构建
+                new XElement(ns + "Touch",
+                    new XAttribute("Files", Path.Combine("$(IntDir)", "force_rebuild.timestamp")),
+                    new XAttribute("AlwaysCreate", "true"))));
+
             SaveXmlDocument(project, projectInfo.ProjectPath);
         }
 
@@ -260,11 +280,11 @@ namespace SB
             void CollectAllPaths(string path)
             {
                 if (string.IsNullOrEmpty(path)) return;
-                
+
                 // Normalize to use backslashes for VS
                 path = path.Replace('/', '\\');
                 filters.Add(path);
-                
+
                 // Add parent path
                 var parentPath = Path.GetDirectoryName(path);
                 if (!string.IsNullOrEmpty(parentPath))
@@ -283,7 +303,7 @@ namespace SB
                 var sortedFilters = filters
                     .OrderBy(f => f.Count(c => c == '\\'))
                     .ThenBy(f => f);
-                    
+
                 project.Add(new XElement(ns + "ItemGroup",
                     sortedFilters.Select(filter =>
                         new XElement(ns + "Filter",
@@ -319,7 +339,7 @@ namespace SB
         {
             if (!ProjectInfos.TryGetValue(Target.Name, out var projectInfo))
                 throw new InvalidOperationException($"Project info for target '{Target.Name}' not found.");
-            
+
             var outDir = Path.GetDirectoryName(GetTargetOutputPath(Target));
             ForEachConfiguration((config, platform) =>
             {
@@ -332,7 +352,7 @@ namespace SB
             var projectDir = Path.GetDirectoryName(projectInfo.ProjectPath) ?? "";
             var relativeIncludes = GetRelativeIncludes(projectInfo.IncludePaths, projectDir);
             var forcedIncludes = ExtractForcedIncludes(projectInfo.CompilerFlags);
-            
+
             ForEachConfiguration((config, platform) =>
             {
                 // IntelliSense configuration
@@ -343,9 +363,9 @@ namespace SB
                     intelliSenseProps.Add(("NMakePreprocessorDefinitions", string.Join(";", projectInfo.Defines) + ";$(NMakePreprocessorDefinitions)"));
                 if (forcedIncludes.Any())
                     intelliSenseProps.Add(("NMakeForcedIncludes", string.Join(";", forcedIncludes)));
-                
+
                 project.Add(CreatePropertyGroup(ns, config, platform, intelliSenseProps));
-                
+
                 // ClCompile settings
                 var itemDefGroup = new XElement(ns + "ItemDefinitionGroup", new XAttribute("Condition", $"'$(Configuration)|$(Platform)'=='{config}|{platform}'"));
                 itemDefGroup.Add(CreateClCompileSettings(ns, projectInfo, config, projectDir));
@@ -356,7 +376,7 @@ namespace SB
         private List<string> ExtractForcedIncludes(List<string> compilerFlags)
         {
             var forcedIncludes = new List<string>();
-            
+
             for (int i = 0; i < compilerFlags.Count; i++)
             {
                 var flag = compilerFlags[i];
@@ -380,7 +400,7 @@ namespace SB
                     forcedIncludes.Add(flag.Substring(9).Trim('"'));
                 }
             }
-            
+
             return forcedIncludes;
         }
 
@@ -389,7 +409,7 @@ namespace SB
             var clCompile = new XElement(ns + "ClCompile");
             var relativeIncludes = GetRelativeIncludes(projectInfo.IncludePaths, projectDir);
             var forcedIncludes = ExtractForcedIncludes(projectInfo.CompilerFlags);
-            
+
             if (relativeIncludes.Any())
                 clCompile.Add(new XElement(ns + "AdditionalIncludeDirectories", string.Join(";", relativeIncludes) + ";%(AdditionalIncludeDirectories)"));
             if (projectInfo.Defines.Any())
@@ -401,7 +421,7 @@ namespace SB
                 var relativeForced = forcedIncludes.Select(inc => Path.IsPathFullyQualified(inc) ? GetRelativePath(projectDir, inc) : inc);
                 clCompile.Add(new XElement(ns + "ForcedIncludeFiles", string.Join(";", relativeForced) + ";%(ForcedIncludeFiles)"));
             }
-            
+
             AddCompilerFlagSettings(clCompile, ns, projectInfo.CompilerFlags, config);
             return clCompile;
         }
@@ -441,11 +461,11 @@ namespace SB
             var clCompile = CreateClCompileSettings(ns, projectInfo, "Debug", projectDir);
             clCompile.SetAttributeValue("Include", GetFileProjectPath(file, projectInfo));
             clCompile.Add(new XElement(ns + "ExcludedFromBuild", "true"));
-            
+
             var compileAs = GetCompileAsType(Path.GetExtension(file));
             if (compileAs != null)
                 clCompile.Add(new XElement(ns + "CompileAs", compileAs));
-                
+
             return clCompile;
         }
 
@@ -460,7 +480,9 @@ namespace SB
                 TargetType.Static => ".lib",
                 _ => ""
             };
-            return Path.Combine(Target.GetBinaryPath(), Target.Name + extension);
+            var relativePath = Path.Combine(Target.GetBinaryDir(), Target.Name + extension);
+            // 确保返回绝对路径，这对 Visual Studio 检测文件状态很重要
+            return Path.IsPathFullyQualified(relativePath) ? relativePath : Path.GetFullPath(Path.Combine(RootDirectory, relativePath));
         }
 
         private string MapCppStandard(string version)
@@ -484,7 +506,7 @@ namespace SB
                 foreach (var platform in Platforms)
                     action(config, platform);
         }
-        
+
         private XElement CreatePropertyGroup(XNamespace ns, string config, string platform, IEnumerable<(string key, string value)> properties, string? label = null)
         {
             var group = new XElement(ns + "PropertyGroup", new XAttribute("Condition", $"'$(Configuration)|$(Platform)'=='{config}|{platform}'"));
@@ -494,29 +516,29 @@ namespace SB
                 group.Add(new XElement(ns + key, value));
             return group;
         }
-        
+
         private IEnumerable<string> GetRelativeIncludes(List<string> includePaths, string projectDir)
         {
             return includePaths.Select(inc => Path.IsPathFullyQualified(inc) ? GetRelativePath(projectDir, inc) : inc);
         }
-        
+
         private string GetFileDisplayPath(string filePath, VSProjectInfo projectInfo)
         {
             // Calculate path relative to target directory for display in VS
-            return Path.IsPathFullyQualified(filePath) 
+            return Path.IsPathFullyQualified(filePath)
                 ? Path.GetRelativePath(projectInfo.TargetDirectory, filePath)
                 : filePath;
         }
-        
+
         private string GetFileProjectPath(string filePath, VSProjectInfo projectInfo)
         {
             // Calculate path relative to project file for VS project references
             var projectDir = Path.GetDirectoryName(projectInfo.ProjectPath) ?? "";
-            return Path.IsPathFullyQualified(filePath) 
+            return Path.IsPathFullyQualified(filePath)
                 ? GetRelativePath(projectDir, filePath)
                 : filePath;
         }
-        
+
         private string? GetCompileAsType(string extension)
         {
             return extension.ToLower() switch
@@ -528,22 +550,22 @@ namespace SB
                 _ => null
             };
         }
-        
+
         private string GetTargetFolderPath(Target target)
         {
             // Get relative path from root to target directory
             var relativePath = Path.GetRelativePath(RootDirectory, target.Directory);
-            
+
             // Split path and take up to SolutionFolderDepth levels
             var parts = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                 .Where(p => !string.IsNullOrEmpty(p) && p != ".")
                 .Take(SolutionFolderDepth)
                 .ToArray();
-            
+
             // Return the folder path with backslashes for VS
             return parts.Length > 0 ? string.Join("\\", parts) : "";
         }
-        
+
         private static string GenerateGuid(string name)
         {
             using var md5 = System.Security.Cryptography.MD5.Create();
@@ -554,7 +576,7 @@ namespace SB
         private string GetRelativePath(string basePath, string fullPath)
         {
             var relativePath = GetSafeRelativePath(basePath, fullPath);
-            
+
             // Handle case where paths are on different drives (Windows)
             if (!string.IsNullOrEmpty(basePath) && !string.IsNullOrEmpty(fullPath))
             {
@@ -563,7 +585,7 @@ namespace SB
                 if (Path.GetPathRoot(basePath) != Path.GetPathRoot(fullPath))
                     return fullPath;
             }
-            
+
             // Convert forward slashes to backslashes for consistency
             return relativePath.Replace('/', Path.DirectorySeparatorChar);
         }
@@ -578,28 +600,28 @@ namespace SB
             }
 
             var sb = new StringBuilder();
-            
+
             // Solution header
             WriteSolutionHeader(sb);
 
             // Group projects by folder path and create nested folder structure
             var folderGuids = new Dictionary<string, string>();
             var allFolderPaths = new HashSet<string>();
-            
+
             // Collect all folder paths and their parent paths
             CollectFolderPaths(allFolderPaths);
-            
+
             // Sort paths by depth to ensure parents are created before children
             var sortedPaths = allFolderPaths.OrderBy(p => p.Count(c => c == '\\')).ThenBy(p => p);
-            
+
             // Create solution folders
             foreach (var folderPath in sortedPaths)
             {
                 var folderGuid = GenerateGuid($"SolutionFolder_{folderPath}");
                 folderGuids[folderPath] = folderGuid;
-                
+
                 var folderName = folderPath.Split('\\').Last();
-                
+
                 sb.AppendLine($"Project(\"{SOLUTION_FOLDER_GUID}\") = \"{folderName}\", \"{folderName}\", \"{folderGuid}\"");
                 sb.AppendLine("EndProject");
             }
@@ -609,15 +631,15 @@ namespace SB
             {
                 var name = kvp.Key;
                 var info = kvp.Value;
-                
+
                 var relativePath = GetSafeRelativePath(solutionDir, info.ProjectPath);
-                
+
                 sb.AppendLine($"Project(\"{CPP_PROJECT_GUID}\") = \"{name}\", \"{relativePath}\", \"{info.ProjectGuid}\"");
                 sb.AppendLine("EndProject");
             }
 
             sb.AppendLine("Global");
-            
+
             // Solution configurations
             WriteSolutionConfigurations(sb);
 
@@ -639,10 +661,10 @@ namespace SB
             sb.AppendLine("\tGlobalSection(SolutionProperties) = preSolution");
             sb.AppendLine("\t\tHideSolutionNode = FALSE");
             sb.AppendLine("\tEndGlobalSection");
-            
+
             // Nested projects section - establish parent-child relationships
             sb.AppendLine("\tGlobalSection(NestedProjects) = preSolution");
-            
+
             // Assign projects to their folders
             foreach (var kvp in ProjectInfos)
             {
@@ -652,7 +674,7 @@ namespace SB
                     sb.AppendLine($"\t\t{info.ProjectGuid} = {folderGuid}");
                 }
             }
-            
+
             // Assign child folders to parent folders
             foreach (var folderPath in sortedPaths)
             {
@@ -662,9 +684,9 @@ namespace SB
                     sb.AppendLine($"\t\t{folderGuids[folderPath]} = {parentGuid}");
                 }
             }
-            
+
             sb.AppendLine("\tEndGlobalSection");
-            
+
             sb.AppendLine("EndGlobal");
 
             File.WriteAllText(solutionPath, sb.ToString());
@@ -714,7 +736,7 @@ namespace SB
             {
                 if (string.IsNullOrEmpty(basePath) || string.IsNullOrEmpty(fullPath))
                     return fullPath ?? "";
-                    
+
                 basePath = Path.GetFullPath(basePath);
                 fullPath = Path.GetFullPath(fullPath);
                 return Path.GetRelativePath(basePath, fullPath);
@@ -743,7 +765,7 @@ namespace SB
         {
             var allFlags = new List<string>();
             var flagKeys = new[] { "CppFlags", "CXFlags" }.Concat(CompilerSettingKeys);
-            
+
             foreach (var key in flagKeys)
             {
                 if (calculatedArgs.TryGetValue(key, out var flags))
@@ -751,7 +773,7 @@ namespace SB
                     allFlags.AddRange(flags);
                 }
             }
-            
+
             return allFlags;
         }
 
@@ -806,16 +828,24 @@ namespace SB
 
         private (string, string)[] GetNMakeProperties(Target target, string config, string platform, string outDir)
         {
+            var outputPath = GetTargetOutputPath(target);
+            var buildCommand = $"cd \"{RootDirectory}\" && dotnet run SB build --target={target.Name} --mode={config.ToLower()}";
+
             return new[]
             {
-                ("NMakeBuildCommandLine", $"cd \"{RootDirectory}\" && dotnet run SB build --target={target.Name} --mode={config.ToLower()}"),
-                ("NMakeReBuildCommandLine", $"cd \"{RootDirectory}\" && dotnet run SB clean && dotnet run SB build --target={target.Name} --mode={config.ToLower()}"),
-                ("NMakeCleanCommandLine", $"cd \"{RootDirectory}\" && dotnet run SB clean"),
-                ("NMakeOutput", GetTargetOutputPath(target)),
+                ("NMakeBuildCommandLine", buildCommand),
+                ("NMakeReBuildCommandLine", $"cd \"{RootDirectory}\" && dotnet run SB clean --target={target.Name} && dotnet run SB build --target={target.Name} --mode={config.ToLower()}"),
+                ("NMakeCleanCommandLine", $"cd \"{RootDirectory}\" && dotnet run SB clean --target={target.Name}"),
+                ("NMakeOutput", outputPath),
                 ("OutDir", outDir + "\\"),
                 ("IntDir", $"temp\\{target.Name}\\{config}\\{platform}\\"),
                 ("LocalDebuggerWorkingDirectory", outDir + "\\"),
-                ("DebuggerFlavor", "WindowsLocalDebugger")
+                ("DebuggerFlavor", "WindowsLocalDebugger"),
+                // 关键设置：让 VS 和 Rider 都知道每次都需要检查是否需要构建
+                ("AlwaysCreate", "true"),
+                // 针对 Rider 的特殊设置：强制每次都认为项目过期
+                ("BuildDependsOn", "$(BuildDependsOn);AlwaysBuild"),
+                ("DisableFastUpToDateCheck", "true")
             };
         }
 

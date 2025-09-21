@@ -2,8 +2,9 @@
 #include <SkrBase/misc/integer_tools.hpp>
 #include <SkrContainersDef/skr_allocator.hpp>
 #include <SkrContainersDef/vector.hpp>
-#include <SkrRTTR/rttr_traits.hpp>
+#include <SkrBase/type_info.hpp>
 #include <SkrBase/containers/string/format.hpp>
+#include <SkrContainersDef/string.hpp>
 
 namespace skr
 {
@@ -139,7 +140,7 @@ struct TypeSignatureHelper
     template <typename T>
     inline static const uint8_t* read_buffer(const uint8_t* pos, T& value)
     {
-        memcpy(&value, pos, sizeof(T));
+        memcpy((void*)&value, pos, sizeof(T));
         return pos + sizeof(T);
     }
     inline static bool has_enough_buffer(const uint8_t* pos, const uint8_t* end, ETypeSignatureSignal signal)
@@ -559,7 +560,8 @@ struct TypeSignatureHelper
         const uint8_t* lhs_end,
         const uint8_t*& rhs,
         const uint8_t* rhs_end,
-        ETypeSignatureCompareFlag flag)
+        ETypeSignatureCompareFlag flag
+    )
     {
         SKR_ASSERT(has_enough_buffer(lhs, lhs_end, peek_signal(lhs, lhs_end)));
         SKR_ASSERT(has_enough_buffer(rhs, rhs_end, peek_signal(rhs, rhs_end)));
@@ -714,7 +716,8 @@ struct TypeSignatureHelper
         const uint8_t* lhs_end,
         const uint8_t* rhs,
         const uint8_t* rhs_end,
-        ETypeSignatureCompareFlag flag)
+        ETypeSignatureCompareFlag flag
+    )
     {
         SKR_ASSERT(lhs < lhs_end && rhs < rhs_end && "invalid signature buffer");
 
@@ -749,7 +752,8 @@ struct TypeSignatureHelper
     inline static void decay_signature(
         uint8_t* pos,
         uint8_t* end,
-        ETypeSignatureDecayFlag flag)
+        ETypeSignatureDecayFlag flag
+    )
     {
         uint8_t *read_pos = pos, *write_pos = pos;
         while (read_pos < end)
@@ -946,7 +950,8 @@ struct TypeSignatureView
     }
     inline bool equal(
         const TypeSignatureView& rhs,
-        ETypeSignatureCompareFlag flag = ETypeSignatureCompareFlag::Strict) const
+        ETypeSignatureCompareFlag flag = ETypeSignatureCompareFlag::Strict
+    ) const
     {
         if (is_empty() && rhs.is_empty())
         {
@@ -964,7 +969,8 @@ struct TypeSignatureView
             _data + _size,
             rhs._data,
             rhs._data + rhs._size,
-            flag);
+            flag
+        );
     }
     inline String to_string() const
     {
@@ -1168,7 +1174,7 @@ struct TypeSignatureTraits
     inline static constexpr size_t buffer_size = type_signature_size_v<ETypeSignatureSignal::TypeId>;
     inline static uint8_t* write(uint8_t* pos, uint8_t* end)
     {
-        return TypeSignatureHelper::write_type_id(pos, end, RTTRTraits<T>::get_guid());
+        return TypeSignatureHelper::write_type_id(pos, end, TypeInfo<T>::get_guid());
     }
 };
 
@@ -1428,7 +1434,8 @@ struct TypeSignature : private SkrAllocator
         TypeSignatureHelper::decay_signature(
             data(),
             data() + size(),
-            flag);
+            flag
+        );
     }
 
     // ops
@@ -1629,7 +1636,8 @@ struct TypeSignatureTyped
         TypeSignatureHelper::decay_signature(
             data(),
             data() + size(),
-            flag);
+            flag
+        );
     }
 
 private:

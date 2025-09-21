@@ -1,26 +1,25 @@
 #pragma once
 #include "SkrToolCore/fwd_types.hpp"
-#ifndef __meta__
-    #include "SkrToolCore/cook_system/cooker.generated.h"
-#endif
+#include "SkrToolCore/cook_system/cooker.generated.h"
 
 namespace skd::asset
 {
-sreflect_struct(guid = "ff344604-b522-411c-b9a5-1ec4b5970c02")
-TOOL_CORE_API Cooker
+struct [[sattr(
+    guid = "ff344604-b522-411c-b9a5-1ec4b5970c02"
+)]] TOOL_CORE_API Cooker
 {
     static constexpr uint32_t kDevelopmentVersion = UINT32_MAX;
     virtual ~Cooker() {}
     virtual uint32_t Version() = 0;
-    virtual bool Cook(CookContext * ctx) = 0;
+    virtual bool Cook(CookContext* ctx) = 0;
     CookSystem* system;
 };
 
 TOOL_CORE_API CookSystem* GetCookSystem();
-TOOL_CORE_API void RegisterCookerToSystem(CookSystem* system, bool isDefault, skr_guid_t cooker, skr_guid_t type, Cooker* instance);
+TOOL_CORE_API void RegisterCookerToSystem(CookSystem* system, bool isDefault, skr::GUID cooker, skr::GUID type, Cooker* instance);
 
 template <class T>
-void RegisterCooker(bool isDefault, skr_guid_t cookerGuid, skr_guid_t resGuid)
+void RegisterCooker(bool isDefault, skr::GUID cookerGuid, skr::GUID resGuid)
 {
     static T instance;
     skd::asset::RegisterCookerToSystem(GetCookSystem(), isDefault, cookerGuid, resGuid, &instance);

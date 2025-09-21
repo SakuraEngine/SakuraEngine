@@ -2,7 +2,6 @@
 #include "./../attributes.hxx"
 #include "./../type_traits.hxx"
 #include "./../types/vec.hxx"
-#include "./../numeric/constants.hxx"
 
 template<concepts::arithmetic_vec T>
 [[callop("ASFLOAT")]] extern vec<float, vec_dim_v<T>> asfloat(T v);
@@ -87,9 +86,6 @@ template<concepts::uint_family T>
 
 template<concepts::uint_family T>
 [[callop("POPCOUNT")]] extern T popcount(const T& v);
-
-template<concepts::uint_family T>
-[[callop("REVERSE")]] extern T reverse(const T& v);
 
 template<concepts::float_vec_family T>
 [[callop("ISINF")]] extern vec<bool, vec_dim_v<T>> is_inf(const T& v);
@@ -240,6 +236,9 @@ template<concepts::float_vec_family T>
 template<concepts::float_vec_family T>
 [[callop("NORMALIZE")]] extern T normalize(const T& v);
 
+template<concepts::uint_family T>
+[[callop("REVERSEBITS")]] extern T reversebits(const T& v);
+
 template<concepts::arithmetic_vec T>
 scalar_type<T> reduce_sum(const T& v)
 {
@@ -335,33 +334,3 @@ template <concepts::float_family T>
 
 template<concepts::float_family T>
 constexpr T inverse_smoothstep(T y) { return T(0.5f) - sin(asin(T(1.0f) - T(2.0f) * y) / T(3.0f)); }
-
-inline float abgam(float x) {
-	constexpr float const gam0 = 1.0f / 12.0f;
-	constexpr float const gam1 = 1.0f / 30.0f;
-	constexpr float const gam2 = 53.0f / 210.0f;
-	constexpr float const gam3 = 195.0f / 371.0f;
-	constexpr float const gam4 = 22999.0f / 22737.0f;
-	constexpr float const gam5 = 29944523.0f / 19733142.0f;
-	constexpr float const gam6 = 109535241009.0f / 48264275462.0f;
-
-	return 0.5f * log(2 * pi) - x + (x - 0.5f) * log(x) + gam0 / (x + gam1 / (x + gam2 / (x + gam3 / (x + gam4 / (x + gam5 / (x + gam6 / x))))));
-}
-
-inline float gamma(float x) {
-	float result;
-	result = exp(abgam(x + 5)) / (x * (x + 1) * (x + 2) * (x + 3) * (x + 4));
-	return result;
-}
-
-inline float beta(float m, float n) {
-	return (gamma(m) * gamma(n) / gamma(m + n));
-}
-
-template<typename T>
-auto sum(T v) { return v; }
-
-template<typename T, typename... Args>
-auto sum(T v, Args... args) {
-    return v + sum(args...);
-}

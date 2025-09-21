@@ -1,9 +1,8 @@
 #include "SkrToolCore/cook_system/cook_system.hpp"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrTextureCompiler/texture_sampler_asset.hpp"
-#include "SkrSerde/json_serde.hpp"
 
 namespace skd::asset
 {
@@ -20,10 +19,10 @@ void* TextureSamplerImporter::Import(skr::io::IRAMService* ioService, CookContex
         return nullptr;
     }
     '*/
-    skr::String jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
-    skr::archive::JsonReader jsonVal(jString.view());
+
+    auto reader = skr::ArReadJson::ReadBuffer(blob->get_data(), blob->get_size());
     auto sampler_resource = SkrNew<TextureSamplerResource>();
-    skr::json_read(&jsonVal, *sampler_resource);
+    reader.value(*sampler_resource);
     return sampler_resource;
 }
 

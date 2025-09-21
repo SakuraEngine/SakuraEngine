@@ -27,7 +27,7 @@ void* ProceduralMeshImporter::Import(skr::io::IRAMService* ioService, CookContex
 
     if (!type)
     {
-        SKR_LOG_FATAL(u8"BuiltinMeshImporter: Failed to find type for guid %s", built_in_mesh_tid);
+        SKR_LOG_FMT_FATAL(u8"BuiltinMeshImporter: Failed to find type for guid {}", built_in_mesh_tid);
         return nullptr;
     }
     void* data = sakura_malloc_aligned(type->size(), type->alignment());
@@ -44,7 +44,7 @@ void ProceduralMeshImporter::Destroy(void* resource)
     return;
 }
 
-void SimpleTriangleMesh::generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr_guid_t shuffle_layout_id)
+void SimpleTriangleMesh::generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, GUID shuffle_layout_id)
 {
     // TODO: directly construct on bins, no copy
     skr::Vector<uint8_t> buffer0 = {};
@@ -61,9 +61,9 @@ void SimpleTriangleMesh::generate_resource(skr::MeshResource& out_resource, skr:
         shuffle_layout_name = skr_mesh_resource_query_vertex_layout(shuffle_layout_id, &shuffle_layout);
     }
     uint32_t indices[] = { 0, 1, 2 };
-    skr::Vector<skr_float3_t> c_positions;
-    skr::Vector<skr_float2_t> c_uvs;
-    skr::Vector<skr_float3_t> c_normals;
+    skr::Vector<float3> c_positions;
+    skr::Vector<float2> c_uvs;
+    skr::Vector<float3> c_normals;
     skr::Vector<uint32_t> c_indices;
     c_positions.push_back({ -1.0f, -0.5f, 0.0f });
     c_positions.push_back({ 1.0f, -1.0f, 0.0f });
@@ -84,7 +84,7 @@ void SimpleTriangleMesh::generate_resource(skr::MeshResource& out_resource, skr:
     auto& raw_prim = raw_mesh.primitives.add_default().ref();
     // fill indices
     {
-        raw_prim.index_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_indices.data(), sizeof(c_indices));
+        raw_prim.index_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_indices.data(), sizeof(c_indices));
         raw_prim.index_stream.offset = 0;
         raw_prim.index_stream.count = c_indices.size();
         raw_prim.index_stream.stride = sizeof(uint32_t);
@@ -93,14 +93,14 @@ void SimpleTriangleMesh::generate_resource(skr::MeshResource& out_resource, skr:
     raw_prim.vertex_streams.reserve(2);
     {
         auto& vertex_stream = raw_prim.vertex_streams.add_default().ref();
-        vertex_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_positions.data(), sizeof(c_positions));
+        vertex_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_positions.data(), sizeof(c_positions));
         vertex_stream.offset = 0;
         vertex_stream.count = c_positions.size();
         vertex_stream.stride = sizeof(float) * 3;
         vertex_stream.type = ERawVertexStreamType::POSITION;
 
         auto& texcoord_stream = raw_prim.vertex_streams.add_default().ref();
-        texcoord_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_uvs.data(), sizeof(c_uvs));
+        texcoord_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_uvs.data(), sizeof(c_uvs));
         texcoord_stream.offset = 0;
         texcoord_stream.count = c_uvs.size();
         texcoord_stream.stride = sizeof(float) * 2;
@@ -130,7 +130,7 @@ void SimpleTriangleMesh::generate_resource(skr::MeshResource& out_resource, skr:
     out_bins.add(buffer0);
 }
 
-void SimpleCubeMesh::generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr_guid_t shuffle_layout_id)
+void SimpleCubeMesh::generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, GUID shuffle_layout_id)
 {
     skr::Vector<uint8_t> buffer0 = {};
     out_resource.name = u8"BuiltInSimpleCubeMesh";
@@ -148,9 +148,9 @@ void SimpleCubeMesh::generate_resource(skr::MeshResource& out_resource, skr::Vec
     // clang-format off
     float size = 1.0f;
     float half_size = size * 0.5f;
-    skr::Vector<skr_float3_t> c_positions;
-    skr::Vector<skr_float2_t> c_uvs;
-    skr::Vector<skr_float3_t> c_normals;
+    skr::Vector<float3> c_positions;
+    skr::Vector<float2> c_uvs;
+    skr::Vector<float3> c_normals;
     skr::Vector<uint16_t> c_indices;
     // 8 vertices of a cube
     c_positions.push_back({ -half_size, -half_size, -half_size }); // 0: left-bottom-back
@@ -197,7 +197,7 @@ void SimpleCubeMesh::generate_resource(skr::MeshResource& out_resource, skr::Vec
     auto& raw_prim = raw_mesh.primitives.add_default().ref();
     // fill indices
     {
-        raw_prim.index_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_indices.data(), sizeof(c_indices));
+        raw_prim.index_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_indices.data(), sizeof(c_indices));
         raw_prim.index_stream.offset = 0;
         raw_prim.index_stream.count = c_indices.size();
         raw_prim.index_stream.stride = sizeof(uint16_t);
@@ -207,14 +207,14 @@ void SimpleCubeMesh::generate_resource(skr::MeshResource& out_resource, skr::Vec
         raw_prim.vertex_streams.reserve(2);
 
         auto& vertex_stream = raw_prim.vertex_streams.add_default().ref();
-        vertex_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_positions.data(), sizeof(c_positions));
+        vertex_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_positions.data(), sizeof(c_positions));
         vertex_stream.offset = 0;
         vertex_stream.count = c_positions.size();
         vertex_stream.stride = sizeof(float) * 3;
         vertex_stream.type = ERawVertexStreamType::POSITION;
 
         auto& texcoord_stream = raw_prim.vertex_streams.add_default().ref();
-        texcoord_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_uvs.data(), sizeof(c_uvs));
+        texcoord_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_uvs.data(), sizeof(c_uvs));
         texcoord_stream.offset = 0;
         texcoord_stream.count = c_uvs.size();
         texcoord_stream.stride = sizeof(float) * 2;
@@ -255,11 +255,11 @@ void SimpleGridMesh::configure(const MeshAsset* args)
         y_size = pArgs->y_size;
     }
 }
-void SimpleGridMesh::generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr_guid_t shuffle_layout_id)
+void SimpleGridMesh::generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, GUID shuffle_layout_id)
 {
-    skr::Vector<skr_float3_t> c_positions;
-    skr::Vector<skr_float2_t> c_uvs;
-    skr::Vector<skr_float3_t> c_normals;
+    skr::Vector<float3> c_positions;
+    skr::Vector<float2> c_uvs;
+    skr::Vector<float3> c_normals;
     skr::Vector<uint32_t> c_indices;
     // Calculate total vertices and indices
     int vertices_width = x_segments + 1;
@@ -327,7 +327,7 @@ void SimpleGridMesh::generate_resource(skr::MeshResource& out_resource, skr::Vec
     auto& raw_prim = raw_mesh.primitives.add_default().ref();
     // fill indices
     {
-        raw_prim.index_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_indices.data(), sizeof(c_indices));
+        raw_prim.index_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_indices.data(), sizeof(c_indices));
         raw_prim.index_stream.offset = 0;
         raw_prim.index_stream.count = c_indices.size();
         raw_prim.index_stream.stride = sizeof(uint32_t);
@@ -337,14 +337,14 @@ void SimpleGridMesh::generate_resource(skr::MeshResource& out_resource, skr::Vec
         raw_prim.vertex_streams.reserve(4);
 
         auto& vertex_stream = raw_prim.vertex_streams.add_default().ref();
-        vertex_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_positions.data(), sizeof(c_positions));
+        vertex_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_positions.data(), sizeof(c_positions));
         vertex_stream.offset = 0;
         vertex_stream.count = c_positions.size();
         vertex_stream.stride = sizeof(float) * 3;
         vertex_stream.type = ERawVertexStreamType::POSITION;
 
         auto& texcoord_stream = raw_prim.vertex_streams.add_default().ref();
-        texcoord_stream.buffer_view = skr::span<const uint8_t>((const uint8_t*)c_uvs.data(), sizeof(c_uvs));
+        texcoord_stream.buffer_view = skr::Span<const uint8_t>((const uint8_t*)c_uvs.data(), sizeof(c_uvs));
         texcoord_stream.offset = 0;
         texcoord_stream.count = c_uvs.size();
         texcoord_stream.stride = sizeof(float) * 2;

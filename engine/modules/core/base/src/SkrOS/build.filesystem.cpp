@@ -91,7 +91,7 @@ bool File::read_all_text(const Path& path, skr::String& out_text)
     return true;
 }
 
-bool File::write_all_bytes(const Path& path, skr::span<const uint8_t> data)
+bool File::write_all_bytes(const Path& path, skr::Span<const uint8_t> data)
 {
     File file;
     if (!file.open(path, OpenMode::Write | OpenMode::Create | OpenMode::Truncate))
@@ -103,7 +103,7 @@ bool File::write_all_bytes(const Path& path, skr::span<const uint8_t> data)
 
 bool File::write_all_text(const Path& path, skr::StringView text)
 {
-    skr::span<const uint8_t> data(reinterpret_cast<const uint8_t*>(text.data()), text.size());
+    skr::Span<const uint8_t> data(reinterpret_cast<const uint8_t*>(text.data()), text.size());
     return write_all_bytes(path, data);
 }
 

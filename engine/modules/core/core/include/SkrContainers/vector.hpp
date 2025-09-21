@@ -19,147 +19,67 @@ struct TypeSignatureTraits<::skr::Vector<T>>
 };
 } // namespace skr
 
-// bin serde
-#include "SkrSerde/bin_serde.hpp"
+// serialize
+#include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
-template <typename V>
-struct BinSerde<Vector<V>>
+template <typename Vector>
+struct SerializeSkrVectorImpl
 {
-    inline static bool read(SBinaryReader* r, Vector<V>& v)
+    using DataType = typename Vector::DataType;
+
+    inline static void read(ArchiveRead& r, Vector& v)
     {
-        // read bin
-        uint32_t size;
-        if (!bin_read(r, (size))) return false;
+        SkrZoneScopedN("Serialize<Vector>::read");
+
+        Archive::ArrayScope arr_scope{ r };
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // reserve
+        v.clear();
+        uint64_t arr_size;
+        SKR_FAST_CHECK(r.array_size<uint64_t>(arr_size), );
+        v.reserve(arr_size);
 
         // read content
-        Vector<V> temp;
-        temp.reserve(size);
-        for (uint32_t i = 0; i < size; ++i)
+        for (uint64_t i = 0; i < arr_size; ++i)
         {
-            V value;
-            if (!bin_read(r, value))
-                return false;
-            temp.add(std::move(value));
+            DataType data;
+            SKR_FAST_CHECK(r.value<DataType>(data), );
+            v.add(std::move(data));
         }
-
-        // move to target
-        v = std::move(temp);
-        return true;
     }
-    inline static bool write(SBinaryWriter* r, const Vector<V>& v)
+    inline static void write(ArchiveWrite& w, const Vector& v)
     {
-        // write bin
-        if (!bin_write(r, ((uint32_t)v.size()))) return false;
+        SkrZoneScopedN("Serialize<Vector>::write");
+
+        Archive::ArrayScope arr_scope{ w };
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // write count
+        SKR_FAST_CHECK(w.array_size<uint64_t>((uint64_t)v.size()), );
 
         // write content
-        for (auto& value : v)
+        for (const auto& data : v)
         {
-            if (!bin_write(r, value))
-                return false;
+            SKR_FAST_CHECK(w.value<DataType>(data), );
         }
-        return true;
-    }
-};
-} // namespace skr
-
-// vector bin reader writer
-namespace skr::archive
-{
-struct BinVectorWriter
-{
-    Vector<uint8_t>* buffer;
-
-    bool write(const void* data, size_t size)
-    {
-        buffer->append((uint8_t*)data, size);
-        return true;
-    }
-};
-struct BinVectorWriterBitpacked
-{
-    Vector<uint8_t>* buffer;
-    uint8_t bitOffset = 0;
-    bool write(const void* data, size_t size)
-    {
-        return write_bits(data, size * 8);
-    }
-    bool write_bits(const void* data, size_t bitSize)
-    {
-        uint8_t* dataPtr = (uint8_t*)data;
-        if (bitOffset == 0)
-        {
-            buffer->append(dataPtr, (bitSize + 7) / 8);
-            bitOffset = bitSize % 8;
-            if (bitOffset != 0)
-                buffer->at_last() &= (1 << bitOffset) - 1;
-        }
-        else
-        {
-            buffer->at_last() |= dataPtr[0] << bitOffset;
-            int i = 1;
-            while (bitSize > 8)
-            {
-                buffer->add((dataPtr[i - 1] >> (8 - bitOffset)) | (dataPtr[i] << bitOffset));
-                ++i;
-                bitSize -= 8;
-            }
-            if (bitSize > 0)
-            {
-                auto newBitOffset = bitOffset + bitSize;
-                if (newBitOffset == 8)
-                {
-                    bitOffset = 0;
-                    return true;
-                }
-                else if (newBitOffset > 8)
-                {
-                    buffer->add(dataPtr[i - 1] >> (8 - bitOffset));
-                    newBitOffset = newBitOffset - 8;
-                }
-                buffer->at_last() &= (1 << newBitOffset) - 1;
-                SKR_ASSERT(newBitOffset <= UINT8_MAX);
-                bitOffset = (uint8_t)newBitOffset;
-            }
-        }
-        return true;
     }
 };
 
-}; // namespace skr::archive
-
-// json serde
-#include "SkrSerde/json_serde.hpp"
-namespace skr
+template <typename T, typename Allocator>
+struct Serialize<skr::Vector<T, Allocator>>
+    : public SerializeSkrVectorImpl<skr::Vector<T, Allocator>>
 {
-template <class V>
-struct JsonSerde<skr::Vector<V>>
+};
+template <typename T, uint64_t kCount>
+struct Serialize<skr::FixedVector<T, kCount>>
+    : public SerializeSkrVectorImpl<skr::FixedVector<T, kCount>>
 {
-    inline static bool read(skr::archive::JsonReader* r, skr::Vector<V>& v)
-    {
-        size_t count;
-        SKR_EXPECTED_CHECK(r->StartArray(count), false);
-        v.reserve(count);
-        for (size_t i = 0; i < count; i++)
-        {
-            V value;
-            if (!json_read<V>(r, value))
-                return false;
-            v.emplace(std::move(value));
-        }
-        SKR_EXPECTED_CHECK(r->EndArray(), false);
-        return true;
-    }
-    inline static bool write(skr::archive::JsonWriter* w, const skr::Vector<V>& v)
-    {
-        SKR_EXPECTED_CHECK(w->StartArray(), false);
-        for (auto& value : v)
-        {
-            if (!json_write<V>(w, value))
-                return false;
-        }
-        SKR_EXPECTED_CHECK(w->EndArray(), false);
-        return true;
-    }
+};
+template <typename T, uint64_t kCount, typename Allocator>
+struct Serialize<skr::InlineVector<T, kCount, Allocator>>
+    : public SerializeSkrVectorImpl<skr::InlineVector<T, kCount, Allocator>>
+{
 };
 } // namespace skr

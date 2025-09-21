@@ -2,7 +2,7 @@
 #include "SkrBase/config.h" // IWYU pragma: export
 #include "SkrBase/types.h"  // IWYU pragma: export
 #include "SkrBase/meta.h"   // IWYU pragma: export
-#include "SkrRT/ecs/component.hpp" // IWYU pragma: export
+#include "SkrRuntime/ecs/component.hpp" // IWYU pragma: export
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IVRAMService, skr_io_vram_service);

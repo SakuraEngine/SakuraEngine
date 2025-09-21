@@ -5,7 +5,7 @@
 #include "SkrContainersDef/map.hpp"
 #include "SkrCore/time.h"
 #include "SkrCore/platform/vfs.h"
-#include "SkrRT/ecs/query.hpp"
+#include "SkrRuntime/ecs/query.hpp"
 #include "SkrRenderer/primitive_draw.h"
 #include "SkrRenderer/render_device.h"
 #include "SkrRenderer/render_mesh.h"
@@ -37,7 +37,7 @@ struct SceneRendererImpl : public skr::SceneRenderer
     virtual utils::Camera* get_camera() const override { return mp_camera; }
     virtual CGPURenderPipelineId get_render_pso() const override { return pipeline; }
 
-    void draw_primitives(skr::render_graph::RenderGraph* rg, skr::span<skr_primitive_draw_t> dallcalls) override;
+    void draw_primitives(skr::render_graph::RenderGraph* rg, skr::Span<skr_primitive_draw_t> dallcalls) override;
 
     void prepare_pipeline_settings();
     void prepare_pipeline(skr::RenderDevice* render_device);
@@ -57,7 +57,7 @@ void skr::SceneRenderer::Destroy(skr::SceneRenderer* renderer)
 
 skr::SceneRenderer::~SceneRenderer() {}
 
-void SceneRendererImpl::draw_primitives(skr::render_graph::RenderGraph* rg, skr::span<skr_primitive_draw_t> drawcalls)
+void SceneRendererImpl::draw_primitives(skr::render_graph::RenderGraph* rg, skr::Span<skr_primitive_draw_t> drawcalls)
 {
     for (auto& drawcall : drawcalls)
     {
@@ -126,9 +126,9 @@ void SceneRendererImpl::draw_primitives(skr::render_graph::RenderGraph* rg, skr:
 void SceneRendererImpl::prepare_pipeline_settings()
 {
     // max vertex attributes is 15
-    vertex_layout.attributes[0] = { u8"position", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX }; // per vertex position
-    vertex_layout.attributes[1] = { u8"uv", 2, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[2] = { u8"normal", 3, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX }; // per vertex normal
+    vertex_layout.attributes[0] = { u8"position", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr::float3), CGPU_INPUT_RATE_VERTEX }; // per vertex position
+    vertex_layout.attributes[1] = { u8"uv", 2, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr::float2), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[2] = { u8"normal", 3, CGPU_FORMAT_R32G32B32_SFLOAT, 2, 0, sizeof(skr::float3), CGPU_INPUT_RATE_VERTEX }; // per vertex normal
 
     vertex_layout.attribute_count = 3;
 
@@ -153,11 +153,9 @@ void SceneRendererImpl::prepare_pipeline(skr::RenderDevice* render_device)
     CGPUShaderEntryDescriptor ppl_shaders[2];
     CGPUShaderEntryDescriptor& ppl_vs = ppl_shaders[0];
     ppl_vs.library = vs;
-    ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
     ppl_vs.entry = u8"vs";
     CGPUShaderEntryDescriptor& ppl_fs = ppl_shaders[1];
     ppl_fs.library = fs;
-    ppl_fs.stage = CGPU_SHADER_STAGE_FRAG;
     ppl_fs.entry = u8"fs";
 
     const char8_t* static_sampler_name = u8"color_sampler";

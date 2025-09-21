@@ -1,4 +1,4 @@
-#include "SkrRT/goap/planner.hpp"
+#include "SkrRuntime/goap/planner.hpp"
 #include "SkrCore/log.h"
 #include "SkrCore/crash.h"
 #include "SkrTestFramework/framework.hpp"

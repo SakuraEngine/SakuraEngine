@@ -4,12 +4,12 @@
             "path": "../../",
             "name": "root",
         },
+        // {
+        //     "path": "../../.build/clang-cl/.gens/Windows-X64-debug/",
+        //     "name": "codegen",
+        // },
         {
-            "path": "../../build/.skr/codegen",
-            "name": "codegen",
-        },
-        {
-            "path": "../../tools/SB",
+            "path": "../../engine/tools/SB",
             "name": "sb",
         }
     ],
@@ -34,6 +34,9 @@
         },
         "[peggy]": {
             "editor.tabSize": 2,
+        },
+        "[csharp]": {
+            "editor.formatOnSave": false
         },
         // file associations
         "files.associations": {
@@ -126,7 +129,7 @@
                 "request": "launch",
                 "preLaunchTask": "build_SB_Debug",
                 "console": "integratedTerminal",
-                "program": "${workspaceFolder:root}\\.sb\\SB\\bin\\Debug\\net9.0\\SB",
+                "program": "${workspaceFolder:root}\\build\\.sb\\SB\\bin\\Debug\\net9.0\\SB",
                 "args": [
                     "build"
                 ]
@@ -137,7 +140,7 @@
                 "request": "launch",
                 "preLaunchTask": "build_SB_Release",
                 "console": "integratedTerminal",
-                "program": "${workspaceFolder:root}\\.sb\\SB\\bin\\Release\\net9.0\\SB",
+                "program": "${workspaceFolder:root}\\build\\.sb\\SB\\bin\\Release\\net9.0\\SB",
                 "args": [
                     "build"
                 ]
@@ -149,7 +152,7 @@
                 "preLaunchTask": "build_SB_Debug",
                 "console": "integratedTerminal",
                 "cwd": "${workspaceFolder:root}",
-                "program": "${workspaceFolder:root}\\.sb\\SB\\bin\\Debug\\net9.0\\SB",
+                "program": "${workspaceFolder:root}\\build\\.sb\\SB\\bin\\Debug\\net9.0\\SB",
                 "args": [
                     "vscode"
                 ]

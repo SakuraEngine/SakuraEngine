@@ -2,20 +2,32 @@
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Tooling/Tooling.h>
 #include <clang/AST/RecursiveASTVisitor.h>
-#include "CppSL/AST.hpp"
+#include "CppSL/CppSLAST.hpp"
+#include "clang/Frontend/MultiplexConsumer.h"
 
 namespace skr::CppSL {
 
-struct ShaderTranslator;
+struct KernelTranslator;
+
+struct ASTCollection
+{
+    ASTCollection() = default;
+    ASTCollection(const ASTCollection&) = delete;
+    ASTCollection& operator=(const ASTCollection&) = delete;
+
+    std::string permutation_id;
+    std::map<const clang::FunctionDecl*, AST> ASTs;
+    std::map<const clang::FunctionDecl*, const CppSL::FunctionDecl*> Kernels;
+};
 
 struct CompileFrontendAction : public clang::ASTFrontendAction 
 {
 public:
     bool BeginInvocation(clang::CompilerInstance &CI) override;
 
-    CompileFrontendAction(skr::CppSL::AST& AST);
+    CompileFrontendAction(skr::CppSL::ASTCollection& ASTs);
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, llvm::StringRef InFile) final;
-    skr::CppSL::AST& AST;
+    skr::CppSL::ASTCollection& ASTs;
 };
 
 struct FunctionStack
@@ -42,26 +54,26 @@ public:
     std::set<const clang::LambdaExpr*> _local_lambdas;
 
 private:
-    friend class ShaderTranslator;
-    FunctionStack(const clang::FunctionDecl* func, const skr::CppSL::ShaderTranslator* pShaderTranslator)
-        : func(func), pShaderTranslator(pShaderTranslator)
+    friend class KernelTranslator;
+    FunctionStack(const clang::FunctionDecl* func, const skr::CppSL::KernelTranslator* pKernelTranslator)
+        : func(func), pKernelTranslator(pKernelTranslator)
     {
 
     }
 
     const clang::FunctionDecl* func = nullptr;
-    const skr::CppSL::ShaderTranslator* pShaderTranslator = nullptr;
+    const skr::CppSL::KernelTranslator* pKernelTranslator = nullptr;
     FunctionStack* prev = nullptr;
 };
 
-class ShaderTranslator : public clang::ASTConsumer, public clang::RecursiveASTVisitor<ShaderTranslator>
+class KernelTranslator : public clang::RecursiveASTVisitor<KernelTranslator>
 {
 public:
     friend struct FunctionStack;
-    explicit ShaderTranslator(skr::CppSL::AST& AST);
-    virtual ~ShaderTranslator() override;
+    explicit KernelTranslator(skr::CppSL::AST& AST);
+    ~KernelTranslator();
 
-    void HandleTranslationUnit(clang::ASTContext &Context) override;
+    CppSL::FunctionDecl* Run(clang::ASTContext& Context, const clang::FunctionDecl* stage);
 
 public:
     // ASTVisitor APIs
@@ -96,19 +108,22 @@ protected:
 
     Stmt* TranslateStmt(const clang::Stmt *x);
     template <typename T>
-    T* TranslateStmt(const clang::Stmt* x);
+    T* TranslateStmt(const clang::Stmt* x)
+    {
+        return (T*)TranslateStmt(x);
+    }
+
     
     bool addType(clang::QualType type, const skr::CppSL::TypeDecl* decl);
     bool addType(clang::QualType type, skr::CppSL::TypeDecl* decl);
     skr::CppSL::TypeDecl* getType(clang::QualType type) const;
     bool addVar(const clang::VarDecl* var, skr::CppSL::VarDecl* decl);
-    skr::CppSL::VarDecl* getVar(const clang::VarDecl* var) const;
+    skr::CppSL::VarDecl* getVar(const clang::VarDecl* var, bool restrict = true) const;
     bool addFunc(const clang::FunctionDecl* func, skr::CppSL::FunctionDecl* decl);
     skr::CppSL::FunctionDecl* getFunc(const clang::FunctionDecl* func) const;
     
     clang::ASTContext* pASTContext = nullptr;
     std::map<const clang::CXXRecordDecl*, const clang::LambdaExpr*> _lambda_map;
-    std::vector<const clang::FunctionDecl*> _stages;
     std::vector<const clang::FunctionDecl*> _noignore_funcs;
     std::map<const clang::TagDecl*, skr::CppSL::TypeDecl*> _tag_types;
     std::map<const clang::BuiltinType::Kind, skr::CppSL::TypeDecl*> _builtin_types;
@@ -157,15 +172,45 @@ protected:
     void DumpWithLocation(const clang::Stmt *stmt) const;
     void DumpWithLocation(const clang::Decl *decl) const;
     void ReportFatalError(const std::string& message) const;
+
     template <typename... Args>
-    void ReportFatalError(std::format_string<Args...> _fmt, Args&&... args) const;
+    void ReportFatalError(std::format_string<Args...> _fmt, Args&&... args) const
+    {
+        auto message = std::format(_fmt, std::forward<Args>(args)...);
+        llvm::report_fatal_error(message.c_str());
+    }
+
     template <typename... Args>
-    void ReportFatalError(const clang::Stmt* expr, std::format_string<Args...> _fmt, Args&&... args) const;
+    void ReportFatalError(const clang::Stmt* expr, std::format_string<Args...> _fmt, Args&&... args) const
+    {
+        DumpWithLocation(expr);
+        ReportFatalError(_fmt, std::forward<Args>(args)...);
+    }
+
     template <typename... Args>
-    void ReportFatalError(const clang::Decl* decl, std::format_string<Args...> _fmt, Args&&... args) const;
+    void ReportFatalError(const clang::Decl* decl, std::format_string<Args...> _fmt, Args&&... args) const
+    {
+        DumpWithLocation(decl);
+        ReportFatalError(_fmt, std::forward<Args>(args)...);
+    }
     
     std::map<std::string, skr::CppSL::BinaryOp> _bin_ops;
+    
     const bool kUseNamespace = false;
+    const bool kCollectUsedResourcesOnly = false;
+};
+
+class ShaderTranslator : public clang::ASTConsumer, public clang::RecursiveASTVisitor<ShaderTranslator>
+{
+public:
+    explicit ShaderTranslator(skr::CppSL::ASTCollection& ASTs);
+    virtual ~ShaderTranslator() override;
+    void HandleTranslationUnit(clang::ASTContext &Context) override;
+    bool VisitFunctionDecl(const clang::FunctionDecl* x);
+
+private:
+    std::vector<const clang::FunctionDecl*> _stages;
+    ASTCollection& ASTs;
 };
     
 } // namespace skr::CppSL

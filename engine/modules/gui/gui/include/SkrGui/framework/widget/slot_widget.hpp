@@ -1,14 +1,13 @@
 #pragma once
 #include "SkrGui/framework/widget/proxy_widget.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/widget/slot_widget.generated.h"
-#endif
+#include "SkrGui/framework/widget/slot_widget.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "7a561ecb-03dc-4bc4-8577-ff51ce4469f2")
-SKR_GUI_API SlotWidget : public ProxyWidget {
+struct [[sattr(guid = "7a561ecb-03dc-4bc4-8577-ff51ce4469f2"
+)]] SKR_GUI_API SlotWidget : public ProxyWidget
+{
     SKR_GENERATE_BODY(SlotWidget)
 
     NotNull<Element*> create_element() SKR_NOEXCEPT override;

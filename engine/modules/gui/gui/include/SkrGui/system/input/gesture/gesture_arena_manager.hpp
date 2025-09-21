@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/system/input/gesture/gesture_arena.hpp"
-#ifndef __meta__
-    #include "SkrGui/system/input/gesture/gesture_arena_manager.generated.h"
-#endif
+#include "SkrGui/system/input/gesture/gesture_arena_manager.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "6b1d8469-6958-4800-affa-bf1e12cd5197")
-SKR_GUI_API GestureArenaManager {
+struct [[sattr(guid = "6b1d8469-6958-4800-affa-bf1e12cd5197"
+)]] SKR_GUI_API GestureArenaManager
+{
     ~GestureArenaManager();
 
     GestureArena* open_if_resolved(CombinePointerId pointer);

@@ -1,19 +1,18 @@
 #pragma once
 #include "SkrGraphics/api.h"
-#include "SkrRT/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.h"
 #include "SkrRenderer/graphics/shader_hash.hpp"
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/hashmap.hpp>
 
-#ifndef __meta__
-    #include "SkrRenderer/resources/shader_resource.generated.h" // IWYU pragma: export
-#endif
+#include "SkrRenderer/resources/shader_resource.generated.h" // IWYU pragma: export
 
 namespace skr
 {
-sreflect_struct(
-    guid = "6c07aa34-249f-45b8-8080-dd2462ad5312" serde = @bin | @json)
-MultiShaderResource
+struct [[sattr(
+    guid = "6c07aa34-249f-45b8-8080-dd2462ad5312"
+    serde = @enable
+)]] MultiShaderResource
 {
     StableShaderHash stable_hash;
     skr::EnumAsValue<ECGPUShaderStage> shader_stage;
@@ -34,10 +33,10 @@ MultiShaderResource
     skr::FlatHashMap<StableShaderHash, skr::Vector<PlatformShaderIdentifier>, StableShaderHash::hasher> option_variants;
 };
 
-sreflect_struct(
-    guid = "8372f075-b4ce-400d-929f-fb0e57c1c887" serde = @bin)
-sattr(serde = @bin)
-ShaderOptionSequence
+struct [[sattr(
+    guid = "8372f075-b4ce-400d-929f-fb0e57c1c887"
+    serde = @enable
+)]] ShaderOptionSequence
 {
     skr::SerializeConstVector<EShaderOptionType> types;
     skr::SerializeConstVector<skr::SerializeConstString> keys;
@@ -53,12 +52,13 @@ ShaderOptionSequence
     uint32_t find_value_index(uint32_t key_index, skr::StringView value) const SKR_NOEXCEPT;
 
     SKR_RENDERER_API
-    static StableShaderHash calculate_stable_hash(const ShaderOptionSequence& seq, skr::span<uint32_t> indices);
+    static StableShaderHash calculate_stable_hash(const ShaderOptionSequence& seq, skr::Span<uint32_t> indices);
 };
 
-sreflect_struct(
-    guid = "1c7d845a-fde8-4487-b1c9-e9c48d6a9867" serde = @bin)
-ShaderCollectionResource
+struct [[sattr(
+    guid = "1c7d845a-fde8-4487-b1c9-e9c48d6a9867" 
+    serde = @enable
+)]] ShaderCollectionResource
 {
     using stable_hash_t = StableShaderHash;
     using stable_hasher_t = StableShaderHash::hasher;
@@ -76,7 +76,7 @@ ShaderCollectionResource
         return found->second;
     }
 
-    skr_guid_t root_guid;
+    GUID root_guid;
     // hash=0 -> root_variant;
     skr::FlatHashMap<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
 
@@ -84,9 +84,10 @@ ShaderCollectionResource
     ShaderOptionSequence option_sequence;
 };
 
-sreflect_struct(
-    guid = "a633ea13-53d8-4202-b6f1-ec882ac409ec" serde = @bin | @json)
-ShaderCollectionJSON
+struct [[sattr(
+    guid = "a633ea13-53d8-4202-b6f1-ec882ac409ec" 
+    serde = @enable
+)]] ShaderCollectionJSON
 {
     using stable_hash_t = StableShaderHash;
     using stable_hasher_t = StableShaderHash::hasher;
@@ -103,7 +104,7 @@ ShaderCollectionJSON
         return found->second;
     }
 
-    skr_guid_t root_guid;
+    GUID root_guid;
     // hash=0 -> root_variant;
     skr::FlatHashMap<stable_hash_t, MultiShaderResource, stable_hasher_t> switch_variants;
 

@@ -11,6 +11,7 @@ public class TestCommand : CommandBase
     public override int OnExecute()
     {
         // Add necessary emitters for test execution
+        Engine.AddCodegenEmitters(Toolchain);
         Engine.AddEngineTaskEmitters(Toolchain);
         Engine.RunBuild();
 
@@ -26,6 +27,7 @@ public class TestCommand : CommandBase
             return -1;
         }
 
+        bool any_failed = false;
         Programs.AsParallel().ForAll(program =>
         {
             Stopwatch sw = Stopwatch.StartNew();
@@ -39,7 +41,8 @@ public class TestCommand : CommandBase
             float Seconds = sw.ElapsedMilliseconds / 1000.0f;
             if (result != 0)
             {
-                Log.Error("Test target {TargetName} failed with error: {Error}", program.Target.Name, error);
+                Log.Error("Test target {TargetName} failed with exit code {Code} and error: {Error}", program.Target.Name, result, error);
+                any_failed = true;
             }
             else
             {
@@ -47,7 +50,7 @@ public class TestCommand : CommandBase
             }
         });
 
-        return 0;
+        return any_failed ? 1 : 0;
     }
 
     [Cli.RegisterCmd(Name = "test", ShortName = 't', Help = "Run tests", Usage = "SB test [options]\nSB t [options]")]

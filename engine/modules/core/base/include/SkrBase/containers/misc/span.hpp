@@ -15,7 +15,8 @@ inline static constexpr size_t subspan_extent = (Count != kDynamicExtent ? Count
 } // namespace __helper
 
 template <typename T, typename TSize, size_t Extent = kDynamicExtent>
-struct Span {
+struct Span
+{
     using DataType = T;
 
     // ctor & dtor
@@ -254,7 +255,8 @@ SKR_INLINE constexpr bool Span<T, TSize, Extent>::is_valid_ptr(T* ptr) const
 namespace skr::container
 {
 template <typename T, typename TSize, size_t Extent>
-struct ContainerTraits<Span<T, TSize, Extent>> {
+struct ContainerTraits<Span<T, TSize, Extent>>
+{
     constexpr static bool is_linear_memory = true;  // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()

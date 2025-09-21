@@ -82,10 +82,13 @@ template<concepts::arithmetic T>
 [[callop("WavePrefixSum")]] 
 extern T WavePrefixSum(T v);
 
-template<typename T>
+template<concepts::arithmetic T>
 [[callop("WaveReadLaneFirst")]] 
-extern T WaveReadLaneFirst();
+extern T WaveReadLaneFirst(T v);
 
 template<typename T>
 [[callop("WaveReadLaneAt")]] 
 extern T WaveReadLaneAt(uint32 lane_index);
+
+[[callop("firstbithigh")]] 
+extern int firstbithigh(int val);

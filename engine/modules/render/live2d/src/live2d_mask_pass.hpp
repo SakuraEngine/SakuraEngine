@@ -19,7 +19,7 @@ struct Live2DMaskPass
                 .format(live2d_mask_format)
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_render_target();
-            if constexpr (Csm::kMaskResolution > 2048) builder.allocate_dedicated();
+            if constexpr (Csm::kMaskResolution > 2048) builder.heap_dedicated();
         });(void)live2d_mask_msaa;
 
         auto mask = render_graph->create_texture(
@@ -28,7 +28,7 @@ struct Live2DMaskPass
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
                 .format(live2d_mask_format)
                 .allow_render_target();
-            if constexpr (Csm::kMaskResolution > 2048) builder.allocate_dedicated();
+            if constexpr (Csm::kMaskResolution > 2048) builder.heap_dedicated();
         });(void)mask;
         
         auto depth = render_graph->create_texture(
@@ -41,11 +41,11 @@ struct Live2DMaskPass
                 .format(live2d_depth_format)
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_depth_stencil();
-            if constexpr (Csm::kMaskResolution > 2048) builder.allocate_dedicated();
+            if constexpr (Csm::kMaskResolution > 2048) builder.heap_dedicated();
         });(void)depth;
     }
 
-    static void execute(skr::render_graph::RenderGraph* render_graph, skr::span<skr_primitive_draw_t> drawcalls)
+    static void execute(skr::render_graph::RenderGraph* render_graph, skr::Span<skr_primitive_draw_t> drawcalls)
     {
         if (!drawcalls.size()) return;
 

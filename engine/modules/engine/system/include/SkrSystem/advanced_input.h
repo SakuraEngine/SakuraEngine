@@ -82,7 +82,7 @@ struct SKR_SYSTEM_API Input {
             }
         }
     }
-    skr::span<InputLayer*> GetLayers() SKR_NOEXCEPT;
+    skr::Span<InputLayer*> GetLayers() SKR_NOEXCEPT;
 
 protected:
     static Input* instance_;

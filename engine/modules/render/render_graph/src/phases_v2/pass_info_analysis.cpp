@@ -1,4 +1,3 @@
-#include "SkrCore/log.hpp"
 #include "SkrContainersDef/set.hpp"
 #include "SkrRenderGraph/phases_v2/pass_info_analysis.hpp"
 #include "SkrRenderGraph/frontend/pass_node.hpp"
@@ -63,32 +62,45 @@ void PassInfoAnalysis::extract_resource_info(PassNode* pass, PassResourceInfo& i
 {
     SkrZoneScopedN("ExtractResourceInfo");
     
-    info.all_resource_accesses.reserve(pass->buffers_count() + pass->textures_count());
+    info.resource_accesses.reserve(pass->buffers_count() + pass->textures_count());
     
     // Extract textures with detailed access info
     pass->foreach_textures([&](TextureNode* texture, TextureEdge* edge) {
         ResourceAccessInfo access_info;
+        access_info.pass = pass;
         access_info.resource = texture;
-        
         switch (edge->get_type())
         {
         case ERelationshipType::TextureRead:
             access_info.access_type = EResourceAccessType::Read;
             access_info.resource_state = static_cast<TextureReadEdge*>(edge)->requested_state;
+            // 子资源范围
+            access_info.mip_base = static_cast<TextureReadEdge*>(edge)->get_mip_base();
+            access_info.mip_count = static_cast<TextureReadEdge*>(edge)->get_mip_count();
+            access_info.array_base = static_cast<TextureReadEdge*>(edge)->get_array_base();
+            access_info.array_count = static_cast<TextureReadEdge*>(edge)->get_array_count();
             break;
         case ERelationshipType::TextureWrite:
             access_info.access_type = EResourceAccessType::Write;
             access_info.resource_state = static_cast<TextureRenderEdge*>(edge)->requested_state;
+            // RTV 只支持单 mip
+            access_info.mip_base = static_cast<TextureRenderEdge*>(edge)->get_mip_level();
+            access_info.mip_count = 1;
+            access_info.array_base = static_cast<TextureRenderEdge*>(edge)->get_array_base();
+            access_info.array_count = static_cast<TextureRenderEdge*>(edge)->get_array_count();
             break;
         case ERelationshipType::TextureReadWrite:
             access_info.access_type = EResourceAccessType::ReadWrite;
             access_info.resource_state = static_cast<TextureReadWriteEdge*>(edge)->requested_state;
+            access_info.mip_base = static_cast<TextureReadWriteEdge*>(edge)->get_mip_level();
+            access_info.mip_count = 1;
+            access_info.array_base = static_cast<TextureReadWriteEdge*>(edge)->get_array_base();
+            access_info.array_count = static_cast<TextureReadWriteEdge*>(edge)->get_array_count();
             break;
         default:
             break;
         }
-        
-        info.all_resource_accesses.add(access_info);
+        info.resource_accesses.add(access_info);
         
         // 更新全局资源信息
         auto& global_resource_info = resource_infos[texture];
@@ -110,6 +122,7 @@ void PassInfoAnalysis::extract_resource_info(PassNode* pass, PassResourceInfo& i
     // Extract buffers with detailed access info
     pass->foreach_buffers([&](BufferNode* buffer, BufferEdge* edge) {
         ResourceAccessInfo access_info;
+        access_info.pass = pass;
         access_info.resource = buffer;
         access_info.resource_state = static_cast<BufferEdge*>(edge)->requested_state;
         
@@ -117,15 +130,25 @@ void PassInfoAnalysis::extract_resource_info(PassNode* pass, PassResourceInfo& i
         {
         case ERelationshipType::BufferRead:
             access_info.access_type = EResourceAccessType::Read;
+            {
+                auto handle = static_cast<BufferReadEdge*>(edge)->get_handle();
+                access_info.buffer_from = handle.from;
+                access_info.buffer_to = handle.to;
+            }
             break;
         case ERelationshipType::BufferReadWrite:
             access_info.access_type = EResourceAccessType::ReadWrite;
+            {
+                auto handle = static_cast<BufferReadWriteEdge*>(edge)->get_handle();
+                access_info.buffer_from = handle.from;
+                access_info.buffer_to = handle.to;
+            }
             break;
         default:
             break;
         }
         
-        info.all_resource_accesses.add(access_info);
+        info.resource_accesses.add(access_info);
         
         // 更新全局资源信息
         auto& global_resource_info = resource_infos[buffer];
@@ -169,7 +192,7 @@ EResourceAccessType PassInfoAnalysis::get_resource_access_type(PassNode* pass, R
     if (!resource_info) return EResourceAccessType::Read;
     
     // Quick lookup in pre-computed access info
-    for (const auto& access : resource_info->all_resource_accesses)
+    for (const auto& access : resource_info->resource_accesses)
     {
         if (access.resource == resource)
         {

@@ -1,12 +1,12 @@
 #include "SkrCore/module/module_manager.hpp"
-#include "SkrRT/config.h"
+#include "SkrRuntime/config.h"
 #include "SkrCore/crash.h"
-#include "SkrRT/runtime_module.h"
-#include "SkrRT/sugoi/sugoi.h"
+#include "SkrRuntime/runtime_module.h"
+#include "SkrRuntime/sugoi/sugoi.h"
 
 #include "SkrProfile/profile.h"
 
-IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRT);
+IMPLEMENT_DYNAMIC_MODULE(SkrRuntimeModule, SkrRuntime);
 
 #if SKR_PLAT_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
@@ -68,7 +68,7 @@ void SkrRuntimeModule::on_unload()
 SkrRuntimeModule* SkrRuntimeModule::Get()
 {
     auto mm = skr_get_module_manager();
-    static auto rm = static_cast<SkrRuntimeModule*>(mm->get_module(u8"SkrRT"));
+    static auto rm = static_cast<SkrRuntimeModule*>(mm->get_module(u8"SkrRuntime"));
     return rm;
 }
 

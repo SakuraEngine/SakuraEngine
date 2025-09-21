@@ -10,7 +10,7 @@ public static class SkrInputSystem
         Engine
             .Module("SkrInputSystem")
             .EnableUnityBuild()
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .Depend(Visibility.Public, "SkrSystem")
             .IncludeDirs(Visibility.Public, "include")
             .AddCppFiles("src/*.cpp");

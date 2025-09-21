@@ -2,47 +2,26 @@
 #include "SkrGraphics/backend/metal/cgpu_metal.h"
 #include "SkrGraphics/backend/metal/cgpu_metal_types.h"
 #include "SkrGraphics/flags.h"
+#include "metal_utils.h"
 #import <Metal/Metal.h>
 
-// Texture dimension mapping
-static MTLTextureType MetalUtil_TranslateTextureType(ECGPUTextureDimension dim, uint32_t array_size, bool is_cube)
-{
-    if (is_cube)
-    {
-        return array_size > 1 ? MTLTextureTypeCubeArray : MTLTextureTypeCube;
-    }
-    
-    switch (dim)
-    {
-        case CGPU_TEXTURE_DIMENSION_1D:
-            return array_size > 1 ? MTLTextureType1DArray : MTLTextureType1D;
-        case CGPU_TEXTURE_DIMENSION_2D:
-            return array_size > 1 ? MTLTextureType2DArray : MTLTextureType2D;
-        case CGPU_TEXTURE_DIMENSION_3D:
-            return MTLTextureType3D;
-        default:
-            cgpu_assert(false && "Invalid texture dimension");
-            return MTLTextureType2D;
-    }
-}
-
 // Texture usage flags mapping
-static MTLTextureUsage MetalUtil_TranslateTextureUsage(CGPUResourceTypes descriptors)
+static MTLTextureUsage MetalUtil_TranslateTextureUsage(CGPUTextureUsages descriptors)
 {
     MTLTextureUsage usage = MTLTextureUsageShaderRead;
     
-    if (descriptors & CGPU_RESOURCE_TYPE_RW_TEXTURE)
+    if (descriptors & CGPU_TEXTURE_USAGE_SHADER_READWRITE)
     {
         usage |= MTLTextureUsageShaderWrite;
         usage |= MTLTextureUsagePixelFormatView;
     }
     
-    if (descriptors & CGPU_RESOURCE_TYPE_RENDER_TARGET)
+    if (descriptors & CGPU_TEXTURE_USAGE_RENDER_TARGET)
     {
         usage |= MTLTextureUsageRenderTarget;
     }
     
-    if ((descriptors & CGPU_RESOURCE_TYPE_DEPTH_STENCIL))
+    if ((descriptors & CGPU_TEXTURE_USAGE_DEPTH_STENCIL))
     {
         usage |= MTLTextureUsageRenderTarget;
         usage &= ~MTLTextureUsageShaderWrite;
@@ -109,20 +88,18 @@ CGPUTextureId cgpu_create_texture_metal(CGPUDeviceId device, const struct CGPUTe
     info->width = desc->width;
     info->height = desc->height;
     info->depth = desc->depth;
-    info->array_size_minus_one = desc->array_size - 1;
+    info->array_size = desc->array_size;
     info->mip_levels = desc->mip_levels;
     info->sample_count = desc->sample_count;
     info->format = desc->format;
     info->aspect_mask = CGPU_TEXTURE_VIEW_ASPECTS_COLOR;
     info->node_index = CGPU_SINGLE_GPU_NODE_INDEX;
     info->owns_image = true;
-    info->is_cube = (desc->descriptors & CGPU_RESOURCE_TYPE_TEXTURE_CUBE) == CGPU_RESOURCE_TYPE_TEXTURE_CUBE;
-    info->is_allocation_dedicated = (desc->flags & CGPU_TEXTURE_FLAG_DEDICATED_BIT) != 0;
-    info->is_restrict_dedicated = desc->is_restrict_dedicated;
+    info->is_cube = (CGPU_TEXTURE_USAGE_CUBEMAP == (desc->usages & CGPU_TEXTURE_USAGE_CUBEMAP)) ? 1 : 0;
     info->is_aliasing = (desc->flags & CGPU_TEXTURE_FLAG_ALIASING_RESOURCE) != 0;
     info->is_tiled = (desc->flags & CGPU_TEXTURE_FLAG_TILED_RESOURCE) != 0;
     info->is_imported = desc->native_handle != NULL;
-    info->can_alias = !desc->is_restrict_dedicated && !info->is_imported;
+    info->can_alias = false;
     info->can_export = (desc->flags & CGPU_TEXTURE_FLAG_EXPORT_BIT) != 0;
     
     // Set aspect mask based on format
@@ -147,7 +124,7 @@ CGPUTextureId cgpu_create_texture_metal(CGPUDeviceId device, const struct CGPUTe
                 info->width = texture->pTexture.width;
                 info->height = texture->pTexture.height;
                 info->depth = texture->pTexture.depth;
-                info->array_size_minus_one = texture->pTexture.arrayLength - 1;
+                info->array_size = texture->pTexture.arrayLength;
                 info->mip_levels = texture->pTexture.mipmapLevelCount;
                 info->sample_count = (ECGPUSampleCount)texture->pTexture.sampleCount;
             }
@@ -169,7 +146,7 @@ CGPUTextureId cgpu_create_texture_metal(CGPUDeviceId device, const struct CGPUTe
             textureDesc.sampleCount = desc->sample_count;
             
             // Set usage flags
-            textureDesc.usage = MetalUtil_TranslateTextureUsage(desc->descriptors);
+            textureDesc.usage = MetalUtil_TranslateTextureUsage(desc->usages);
             
             // Set storage mode
             textureDesc.storageMode = MTLStorageModePrivate;
@@ -199,6 +176,11 @@ CGPUTextureId cgpu_create_texture_metal(CGPUDeviceId device, const struct CGPUTe
                     cgpu_assert(false && "Failed to create Metal texture");
                     cgpu_free_aligned(texture, _Alignof(CGPUTexture_Metal));
                     return NULL;
+                }
+                
+                if (desc->name) {
+                    NSString* textureName = [NSString stringWithUTF8String:(const char*)desc->name];
+                    texture->pTexture.label = textureName;
                 }
             }
             
@@ -235,75 +217,13 @@ CGPUTextureViewId cgpu_create_texture_view_metal(CGPUDeviceId device, const stru
     CGPUTexture_Metal* texture = (CGPUTexture_Metal*)desc->texture;
     
     // Allocate texture view
-    CGPUTextureView_Metal* view = (CGPUTextureView_Metal*)cgpu_calloc_aligned(1, 
-        sizeof(CGPUTextureView_Metal), _Alignof(CGPUTextureView_Metal));
+    CGPUTextureView_Metal* view = (CGPUTextureView_Metal*)cgpu_calloc_aligned(1, sizeof(CGPUTextureView_Metal), _Alignof(CGPUTextureView_Metal));
     if (!view)
     {
         cgpu_assert(false && "Failed to allocate memory for texture view");
         return NULL;
     }
-    
-    @autoreleasepool {
-        // Determine view parameters
-        ECGPUFormat viewFormat = desc->format != CGPU_FORMAT_UNDEFINED ? desc->format : texture->super.info->format;
-        MTLPixelFormat mtlFormat = MetalUtil_TranslatePixelFormat(viewFormat);
-        
-        // Calculate mip and array ranges
-        uint32_t baseMip = desc->base_mip_level;
-        uint32_t mipCount = desc->mip_level_count ? desc->mip_level_count : (texture->super.info->mip_levels - baseMip);
-        uint32_t baseLayer = desc->base_array_layer;
-        uint32_t layerCount = desc->array_layer_count ? desc->array_layer_count : (texture->super.info->array_size_minus_one + 1 - baseLayer);
-        
-        // Validate ranges
-        cgpu_assert(baseMip < texture->super.info->mip_levels && "Base mip level out of range");
-        cgpu_assert(baseMip + mipCount <= texture->super.info->mip_levels && "Mip range out of bounds");
-        cgpu_assert(baseLayer <= texture->super.info->array_size_minus_one && "Base array layer out of range");
-        cgpu_assert(baseLayer + layerCount <= texture->super.info->array_size_minus_one + 1 && "Array range out of bounds");
-        
-        // Create texture view
-        NSRange levelRange = NSMakeRange(baseMip, mipCount);
-        NSRange sliceRange = NSMakeRange(baseLayer, layerCount);
-        
-        // Handle swizzle if needed (Metal doesn't support arbitrary swizzle, only specific patterns)
-        MTLTextureSwizzleChannels swizzle = MTLTextureSwizzleChannelsDefault;
-        
-        // Check if we need a different view type
-        MTLTextureType viewType = texture->pTexture.textureType;
-        if (desc->dims != CGPU_TEXTURE_DIMENSION_UNDEFINED)
-        {
-            viewType = MetalUtil_TranslateTextureType(desc->dims, layerCount, false);
-        }
-        
-        if (@available(macOS 10.15, iOS 13.0, *))
-        {
-            view->pTextureView = [texture->pTexture newTextureViewWithPixelFormat:mtlFormat
-                                                                      textureType:viewType
-                                                                           levels:levelRange
-                                                                           slices:sliceRange
-                                                                          swizzle:swizzle];
-        }
-        else
-        {
-            view->pTextureView = [texture->pTexture newTextureViewWithPixelFormat:mtlFormat
-                                                                      textureType:viewType
-                                                                           levels:levelRange
-                                                                           slices:sliceRange];
-        }
-        
-        if (!view->pTextureView)
-        {
-            cgpu_assert(false && "Failed to create Metal texture view");
-            cgpu_free_aligned(view, _Alignof(CGPUTextureView_Metal));
-            return NULL;
-        }
-        
-        // Set debug name if provided
-        if (device->adapter->instance->enable_set_name && desc->name)
-        {
-            view->pTextureView.label = [NSString stringWithUTF8String:(const char*)desc->name];
-        }
-    }
-    
+    view->pTextureView = MetalUtil_CreateTextureView(device, desc);
     return &view->super;
 }
 

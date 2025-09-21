@@ -1,14 +1,12 @@
 #pragma once
 #include "SkrScene/actor.h"
-#if !defined(__meta__)
-    #include "SkrScene/actor_manager.generated.h"
-#endif
+#include "SkrScene/actor_manager.generated.h"
 
 namespace skr
 {
 
-sreflect_struct(guid = "00af1514-7d79-4eb3-a477-40657f11840a")
-SKR_SCENE_API ActorManager
+struct [[sattr(guid = "00af1514-7d79-4eb3-a477-40657f11840a"
+)]] SKR_SCENE_API ActorManager
 {
 public:
     static ActorManager& GetInstance()

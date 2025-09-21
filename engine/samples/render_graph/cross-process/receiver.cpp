@@ -85,11 +85,13 @@ void ReceiverRenderer::create_api_objects()
     gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
     present_fence = cgpu_create_fence(device);
 
+#if SKR_PLAT_WINDOWS
     if (cgpux_adapter_is_nvidia(adapter))
     {
         CGPUNSightTrackerDescriptor desc = {};
         nsight_tracker = cgpu_create_nsight_tracker(device, &desc);
     }
+#endif
 
     // Sampler
     CGPUSamplerDescriptor sampler_desc = {};
@@ -140,10 +142,8 @@ void ReceiverRenderer::create_blit_pipeline()
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = u8"main";
     ppl_shaders[0].library = screen_vs;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = u8"main";
     ppl_shaders[1].library = blit_fs;
     const char8_t* static_sampler_name = u8"texture_sampler";

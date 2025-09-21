@@ -8,7 +8,7 @@ public static class HotfixTest
     static HotfixTest()
     {
         Engine.Module("HotfixTest")
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("hotfix_module.cpp");
 
         Engine.Program("HotfixTestHost")

@@ -7,11 +7,14 @@
 
 // Declares llvm::cl::extrahelp.
 #include "ASTConsumer.h"
+#include "IgnoreGeneratedFileSystem.h"
 #include "OptionsParser.h"
 #include "meta.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/TimeProfiler.h"
+#include "llvm/Support/VirtualFileSystem.h"
+#include "clang/Frontend/PCHContainerOperations.h"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -49,8 +52,9 @@ class ReflectFrontendAction : public clang::ASTFrontendAction {
 public:
   ReflectFrontendAction() {}
 
+
   std::unique_ptr<clang::ASTConsumer>
-  CreateASTConsumer(clang::CompilerInstance &compiler, llvm::StringRef file) {
+  CreateASTConsumer(clang::CompilerInstance &compiler, llvm::StringRef file) override {
     // fronted opts
     auto &FO = compiler.getFrontendOpts();
     FO.SkipFunctionBodies = true;
@@ -95,7 +99,14 @@ int main(int argc, const char **argv) {
 
   // run tool
   // auto start = std::chrono::high_resolution_clock::now();
-  tooling::ClangTool Tool(OptionsParser.getCompilations(), OptionsParser.getSourcePathList());
+  
+  // Setup custom virtual file system to ignore .generated.h files
+  auto BaseFS = llvm::vfs::getRealFileSystem();
+  auto CustomFS = llvm::makeIntrusiveRefCnt<meta::IgnoreGeneratedFileSystem>(BaseFS);
+  
+  tooling::ClangTool Tool(OptionsParser.getCompilations(), OptionsParser.getSourcePathList(),
+                          std::make_shared<clang::PCHContainerOperations>(), CustomFS);
+  
   llvm::outs() << "===========start compile===========\n";
   int result = Tool.run(tooling::newFrontendActionFactory<ReflectFrontendAction>().get());
   llvm::outs() << "===========end compile===========\n";

@@ -11,7 +11,9 @@ public static class SkrImageCoder
         
         var ImageCoder = Engine.Module("SkrImageCoder")
             .EnableUnityBuild()
-            .Depend(Visibility.Public, "SkrRT")
+            .UsePrivatePCH("src/pch.h")
+            .Exception(true)
+            .Depend(Visibility.Public, "SkrRuntime")
             .IncludeDirs(Visibility.Public, "include")
 
             .Require("zlib", new PackageConfig { Version = new Version(1, 2, 8) })

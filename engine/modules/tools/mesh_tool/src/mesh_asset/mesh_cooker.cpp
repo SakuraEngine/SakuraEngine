@@ -19,7 +19,7 @@ bool MeshCooker::Cook(CookContext* ctx)
     auto assetMetaFile = ctx->GetAssetMetaFile();
 
     auto& mesh_asset = *assetMetaFile->GetMetadata<MeshAsset>();
-    if (mesh_asset.vertexType == skr_guid_t{})
+    if (mesh_asset.vertexType.is_zero())
     {
         SKR_LOG_FATAL(u8"MeshCooker: VertexType is not specified for asset %s!", ctx->GetAssetPath().c_str());
         return false;
@@ -80,7 +80,7 @@ bool MeshCooker::Cook(CookContext* ctx)
         }
         SKR_DEFER({ ctx->Destroy(pBuiltInMesh); });
 
-        skr_guid_t shuffle_layout_id = mesh_asset.vertexType;
+        GUID shuffle_layout_id = mesh_asset.vertexType;
         pBuiltInMesh->generate_resource(mesh, blobs, shuffle_layout_id);
     }
     else

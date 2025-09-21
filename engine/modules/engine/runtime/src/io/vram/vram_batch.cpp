@@ -1,7 +1,7 @@
 #include "SkrCore/async/wait_timeout.hpp"
 #include "../common/io_request.hpp"
 #include "../dstorage/dstorage_resolvers.hpp"
-#include "SkrRT/io/vram_io.hpp"
+#include "SkrRuntime/io/vram_io.hpp"
 #include "vram_service.hpp"
 #include "vram_resolvers.hpp"
 #include "vram_readers.hpp"

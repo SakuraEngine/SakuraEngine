@@ -7,14 +7,14 @@
 
 #ifdef _WIN32
     #ifndef WIN32_LEAN_AND_MEAN
-	#define WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
     #endif
-    #include <wtypes.h> // IWYU pragma: export
-    #include <unknwn.h> // IWYU pragma: export
-    #include <winbase.h> // IWYU pragma: export
+    #include <wtypes.h>   // IWYU pragma: export
+    #include <unknwn.h>   // IWYU pragma: export
+    #include <winbase.h>  // IWYU pragma: export
     #include <winioctl.h> // IWYU pragma: export
 #endif
-#include "./../dxc/dxcapi.h" 
+#include "./../dxc/dxcapi.h"
 
 // helper
 namespace skd::asset
@@ -30,7 +30,12 @@ struct DxcCreateInstanceT
 
 // compiled shader
 
-#define SAFE_RELEASE(ptr) if (ptr) { ptr->Release(); ptr = nullptr; }
+#define SAFE_RELEASE(ptr) \
+    if (ptr)              \
+    {                     \
+        ptr->Release();   \
+        ptr = nullptr;    \
+    }
 
 SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT
 {
@@ -44,7 +49,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
     IDxcBlob* hash = nullptr;
     IDxcBlob* reflectionData = nullptr;
     uint32_t spv_hash[4];
-    
+
     result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
     result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&bytecode), &outputName);
     if (bytecode == nullptr)
@@ -57,18 +62,18 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
         if (bytecode == nullptr) goto FAIL;
     }
     result->GetOutput(DXC_OUT_PDB, IID_PPV_ARGS(&pdb), &pdbName);
-    if (auto hres = result->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(&hash), nullptr);!SUCCEEDED(hres))
+    if (auto hres = result->GetOutput(DXC_OUT_SHADER_HASH, IID_PPV_ARGS(&hash), nullptr); !SUCCEEDED(hres))
     {
         if (is_spv)
         {
-            auto md5 = skr_md5_t{};
+            auto md5 = MD5{};
             auto bytes = bytecode->GetBufferPointer();
             auto byte_size = (uint32_t)bytecode->GetBufferSize();
             skr_make_md5((const char8_t*)bytes, byte_size, &md5);
-            spv_hash[0] = (uint32_t)md5.digest[0] | ((uint32_t)md5.digest[1] << 8) | ((uint32_t)md5.digest[2] << 16) | ((uint32_t)md5.digest[3] << 24);
-            spv_hash[1] = (uint32_t)md5.digest[4] | ((uint32_t)md5.digest[5] << 8) | ((uint32_t)md5.digest[6] << 16) | ((uint32_t)md5.digest[7] << 24);
-            spv_hash[2] = (uint32_t)md5.digest[8] | ((uint32_t)md5.digest[9] << 8) | ((uint32_t)md5.digest[10] << 16) | ((uint32_t)md5.digest[11] << 24);
-            spv_hash[3] = (uint32_t)md5.digest[12] | ((uint32_t)md5.digest[13] << 8) | ((uint32_t)md5.digest[14] << 16) | ((uint32_t)md5.digest[15] << 24);
+            spv_hash[0] = md5.at_u32(0);
+            spv_hash[1] = md5.at_u32(1);
+            spv_hash[2] = md5.at_u32(2);
+            spv_hash[3] = md5.at_u32(3);
         }
         else
         {
@@ -77,8 +82,8 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
         }
     }
     // TODO: Demonstrate getting the hash from the PDB blob using the IDxcUtils::GetPDBContents API
-    //if (SUCCEEDED(utils->GetPDBContents(pdb, &hashDigestBlob, &debugDxilContainer)));
-    if (auto hres = result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(&reflectionData), nullptr);!is_spv && !SUCCEEDED(hres))
+    // if (SUCCEEDED(utils->GetPDBContents(pdb, &hashDigestBlob, &debugDxilContainer)));
+    if (auto hres = result->GetOutput(DXC_OUT_REFLECTION, IID_PPV_ARGS(&reflectionData), nullptr); !is_spv && !SUCCEEDED(hres))
     {
         SKR_LOG_ERROR(u8"[DXCCompiler]Unknown Error: Failed to get reflection data! HRESULT: %u", hres);
     }
@@ -135,18 +140,18 @@ ECGPUShaderStage SDXCCompiledShader::GetShaderStage() const SKR_NOEXCEPT
     return shader_stage;
 }
 
-skr::span<const uint8_t> SDXCCompiledShader::GetBytecode() const SKR_NOEXCEPT
+skr::Span<const uint8_t> SDXCCompiledShader::GetBytecode() const SKR_NOEXCEPT
 {
-    return skr::span<const uint8_t>((const uint8_t*)bytecode->GetBufferPointer(), bytecode->GetBufferSize());
+    return skr::Span<const uint8_t>((const uint8_t*)bytecode->GetBufferPointer(), bytecode->GetBufferSize());
 }
 
-skr::span<const uint8_t> SDXCCompiledShader::GetPDB() const SKR_NOEXCEPT
+skr::Span<const uint8_t> SDXCCompiledShader::GetPDB() const SKR_NOEXCEPT
 {
     if (!pdb) return {};
-    return skr::span<const uint8_t>((const uint8_t*)pdb->GetBufferPointer(), pdb->GetBufferSize());
+    return skr::Span<const uint8_t>((const uint8_t*)pdb->GetBufferPointer(), pdb->GetBufferSize());
 }
 
-bool SDXCCompiledShader::GetHashCode(uint32_t* flags, skr::span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT
+bool SDXCCompiledShader::GetHashCode(uint32_t* flags, skr::Span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT
 {
     if ((code_type == CGPU_SHADER_BYTECODE_TYPE_SPIRV) && !hash)
     {
@@ -172,9 +177,9 @@ bool SDXCCompiledShader::GetHashCode(uint32_t* flags, skr::span<uint32_t, 4> enc
 // compiler
 
 SDXCCompiler::SDXCCompiler(IDxcUtils* utils, IDxcCompiler3* compiler) SKR_NOEXCEPT
-    : utils(utils), compiler(compiler)
+    : utils(utils)
+    , compiler(compiler)
 {
-
 }
 
 SDXCCompiler::~SDXCCompiler() SKR_NOEXCEPT
@@ -221,14 +226,14 @@ inline static ECGPUShaderStage getShaderStageFromTargetString(const char* target
     return CGPU_SHADER_STAGE_NONE;
 }
 
-void SDXCCompiler::SetShaderOptions(skr::span<ShaderOptionTemplate> opt_defs, skr::span<ShaderOptionInstance> options_view, const StableShaderHash& option_hash) SKR_NOEXCEPT
+void SDXCCompiler::SetShaderOptions(skr::Span<ShaderOptionTemplate> opt_defs, skr::Span<ShaderOptionInstance> options_view, const StableShaderHash& option_hash) SKR_NOEXCEPT
 {
     option_defs = skr::Vector<ShaderOptionTemplate>(opt_defs.data(), opt_defs.size());
     options = skr::Vector<ShaderOptionInstance>(options_view.data(), options_view.size());
     options_hash = option_hash;
 }
 
-void SDXCCompiler::SetShaderSwitches(skr::span<ShaderOptionTemplate> opt_defs, skr::span<ShaderOptionInstance> options_view, const StableShaderHash& option_hash) SKR_NOEXCEPT
+void SDXCCompiler::SetShaderSwitches(skr::Span<ShaderOptionTemplate> opt_defs, skr::Span<ShaderOptionInstance> options_view, const StableShaderHash& option_hash) SKR_NOEXCEPT
 {
     switch_defs = skr::Vector<ShaderOptionTemplate>(opt_defs.data(), opt_defs.size());
     switches = skr::Vector<ShaderOptionInstance>(options_view.data(), options_view.size());
@@ -256,17 +261,17 @@ skr::stl_wstring utf8_to_utf16(const skr::String& utf8)
         }
         else if (ch <= 0xDF)
         {
-            uni = ch&0x1F;
+            uni = ch & 0x1F;
             todo = 1;
         }
         else if (ch <= 0xEF)
         {
-            uni = ch&0x0F;
+            uni = ch & 0x0F;
             todo = 2;
         }
         else if (ch <= 0xF7)
         {
-            uni = ch&0x07;
+            uni = ch & 0x07;
             todo = 3;
         }
         else
@@ -320,7 +325,7 @@ skr::stl_wstring utf8_to_utf16(const skr::String& utf8)
     return utf16;
 }
 
-void SDXCCompiler::createDefArgsFromOptions(skr::span<ShaderOptionTemplate> opt_defs, skr::span<ShaderOptionInstance> options, skr::Vector<skr::stl_wstring>& outArgs) SKR_NOEXCEPT
+void SDXCCompiler::createDefArgsFromOptions(skr::Span<ShaderOptionTemplate> opt_defs, skr::Span<ShaderOptionInstance> options, skr::Vector<skr::stl_wstring>& outArgs) SKR_NOEXCEPT
 {
     using namespace skr;
     ShaderOptionTemplate* optdef = nullptr;
@@ -344,13 +349,15 @@ void SDXCCompiler::createDefArgsFromOptions(skr::span<ShaderOptionTemplate> opt_
         if (opt_type == EShaderOptionType::VALUE)
         {
             auto prefix = skr::stl_wstring(L"-D") + utf8_to_utf16(option.key).c_str();
-            if (option.value == u8"on") outArgs.add(prefix);
-            else if (option.value == u8"off") continue;//allArgs.add(prefix);
+            if (option.value == u8"on")
+                outArgs.add(prefix);
+            else if (option.value == u8"off")
+                continue; // allArgs.add(prefix);
             else
             {
-                auto wvalue =  skr::stl_wstring(utf8_to_utf16(option.value).c_str());
-                auto defination = prefix + L"=" + wvalue; 
-                outArgs.add(defination);  
+                auto wvalue = skr::stl_wstring(utf8_to_utf16(option.value).c_str());
+                auto defination = prefix + L"=" + wvalue;
+                outArgs.add(defination);
             }
         }
         else if (opt_type == EShaderOptionType::SELECT)
@@ -386,7 +393,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
 {
     IDxcBlobEncoding* pSourceBlob = nullptr;
     IDxcResult* pDxcResult = nullptr;
-    if (auto hr = utils->CreateBlobFromPinned(source.blob->get_data(), (uint32_t)source.blob->get_size(), DXC_CP_ACP, &pSourceBlob);!SUCCEEDED(hr))
+    if (auto hr = utils->CreateBlobFromPinned(source.blob->get_data(), (uint32_t)source.blob->get_size(), DXC_CP_ACP, &pSourceBlob); !SUCCEEDED(hr))
     {
         SKR_LOG_ERROR(u8"DXC Compiler: Failed to create blob from pinned memory, HRESULT: %u!", hr);
     }
@@ -394,7 +401,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     SourceBuffer.Ptr = pSourceBlob->GetBufferPointer();
     SourceBuffer.Size = pSourceBlob->GetBufferSize();
     SourceBuffer.Encoding = DXC_CP_ACP; // Assume BOM says UTF8 or UTF16 or this is ANSI text.
-    
+
     // calculate compile arguments
     const auto wTargetString = utf8_to_utf16(importer.target);
     const auto wEntryString = utf8_to_utf16(importer.entry);
@@ -414,10 +421,10 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     }
     // entry point
     allArgs.add(L"-E");
-    allArgs.add(wEntryString.c_str()); 
+    allArgs.add(wEntryString.c_str());
     // target profile
     allArgs.add(L"-T");
-    allArgs.add(wTargetString.c_str()); 
+    allArgs.add(wTargetString.c_str());
     // optimization
 #if _DEBUG
     allArgs.add(DXC_ARG_DEBUG);
@@ -425,7 +432,7 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
 #else
     allArgs.add(DXC_ARG_OPTIMIZATION_LEVEL3);
 #endif
-    allArgs.add(L"-Qstrip_debug"); 
+    allArgs.add(L"-Qstrip_debug");
 
     createDefArgsFromOptions(switch_defs, switches, allArgs);
     createDefArgsFromOptions(option_defs, options, allArgs);
@@ -437,7 +444,8 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
         wArgsString += arg + L" ";
     }
     skr::stl_string msg;
-    for(char x : wArgsString) msg += x;
+    for (char x : wArgsString)
+        msg += x;
     SkrMessage(msg.c_str(), msg.size());
 #endif
 
@@ -450,10 +458,10 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
             pszArgs.add(arg.c_str());
         }
         auto hres = compiler->Compile(
-            &SourceBuffer,                // Source buffer.
-            pszArgs.data(),                // Array of pointers to arguments.
-            (UINT32)pszArgs.size(),      // Number of arguments.
-            includeHandler,        // User-provided interface to handle #include directives (optional).
+            &SourceBuffer,            // Source buffer.
+            pszArgs.data(),           // Array of pointers to arguments.
+            (UINT32)pszArgs.size(),   // Number of arguments.
+            includeHandler,           // User-provided interface to handle #include directives (optional).
             IID_PPV_ARGS(&pDxcResult) // Compiler output status, buffer, and errors.
         );
         if (!SUCCEEDED(hres))
@@ -470,11 +478,11 @@ ICompiledShader* SDXCCompiler::Compile(ECGPUShaderBytecodeType format, const Sha
     return SDXCCompiledShader::Create(shader_stage, format, pSourceBlob, pDxcResult);
 }
 
-void SDXCCompiler::FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT { SkrDelete(compiled); } 
+void SDXCCompiler::FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT { SkrDelete(compiled); }
 
 void SDXCCompiler::SetIncludeHandler(IDxcIncludeHandler* handler) SKR_NOEXCEPT
 {
-    includeHandler = handler; 
+    includeHandler = handler;
 }
 
 // library
@@ -493,7 +501,8 @@ void SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName());
     filename.append(u8"dxcompiler");
     filename.append(skr::SharedLibrary::GetPlatformFileExtensionName());
-    if (auto result = dxc_library.load(filename.u8_str()));
+    if (auto result = dxc_library.load(filename.u8_str()))
+        ;
     else
     {
         SKR_LOG_ERROR(u8"failed to load dxc library!");
@@ -508,7 +517,7 @@ void SDXCLibrary::LoadDXCLibrary() SKR_NOEXCEPT
     IDxcCompiler3* pTestCompiler = nullptr;
     DxcCreateInstanceT::Get()(CLSID_DxcUtils, IID_PPV_ARGS(&pTestUtils));
     DxcCreateInstanceT::Get()(CLSID_DxcCompiler, IID_PPV_ARGS(&pTestCompiler));
-    
+
     IDxcIncludeHandler* pIncludeHandler = nullptr;
     pTestUtils->CreateDefaultIncludeHandler(&pIncludeHandler);
     SKR_ASSERT(pTestUtils && "Fatal: Failed to create default include handler for dxc!");
@@ -525,11 +534,12 @@ void SDXCLibrary::LoadDXILLibrary() SKR_NOEXCEPT
     filename.append(skr::SharedLibrary::GetPlatformFilePrefixName());
     filename.append(u8"dxil");
     filename.append(skr::SharedLibrary::GetPlatformFileExtensionName());
-    if (auto result = dxcInstance->dxil_library.load(filename.u8_str()));
+    if (auto result = dxcInstance->dxil_library.load(filename.u8_str()))
+        ;
     else
     {
         SKR_LOG_ERROR(u8"failed to load dxil library!"
-        "no correct signature will be assigned to the dxil files that shaders will be rejected by runtime driver!");
+                      "no correct signature will be assigned to the dxil files that shaders will be rejected by runtime driver!");
     }
 }
 
@@ -556,4 +566,6 @@ void SDXCLibrary::Finalize()
 }
 } // namespace skd::asset
 
+#if SKR_PLAT_WINDOWS
 SKR_MODULE_SUBSYSTEM(skd::asset::SDXCLibrary, SkrShaderCompiler);
+#endif

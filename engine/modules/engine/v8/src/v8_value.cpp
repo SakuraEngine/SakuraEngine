@@ -26,9 +26,9 @@ bool V8Value::is_object() const
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
 
     if (_v8_value.IsEmpty()) { return false; }
     auto local_value = _v8_value.Get(isolate);
@@ -39,9 +39,9 @@ bool V8Value::is_function() const
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
 
     if (_v8_value.IsEmpty()) { return false; }
     auto local_value = _v8_value.Get(isolate);
@@ -56,10 +56,10 @@ V8Value V8Value::get_field(StringView name) const
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
-    auto           context = _context->v8_context().Get(isolate);
+    HandleScope handle_scope(isolate);
+    auto context = _context->v8_context().Get(isolate);
 
     // check object
     if (!_v8_value.Get(isolate)->IsObject())
@@ -91,10 +91,10 @@ bool V8Value::set_field_value(StringView name, const V8Value& value) const
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
-    auto           context = _context->v8_context().Get(isolate);
+    HandleScope handle_scope(isolate);
+    auto context = _context->v8_context().Get(isolate);
 
     // check object
     if (!_v8_value.Get(isolate)->IsObject()) { return false; }
@@ -116,9 +116,9 @@ void V8Value::_get(TypeSignatureView sig, void* ptr) const
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
 
     // find bind template
     auto* bind_tp = _context->isolate()->solve_bind_tp(sig);
@@ -136,9 +136,9 @@ bool V8Value::_is(TypeSignatureView sig) const
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
 
     // find bind template
     auto* bind_tp = _context->isolate()->solve_bind_tp(sig);
@@ -151,9 +151,9 @@ bool V8Value::_set(TypeSignatureView sig, void* ptr)
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
 
     // solve context
     Local<Context> solved_context = _context->v8_context().Get(isolate);
@@ -169,8 +169,8 @@ bool V8Value::_set(TypeSignatureView sig, void* ptr)
     return true;
 }
 bool V8Value::_call(
-    const span<const StackProxy> params,
-    StackProxy                   return_value
+    const Span<const StackProxy> params,
+    StackProxy return_value
 ) const
 {
     SKR_ASSERT(is_function());
@@ -178,9 +178,9 @@ bool V8Value::_call(
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
 
     // solve context
     Local<Context> solved_context = _context->v8_context().Get(isolate);
@@ -188,7 +188,7 @@ bool V8Value::_call(
 
     // solve function
     auto v8_value_local = _v8_value.Get(isolate);
-    auto v9_function    = v8_value_local.As<v8::Function>();
+    auto v9_function = v8_value_local.As<v8::Function>();
 
     return _context->isolate()->invoke_v8(
         solved_context->Global(),
@@ -198,9 +198,9 @@ bool V8Value::_call(
     );
 }
 bool V8Value::_call_method(
-    const StringView             name,
-    const span<const StackProxy> params,
-    StackProxy                   return_value
+    const StringView name,
+    const Span<const StackProxy> params,
+    StackProxy return_value
 ) const
 {
     SKR_ASSERT(is_object());
@@ -208,9 +208,9 @@ bool V8Value::_call_method(
     using namespace ::v8;
 
     // scopes
-    auto*          isolate = _context->isolate()->v8_isolate();
+    auto* isolate = _context->isolate()->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
 
     // solve context
     Local<Context> solved_context = _context->v8_context().Get(isolate);
@@ -218,7 +218,7 @@ bool V8Value::_call_method(
 
     // solve object
     auto v8_value_local = _v8_value.Get(isolate);
-    auto v8_object      = v8_value_local.As<v8::Object>();
+    auto v8_object = v8_value_local.As<v8::Object>();
 
     // find method
     auto maybe_found_value = v8_object->Get(

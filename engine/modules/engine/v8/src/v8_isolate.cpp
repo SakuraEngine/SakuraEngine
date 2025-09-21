@@ -26,7 +26,8 @@
 // allocator
 namespace skr
 {
-struct V8Allocator final : ::v8::ArrayBuffer::Allocator {
+struct V8Allocator final : ::v8::ArrayBuffer::Allocator
+{
     static constexpr const char* kV8DefaultPoolName = "v8-allocate";
 
     void* AllocateUninitialized(size_t length) override
@@ -91,7 +92,7 @@ void V8Isolate::init()
 
     // init isolate
     _isolate_create_params.array_buffer_allocator = SkrNew<V8Allocator>();
-    _isolate                                      = Isolate::New(_isolate_create_params);
+    _isolate = Isolate::New(_isolate_create_params);
     _isolate->SetData(0, this);
 
     // auto microtasks
@@ -198,16 +199,16 @@ void V8Isolate::destroy_context(V8Context* context)
 }
 
 bool V8Isolate::invoke_v8(
-    v8::Local<v8::Value>    v8_this,
+    v8::Local<v8::Value> v8_this,
     v8::Local<v8::Function> v8_func,
-    span<const StackProxy>  params,
-    StackProxy              return_value
+    Span<const StackProxy> params,
+    StackProxy return_value
 )
 {
     using namespace ::v8;
 
-    auto*       isolate = Isolate::GetCurrent();
-    auto        context = isolate->GetCurrentContext();
+    auto* isolate = Isolate::GetCurrent();
+    auto context = isolate->GetCurrentContext();
     HandleScope handle_scope(isolate);
 
     // solve bind template
@@ -259,19 +260,19 @@ void V8Isolate::on_object_destroyed(
     found.value()->invalidate();
 }
 bool V8Isolate::try_invoke_mixin(
-    ScriptbleObject*             obj,
-    StringView                   name,
-    const span<const StackProxy> params,
-    StackProxy                   result
+    ScriptbleObject* obj,
+    StringView name,
+    const Span<const StackProxy> params,
+    StackProxy result
 )
 {
     using namespace ::v8;
 
     Isolate::Scope isolate_scope(_isolate);
-    HandleScope    handle_scope(_isolate);
+    HandleScope handle_scope(_isolate);
 
     auto* isolate = _isolate;
-    auto  context = isolate->GetCurrentContext();
+    auto context = isolate->GetCurrentContext();
     if (context.IsEmpty())
     {
         context = _main_context->v8_context().Get(isolate);
@@ -291,7 +292,7 @@ bool V8Isolate::try_invoke_mixin(
         }
 
         // find method in object
-        auto v8_object           = bind_proxy->v8_object.Get(isolate);
+        auto v8_object = bind_proxy->v8_object.Get(isolate);
         auto maybe_v8_func_value = v8_object->Get(
             context,
             V8Bind::to_v8(name, true)
@@ -390,9 +391,9 @@ V8BindTemplate* V8Isolate::solve_bind_tp(
         }
 
         // get generic type id
-        GUID     generic_id;
+        GUID generic_id;
         uint32_t generic_param_count;
-        auto     solve_sig = signature.read_generic_type_id(generic_id, generic_param_count);
+        auto solve_sig = signature.read_generic_type_id(generic_id, generic_param_count);
 
         switch (generic_id.get_hash())
         {
@@ -487,14 +488,14 @@ void V8Isolate::destroy_bind_proxy(V8BindProxy* bind_proxy)
 
 // bind proxy management
 void V8Isolate::register_bind_proxy(
-    void*        native_ptr,
+    void* native_ptr,
     V8BindProxy* bind_proxy
 )
 {
     _bind_proxy_map.add(native_ptr, bind_proxy);
 }
 void V8Isolate::unregister_bind_proxy(
-    void*        native_ptr,
+    void* native_ptr,
     V8BindProxy* bind_proxy
 )
 {

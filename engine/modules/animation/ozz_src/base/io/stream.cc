@@ -33,7 +33,6 @@
 
 #include "SkrAnim/ozz/base/maths/math_ex.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
-#include "SkrSerde/bin_serde.hpp"
 
 namespace ozz
 {
@@ -255,10 +254,15 @@ bool MemoryStream::Resize(size_t _size)
 }
 
 // Starts SkrStream implementation.
-SkrStream::SkrStream(SBinaryReader* _reader, SBinaryWriter* _writer)
+SkrStream::SkrStream(skr::ArchiveRead* _reader, skr::ArchiveWrite* _writer)
     : reader_(_reader)
     , writer_(_writer)
 {
+    SKR_ASSERT(reader_ || writer_);
+    if (reader_)
+        SKR_ASSERT(!reader_->is_structured() && "streamed binary reader cannot be structured");
+    if (writer_)
+        SKR_ASSERT(!writer_->is_structured() && "streamed binary writer cannot be structured");
 }
 
 SkrStream::~SkrStream() {}
@@ -268,7 +272,7 @@ bool SkrStream::opened() const { return reader_ != nullptr || writer_ != nullptr
 size_t SkrStream::Read(void* _buffer, size_t _size)
 {
     SKR_ASSERT(reader_);
-    if (!reader_->read(_buffer, _size))
+    if (!reader_->bytes(_buffer, _size))
     {
         return 0;
     }
@@ -278,7 +282,7 @@ size_t SkrStream::Read(void* _buffer, size_t _size)
 size_t SkrStream::Write(const void* _buffer, size_t _size)
 {
     SKR_ASSERT(writer_);
-    if (!writer_->write(_buffer, _size))
+    if (!writer_->bytes(_buffer, _size))
     {
         return 0;
     }
@@ -302,6 +306,7 @@ size_t SkrStream::Size() const
     SKR_UNIMPLEMENTED_FUNCTION()
     return 0;
 }
+
 
 } // namespace io
 } // namespace ozz

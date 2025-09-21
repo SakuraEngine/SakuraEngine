@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
-#ifndef __meta__
-    #include "SkrGui/render_objects/render_grid_paper.generated.h"
-#endif
+#include "SkrGui/render_objects/render_grid_paper.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "4207334c-617c-4f7c-bf3c-fd2f9e018a9c")
-SKR_GUI_API RenderGridPaper : public RenderBox {
+struct [[sattr(guid = "4207334c-617c-4f7c-bf3c-fd2f9e018a9c"
+)]] SKR_GUI_API RenderGridPaper : public RenderBox
+{
 public:
     SKR_GENERATE_BODY(RenderGridPaper)
     using Super = RenderBox;

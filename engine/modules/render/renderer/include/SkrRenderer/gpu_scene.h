@@ -1,15 +1,14 @@
 #pragma once
+#include "SkrCore/id_range_allocator.hpp"
 #include "SkrContainersDef/map.hpp"
 #include "SkrGraphics/raytracing.h"
-#include "SkrRT/ecs/world.hpp"
+#include "SkrRuntime/ecs/world.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrRenderGraph/frame_resource.hpp"
 #include "SkrRenderer/render_device.h"
-#include "SkrRenderer/graphics/gpu_database.hpp"
+#include "SkrRenderer/graphics/gpu_table.hpp"
 #include "SkrRenderer/graphics/tlas_manager.hpp"
-#ifndef __meta__
-    #include "SkrRenderer/gpu_scene.generated.h" // IWYU pragma: export
-#endif
+#include "SkrRenderer/gpu_scene.generated.h" // IWYU pragma: export
 
 namespace sugoi
 {
@@ -27,22 +26,27 @@ static constexpr GPUSceneInstanceID INVALID_GPU_SCENE_INSTANCE_ID = 0xFFFFFFFF;
 // D3D12 24位 InstanceID 限制
 struct GPUSceneCustomIndex
 {
-    GPUSceneCustomIndex() : packed(0x00FFFFFF) {}
-    GPUSceneCustomIndex(uint32_t index) : packed(index) { SKR_ASSERT(index <= 0x00FFFFFF); }
+    GPUSceneCustomIndex()
+        : packed(0x00FFFFFF)
+    {
+    }
+    GPUSceneCustomIndex(uint32_t index)
+        : packed(index)
+    {
+        SKR_ASSERT(index <= 0x00FFFFFF);
+    }
     uint32_t GetInstanceID() const { return packed & 0x00FFFFFF; }
+
 private:
     uint32_t packed;
 };
 
-sreflect_managed_component(guid = "fd6cd47d-bb68-4d1c-bd26-ad3717f10ea7")
+struct [[secs_managed_component, sattr(guid = "fd6cd47d-bb68-4d1c-bd26-ad3717f10ea7")]]
 GPUSceneInstance
 {
+public:
     skr::ecs::Entity entity;
-    GPUSceneInstanceID instance_index = ~0;
-    uint32_t prim_id_start;
-    uint32_t prim_id_count;
-    uint32_t mat_id_start;
-    uint32_t mat_id_count;
+    std::atomic_bool _ready_on_gpu = false;
 };
 
 // 主管理器
@@ -58,24 +62,16 @@ public:
     void AddEntity(skr::ecs::Entity entity);
     void RemoveEntity(skr::ecs::Entity entity);
 
-    void RequireUpload(skr::ecs::Entity entity, CPUTypeID component);
+    void RequireUpload(skr::ecs::Entity entity);
     void ExecuteUpload(skr::render_graph::RenderGraph* graph);
 
     inline skr::ecs::ECSWorld* GetECSWorld() const { return ecs_world; }
-    inline skr::render_graph::BufferHandle GetSceneBuffer(skr::render_graph::RenderGraph* graph) const 
+    inline skr::render_graph::BufferHandle GetSceneBuffer(skr::render_graph::RenderGraph* graph) const
     {
-        return frame_ctxs.get(graph).table_handles.find(instance_type).value();
+        return frame_ctxs.get(graph).instance_table_handle;
     }
-    inline skr::render_graph::BufferHandle GetPrimitiveBuffer(skr::render_graph::RenderGraph* graph) const 
+    skr::render_graph::AccelerationStructureHandle GetTLAS(skr::render_graph::RenderGraph* graph) const
     {
-        return frame_ctxs.get(graph).primitives_handle;
-    }
-    inline skr::render_graph::BufferHandle GetMaterialBuffer(skr::render_graph::RenderGraph* graph) const 
-    {
-        return frame_ctxs.get(graph).materials_handle;
-    }
-    skr::render_graph::AccelerationStructureHandle GetTLAS(skr::render_graph::RenderGraph* graph) const 
-    { 
         return frame_ctxs.get(graph).tlas_handle;
     }
     inline uint32_t GetInstanceCount() const { return total_inst_count; }
@@ -96,22 +92,12 @@ private:
     std::atomic_bool tlas_dirty = false;
     skr::ConcurrentQueue<CGPUAccelerationStructureId> dirty_blases;
     skr::Vector<CGPUAccelerationStructureInstanceDesc> tlas_instances;
-    
-    skr::ParallelFlatHashMap<skr::ecs::Entity, GPUSceneInstanceID, skr::Hash<skr::ecs::Entity>> entity_ids;
 
-    CPUTypeID instance_type;
-    skr::Map<CPUTypeID, skr::RC<gpu::TableInstance>> table_map;
-    skr::Map<CPUTypeID, void(*)(gpu::TableInstance&, uint32_t inst, const void* data)> store_map;
+    skr::RC<gpu::TableInstance> instance_table;
     skr::ConcurrentQueue<GPUSceneInstanceID> free_insts;
     std::atomic<GPUSceneInstanceID> free_inst_count = 0;
     std::atomic<GPUSceneInstanceID> latest_inst_index = 0;
     std::atomic<GPUSceneInstanceID> total_inst_count = 0;
-
-    skr::RC<gpu::TableInstance> primitives_table;
-    std::atomic<GPUSceneInstanceID> total_prim_count = 0;
-
-    skr::RC<gpu::TableInstance> materials_table;
-    std::atomic<GPUSceneInstanceID> total_mat_count = 0;
 
 private:
     static constexpr uint32_t kLaneCount = 2;
@@ -124,15 +110,15 @@ private:
         skr::Vector<skr::ecs::Entity> remove_ents;
 
         shared_atomic_mutex dirty_mtx;
-        skr::Vector<skr::ecs::Entity> dirty_ents;
-        skr::Map<skr::ecs::Entity, skr::InlineVector<CPUTypeID, 4>> dirties;
+        skr::Set<skr::ecs::Entity> dirty_ents;
+        skr::Vector<skr::ecs::Entity> tmp_dirty_ents;
     } lanes[kLaneCount];
     std::atomic_uint32_t front_lane = 0;
 
     UpdateLane& GetFrontLane() { return lanes[front_lane]; }
     UpdateLane& GetLaneForUpload() { return lanes[(front_lane + kLaneCount - 1) % kLaneCount]; }
     void SwitchLane() { front_lane = (front_lane + kLaneCount + 1) % kLaneCount; }
- 
+
     // upload buffer management
     struct UploadContext
     {
@@ -153,9 +139,7 @@ private:
         // Single buffer to discard when this frame comes around again
         TLASHandle frame_tlas;
         skr::render_graph::AccelerationStructureHandle tlas_handle;
-        skr::Map<CPUTypeID, skr::render_graph::BufferHandle> table_handles;
-        skr::render_graph::BufferHandle primitives_handle;
-        skr::render_graph::BufferHandle materials_handle;
+        skr::render_graph::BufferHandle instance_table_handle;
     };
     skr::render_graph::FrameResource<FrameContext> frame_ctxs;
 };

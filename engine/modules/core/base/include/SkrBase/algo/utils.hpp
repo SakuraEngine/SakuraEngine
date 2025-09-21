@@ -7,7 +7,8 @@
 namespace skr
 {
 template <typename T>
-struct MapFwd {
+struct MapFwd
+{
 
     SKR_INLINE constexpr T&       operator()(T& v) const { return v; }
     SKR_INLINE constexpr const T& operator()(const T& v) const { return v; }
@@ -19,14 +20,16 @@ namespace skr
 {
 #define SKR_DEF_COMPARE_FUNCTOR(__NAME, __OP)                              \
     template <typename T = void>                                           \
-    struct __NAME {                                                        \
+    struct __NAME                                                          \
+    {                                                                      \
         SKR_INLINE constexpr bool operator()(const T& a, const T& b) const \
         {                                                                  \
             return a __OP b;                                               \
         }                                                                  \
     };                                                                     \
     template <>                                                            \
-    struct __NAME<void> {                                                  \
+    struct __NAME<void>                                                    \
+    {                                                                      \
         template <typename A, typename B>                                  \
         SKR_INLINE constexpr bool operator()(A&& a, B&& b) const           \
         {                                                                  \
@@ -49,14 +52,16 @@ namespace skr
 {
 #define SKR_DEF_ARITHMETIC_FUNCTOR(__NAME, __OP)                                 \
     template <typename T = void>                                                 \
-    struct __NAME {                                                              \
+    struct __NAME                                                                \
+    {                                                                            \
         SKR_INLINE constexpr T operator()(const T& a, const T& b)                \
         {                                                                        \
             return a __OP b;                                                     \
         }                                                                        \
     };                                                                           \
     template <>                                                                  \
-    struct __NAME<void> {                                                        \
+    struct __NAME<void>                                                          \
+    {                                                                            \
         template <typename A, typename B>                                        \
         SKR_INLINE constexpr auto operator()(A&& a, B&& b) -> decltype(a __OP b) \
         {                                                                        \

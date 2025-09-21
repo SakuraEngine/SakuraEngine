@@ -4,9 +4,7 @@
 #include "SkrToolCore/cook_system/importer.hpp"
 #include "SkrToolCore/cook_system/cooker.hpp"
 #include "SkrToolCore/cook_system/asset_meta.hpp"
-#ifndef __meta__
-    #include "SkrAnimTool/animation_asset.generated.h" // IWYU pragma: export
-#endif
+#include "SkrAnimTool/animation_asset.generated.h" // IWYU pragma: export
 
 namespace skr
 {
@@ -23,25 +21,30 @@ namespace skd::asset
 {
 using RawAnimation = ozz::animation::offline::RawAnimation;
 
-sreflect_struct(guid = "37d07586-0901-480a-8dcd-1f1f8220569c" serde = @json)
-SKR_ANIMTOOL_API GltfAnimImporter : public Importer
+struct [[sattr(
+    guid = "37d07586-0901-480a-8dcd-1f1f8220569c" 
+    serde = @enable
+)]] SKR_ANIMTOOL_API GltfAnimImporter : public Importer
 {
     skr::String assetPath;
     skr::String animationName;
     float samplingRate = 30.f;
     virtual ~GltfAnimImporter() = default;
-    virtual void* Import(skr::io::IRAMService*, CookContext * context) override;
+    virtual void* Import(skr::io::IRAMService*, CookContext* context) override;
     virtual void Destroy(void*) override;
     static uint32_t Version() { return kDevelopmentVersion; }
 };
 
-sreflect_enum_class(guid = "544116F5-EBE9-4837-AB88-4743435F39EF" serde = @json)
-AnimAdditiveReference : uint32_t{
+enum class [[sattr(
+    guid = "544116F5-EBE9-4837-AB88-4743435F39EF"
+    serde = @enable
+)]] AnimAdditiveReference : uint32_t
+{
     animation,
     skeleton
 };
 
-sreflect_struct(guid = "9B780FFE-FA11-4BA9-B410-B5D5B2849E64" serde = @json)
+struct [[sattr(guid = "9B780FFE-FA11-4BA9-B410-B5D5B2849E64" serde = @enable)]]
 AnimOptimizationOverride
 {
     /*
@@ -56,7 +59,7 @@ AnimOptimizationOverride
     float distance = 0.1f;
 };
 
-sreflect_struct(guid = "13873706-F7EE-4386-B7F0-B4E313864624" serde = @json)
+struct [[sattr(guid = "13873706-F7EE-4386-B7F0-B4E313864624" serde = @enable)]]
 AnimAsset : public skd::asset::AssetMetadata
 {
     /*
@@ -75,7 +78,7 @@ AnimAsset : public skd::asset::AssetMetadata
             }
         ]
     */
-    skr::AsyncResource<skr::SkeletonResource> skeletonAsset;    // The skeleton asset should exist inside cook system before cooking this animation asset.
+    skr::AsyncResource<skr::SkeletonResource> skeletonAsset;                    // The skeleton asset should exist inside cook system before cooking this animation asset.
     bool additive = false;                                                      //  Creates a delta animation that can be used for additive blending.
     AnimAdditiveReference additiveReference = AnimAdditiveReference::animation; //  Select reference pose to use to build additive/delta animation. Can be "animation" to use the 1st animation keyframe as reference, or "skeleton" to use skeleton rest pose.
     float samplingRate = 0.f;                                                   //  Selects animation sampling rate in hertz. Set a value <= 0 to use imported scene default frame rate.
@@ -85,10 +88,11 @@ AnimAsset : public skd::asset::AssetMetadata
     skr::Vector<AnimOptimizationOverride> override;                             //  Per joint optimization setting override
 };
 
-sreflect_struct(guid = "81F1C813-1ABA-41BE-8D7A-F6C88E73E891")
-SKR_ANIMTOOL_API AnimCooker : public skd::asset::Cooker
+struct [[sattr(
+    guid = "81F1C813-1ABA-41BE-8D7A-F6C88E73E891"
+)]] SKR_ANIMTOOL_API AnimCooker : public skd::asset::Cooker
 {
-    bool Cook(CookContext * ctx) override;
+    bool Cook(CookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 };
 } // namespace skd::asset

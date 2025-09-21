@@ -144,6 +144,7 @@ public:
         ComputePassBuilder& read(const char8_t* name, AccelerationStructureSRVHandle handle) SKR_NOEXCEPT;
 
         ComputePassBuilder& set_pipeline(CGPUComputePipelineId pipeline) SKR_NOEXCEPT;
+        ComputePassBuilder& set_ray_pipeline(CGPURayPipelineId pipeline) SKR_NOEXCEPT;
         ComputePassBuilder& set_root_signature(CGPURootSignatureId signature) SKR_NOEXCEPT;
         
         // Performance hints
@@ -203,7 +204,7 @@ public:
         BufferBuilder& set_name(const char8_t* name) SKR_NOEXCEPT;
         BufferBuilder& with_tags(uint32_t tags) SKR_NOEXCEPT;
         BufferBuilder& import(CGPUBufferId buffer, ECGPUResourceState init_state) SKR_NOEXCEPT;
-        BufferBuilder& allocate_dedicated() SKR_NOEXCEPT;
+        BufferBuilder& heap_dedicated() SKR_NOEXCEPT;
         BufferBuilder& structured(uint64_t first_element, uint64_t element_count, uint64_t element_stride) SKR_NOEXCEPT;
         BufferBuilder& size(uint64_t size) SKR_NOEXCEPT;
         BufferBuilder& with_flags(CGPUBufferFlags flags) SKR_NOEXCEPT;
@@ -213,7 +214,7 @@ public:
         BufferBuilder& as_upload_buffer() SKR_NOEXCEPT;
         BufferBuilder& as_vertex_buffer() SKR_NOEXCEPT;
         BufferBuilder& as_index_buffer() SKR_NOEXCEPT;
-        BufferBuilder& as_uniform_buffer() SKR_NOEXCEPT;
+        BufferBuilder& as_constant_buffer() SKR_NOEXCEPT;
         BufferBuilder& prefer_on_device() SKR_NOEXCEPT;
         BufferBuilder& prefer_on_host() SKR_NOEXCEPT;
 
@@ -238,12 +239,14 @@ public:
         TextureBuilder& import(CGPUTextureId texture, ECGPUResourceState init_state) SKR_NOEXCEPT;
         TextureBuilder& extent(uint64_t width, uint64_t height, uint64_t depth = 1) SKR_NOEXCEPT;
         TextureBuilder& format(ECGPUFormat format) SKR_NOEXCEPT;
+        TextureBuilder& mip_count(uint32_t size) SKR_NOEXCEPT;
         TextureBuilder& array(uint32_t size) SKR_NOEXCEPT;
         TextureBuilder& sample_count(ECGPUSampleCount count) SKR_NOEXCEPT;
         TextureBuilder& allow_render_target() SKR_NOEXCEPT;
         TextureBuilder& allow_depth_stencil() SKR_NOEXCEPT;
         TextureBuilder& allow_readwrite() SKR_NOEXCEPT;
-        TextureBuilder& allocate_dedicated() SKR_NOEXCEPT;
+        TextureBuilder& heap_dedicated() SKR_NOEXCEPT;
+        TextureBuilder& driver_dedicated() SKR_NOEXCEPT;
         TextureBuilder& allow_lone() SKR_NOEXCEPT;
 
     protected:

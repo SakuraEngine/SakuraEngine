@@ -70,8 +70,19 @@
     #endif
 #endif
 
+// cxx 23
+#if !defined(SKR_CXX_23) && defined(__cplusplus)
+    #if (__cplusplus >= 202300L)
+        #define SKR_CXX_23 1
+    #elif defined(_MSVC_LANG) && (_MSVC_LANG >= 202300L)
+        #define SKR_CXX_23 1
+    #endif
+#endif
+
 // cxx version
-#if defined(SKR_CXX_20)
+#if defined(SKR_CXX_23)
+    #define SKR_CXX_VERSION 23
+#elif defined(SKR_CXX_20)
     #define SKR_CXX_VERSION 20
 #elif defined(SKR_CXX_17)
     #define SKR_CXX_VERSION 17

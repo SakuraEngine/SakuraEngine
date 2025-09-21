@@ -44,7 +44,7 @@ struct QueueInfo {
 // QueueSchedule的输出结果
 struct TimelineScheduleResult 
 {
-    skr::span<QueueInfo> all_queues;
+    skr::Span<QueueInfo> all_queues;
     StackVector<StackVector<PassNode*>> queue_schedules;    // 各队列的调度信息
     StackMap<PassNode*, uint32_t> pass_queue_assignments; // Pass到队列的映射
 };

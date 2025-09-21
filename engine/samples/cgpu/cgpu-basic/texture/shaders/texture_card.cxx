@@ -12,7 +12,7 @@ struct RootConstants
 [[push_constant]]
 ConstantBuffer<RootConstants> push_constants;
 [[group(0)]]
-Texture2D<float> sampled_texture;
+Texture2D sampled_texture;
 [[group(1)]]
 Sampler texture_sampler;
 

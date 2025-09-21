@@ -1,4 +1,4 @@
-#include "SkrRT/ecs/scheduler.hpp"
+#include "SkrRuntime/ecs/scheduler.hpp"
 #include "SkrCore/async/wait_timeout.hpp"
 #include "SkrCore/memory/sp.hpp"
 #include "./../sugoi/impl/query.hpp"
@@ -13,7 +13,7 @@ EDependencySyncMode TaskSignature::DeterminSyncMode(TaskSignature* t, EAccessMod
     return EDependencySyncMode::WholeTask;
 }
 
-inline static bool HasSelfConfictReadWrite(skr::RC<TaskSignature> task, ComponentAccess acess, skr::span<ComponentAccess> to_search)
+inline static bool HasSelfConfictReadWrite(skr::RC<TaskSignature> task, ComponentAccess acess, skr::Span<ComponentAccess> to_search)
 {
     if (task->opts && task->opts->no_parallelization)
         return true;

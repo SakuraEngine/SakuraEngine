@@ -1,11 +1,10 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrTask/parallel_for.hpp"
-#include "SkrRT/misc/cartesian_product.hpp"
+#include "SkrRuntime/misc/cartesian_product.hpp"
 #include "SkrToolCore/cook_system/cook_system.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
-#include "SkrSerde/json_serde.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +23,7 @@ void* ShaderImporter::Import(skr::io::IRAMService* ioService, CookContext* conte
     const auto path = context->AddSourceFileAndLoad(ioService, sourcePath.c_str(), ioBlob);
 
     // create source code wrapper
-    const skr::Path pathObj{path};
+    const skr::Path pathObj{ path };
     const auto extention = pathObj.extension(false);
     const auto source_name = pathObj.basename();
     const auto sourceType = Util_GetShaderSourceTypeWithExtensionString(extention.string().c_str());
@@ -42,7 +41,7 @@ using unique_option_variant_t = skr::Vector<ShaderOptionInstance>;
 // [ [z: "on", y: "a", z: "1"], [x: "on", y: "a", z: "2"] ...]
 using option_variant_seq_t = skr::Vector<unique_option_variant_t>;
 using variant_seq_hashe_seq_t = skr::Vector<StableShaderHash>;
-void cartesian_variants(skr::span<ShaderOptionsResource*> options, skr::Vector<ShaderOptionTemplate>& out_flatten_options, option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
+void cartesian_variants(skr::Span<ShaderOptionsResource*> options, skr::Vector<ShaderOptionTemplate>& out_flatten_options, option_variant_seq_t& out_variants, variant_seq_hashe_seq_t& out_stable_hahses)
 {
     // flat and well sorted
     // [ x: ["on", "off"], y: ["a", "b", "c"], z: ["1", "2"] ]
@@ -185,13 +184,8 @@ bool ShaderCooker::Cook(CookContext* ctx)
                         {
                             // write bytecode to disk using ResourceVFS
                             const auto subdir = CGPUShaderBytecodeTypeNames[format];
-                            const auto fname = skr::format(u8"{}#{}-{}-{}-{}",
-                                identifier.hash.flags,
-                                identifier.hash.encoded_digits[0],
-                                identifier.hash.encoded_digits[1],
-                                identifier.hash.encoded_digits[2],
-                                identifier.hash.encoded_digits[3]);
-                            
+                            const auto fname = skr::format(u8"{}#{}-{}-{}-{}", identifier.hash.flags, identifier.hash.encoded_digits[0], identifier.hash.encoded_digits[1], identifier.hash.encoded_digits[2], identifier.hash.encoded_digits[3]);
+
                             // write bytes to file
                             {
                                 auto bytesFilename = skr::format(u8"{}/{}.bytes", subdir, fname);
@@ -201,7 +195,7 @@ bool ShaderCooker::Cook(CookContext* ctx)
                                     SKR_UNREACHABLE_CODE();
                                 }
                             }
-                            
+
                             // write pdb to file
                             if (auto pdb = compiled->GetPDB(); !pdb.is_empty())
                             {
@@ -303,17 +297,17 @@ bool ShaderCooker::Cook(CookContext* ctx)
         json_resource.option_values_sequence = options.values;
 
         // make archive
-        skr::archive::JsonWriter writer(2);
-        skr::json_write(&writer, json_resource);
-        auto jString = writer.Write();
-        
+        auto writer = skr::ArWriteJson::Create();
+        writer.value(json_resource);
+        skr::String jString;
+        writer.write_to_string(jString);
+
         // write to file using ResourceVFS
         auto jsonFilename = skr::format(u8"{}.json", assetMetaFile->GetGUID());
-        skr::span<const uint8_t> jsonData{reinterpret_cast<const uint8_t*>(jString.c_str_raw()), jString.length_buffer()};
+        skr::Span<const uint8_t> jsonData{ reinterpret_cast<const uint8_t*>(jString.c_str_raw()), jString.length_buffer() };
         if (!ctx->SaveExtra(jsonData, jsonFilename.c_str()))
         {
-            SKR_LOG_FMT_ERROR(u8"[ShaderCooker::Cook] failed to write json file for resource {}!",
-                assetMetaFile->GetGUID());
+            SKR_LOG_FMT_ERROR(u8"[ShaderCooker::Cook] failed to write json file for resource {}!", assetMetaFile->GetGUID());
             return false;
         }
     }

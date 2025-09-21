@@ -6,91 +6,57 @@
 
 namespace skr
 {
+// fwd
+struct RCBlock;
+struct RCWeakRefCounter;
+
+// concept
+namespace concepts
+{
+template <typename T>
+concept ObjectWithRC = requires(const T* const_obj, T* obj) {
+    { const_obj->skr_rc_get_block() } -> std::same_as<skr::RCBlock*>;
+};
+template <typename T>
+concept ObjectWithRCDeleter = requires(const T* const_obj, T* obj) {
+    { obj->skr_rc_delete() } -> std::same_as<void>;
+};
+template <typename From, typename To>
+concept RCConvertible =
+    std::convertible_to<From*, To*> &&
+    requires(From obj) {
+        ObjectWithRC<From>;
+        ObjectWithRC<To>;
+    };
+} // namespace concepts
+
+// deleter traits
+template <typename T>
+struct RCDeleterTraits
+{
+    inline static void do_delete(T* obj)
+    {
+        SkrDelete(obj);
+    }
+};
+template <concepts::ObjectWithRCDeleter T>
+struct RCDeleterTraits<T>
+{
+    inline static void do_delete(T* obj)
+    {
+        obj->skr_rc_delete();
+    }
+};
+
+// RC counter type
 using RCCounterType = uint64_t;
-
-// constants
-inline static constexpr RCCounterType kRCCounterUniqueFlag = 1 << 31;
+inline static constexpr RCCounterType kRCCounterUniqueFlag = RCCounterType(1) << (std::numeric_limits<RCCounterType>::digits - 1);
 inline static constexpr RCCounterType kRCCounterMax = kRCCounterUniqueFlag - 1;
-
-// operations
-inline static RCCounterType rc_ref_count(const std::atomic<RCCounterType>& counter)
-{
-    return counter.load(std::memory_order_relaxed) & ~kRCCounterUniqueFlag;
-}
-inline static bool rc_is_unique(RCCounterType counter)
-{
-    return (counter & kRCCounterUniqueFlag) != 0;
-}
-inline static RCCounterType rc_add_ref(std::atomic<RCCounterType>& counter)
-{
-    RCCounterType old = counter.load(std::memory_order_relaxed);
-    SKR_ASSERT(!rc_is_unique(old) && "try to add ref on a unique object");
-    while (!counter.compare_exchange_weak(
-        old,
-        old + 1,
-        std::memory_order_relaxed))
-    {
-        SKR_ASSERT(!rc_is_unique(old) && "try to add ref on a unique object");
-    }
-    return old + 1;
-}
-inline static RCCounterType rc_weak_lock(std::atomic<RCCounterType>& counter)
-{
-    for (RCCounterType old = counter.load(std::memory_order_relaxed); old != 0;)
-    {
-        SKR_ASSERT(!rc_is_unique(old));
-        if (counter.compare_exchange_weak(
-                old,
-                old + 1,
-                std::memory_order_relaxed))
-        {
-            return old;
-        }
-    }
-    return 0;
-}
-inline static RCCounterType rc_add_ref_unique(std::atomic<RCCounterType>& counter)
-{
-    RCCounterType old = counter.load(std::memory_order_relaxed);
-    SKR_ASSERT(old == 0 && "try to add ref on a non-unique object");
-    while (!counter.compare_exchange_weak(
-        old,
-        kRCCounterUniqueFlag | 1,
-        std::memory_order_relaxed))
-    {
-        SKR_ASSERT(old == 0 && "try to add ref on a non-unique object");
-    }
-    return kRCCounterUniqueFlag;
-}
-inline static RCCounterType rc_release_unique(std::atomic<RCCounterType>& counter)
-{
-    RCCounterType old = counter.load(std::memory_order_relaxed);
-    SKR_ASSERT(rc_is_unique(old) && "try to release a non-unique object");
-    while (!counter.compare_exchange_weak(
-        old,
-        0,
-        std::memory_order_relaxed))
-    {
-        SKR_ASSERT(rc_is_unique(old) && "try to release a non-unique object");
-    }
-    return 0;
-}
-inline static RCCounterType rc_release(std::atomic<RCCounterType>& counter)
-{
-    RCCounterType old = counter.fetch_sub(1, std::memory_order_release);
-    if (rc_is_unique(old))
-    {
-        return 0;
-    }
-    else
-    {
-        return old - 1;
-    }
-}
 
 // weak block
 struct RCWeakRefCounter
 {
+    // ref count
     inline RCCounterType ref_count() const
     {
         return _ref_count.load(std::memory_order_relaxed);
@@ -108,7 +74,9 @@ struct RCWeakRefCounter
             SkrDelete(this);
         }
     }
-    inline void notify_dead()
+
+    // object state
+    inline void notify_object_dead()
     {
         SKR_ASSERT(_is_alive.load(std::memory_order_relaxed) == true);
         _is_alive.store(false, std::memory_order_relaxed);
@@ -117,167 +85,254 @@ struct RCWeakRefCounter
     {
         return _is_alive.load(std::memory_order_relaxed);
     }
-    inline void lock_for_use()
+    inline void lock_for_use_object()
     {
         _delete_mutex.lock_shared();
     }
-    inline void unlock_for_use()
+    inline void unlock_for_use_object()
     {
         _delete_mutex.unlock_shared();
     }
-    inline void lock_for_delete()
+    inline void lock_for_delete_object()
     {
         _delete_mutex.lock();
     }
-    inline void unlock_for_delete()
+    inline void unlock_for_delete_object()
     {
         _delete_mutex.unlock();
     }
 
 private:
-    std::atomic<RCCounterType> _ref_count = 0;
-    shared_atomic_mutex _delete_mutex = {};
+    std::atomic<RCCounterType> _ref_count = 0; // weak ref count
+    shared_atomic_mutex _delete_mutex = {};    // mutex used to keep object alive until all weak locks released
     std::atomic<bool> _is_alive = true;
 };
-inline static RCWeakRefCounter* rc_get_weak_ref_released()
+
+// rc block
+struct RCBlock
 {
-    return reinterpret_cast<RCWeakRefCounter*>(uint64_t(-1));
-}
-inline static bool rc_is_weak_ref_released(RCWeakRefCounter* counter)
-{
-    return reinterpret_cast<uint64_t>(counter) == uint64_t(-1);
-}
-inline static RCCounterType rc_weak_ref_count(
-    std::atomic<RCWeakRefCounter*>& counter)
-{
-    RCWeakRefCounter* weak_counter = counter.load(std::memory_order_relaxed);
-    if (!weak_counter || rc_is_weak_ref_released(weak_counter))
+    // ref count ops
+    inline RCCounterType ref_count() const
     {
+        return _ref_count.load(std::memory_order_relaxed) & ~kRCCounterUniqueFlag;
+    }
+    inline RCCounterType add_ref()
+    {
+        // load value
+        RCCounterType old = _ref_count.load(std::memory_order_relaxed);
+        SKR_ASSERT(!_is_unique(old) && "try to ref a unique object use shared way");
+
+        // CAS
+        while (!_ref_count.compare_exchange_weak(
+            old,
+            old + 1,
+            std::memory_order_relaxed
+        ))
+        {
+            SKR_ASSERT(!_is_unique(old) && "try to ref a unique object use shared way");
+        }
+
+        return old + 1;
+    }
+    inline RCCounterType unsafe_release()
+    {
+        RCCounterType old = _ref_count.fetch_sub(1, std::memory_order_release);
+        if (_is_unique(old))
+        {
+            SKR_ASSERT(false && "try to release a unique object use shared way");
+            return 0;
+        }
+        else
+        {
+            return old - 1;
+        }
+    }
+    template <typename T>
+    inline void release(const T* obj)
+    {
+        SKR_ASSERT(obj != nullptr);
+        if (unsafe_release() == 0)
+        {
+            notify_weak_ref_counter_dead();
+            RCDeleterTraits<T>::do_delete(const_cast<T*>(obj));
+        }
+    }
+    inline RCCounterType add_ref_unique()
+    {
+        RCCounterType old = _ref_count.load(std::memory_order_relaxed);
+        SKR_ASSERT(old == 0 && "try to ref a shared object use unique way");
+
+        while (!_ref_count.compare_exchange_weak(
+            old,
+            kRCCounterUniqueFlag | 1,
+            std::memory_order_relaxed
+        ))
+        {
+            SKR_ASSERT(old == 0 && "try to ref a shared object use unique way");
+        }
+        return kRCCounterUniqueFlag;
+    }
+    inline RCCounterType unsafe_release_unique()
+    {
+        RCCounterType old = _ref_count.load(std::memory_order_relaxed);
+        SKR_ASSERT(_is_unique(old) && "try to release a shared object use unique way");
+
+        while (!_ref_count.compare_exchange_weak(
+            old,
+            0,
+            std::memory_order_relaxed
+        ))
+        {
+            SKR_ASSERT(_is_unique(old) && "try to release a shared object use unique way");
+        }
         return 0;
     }
-    else
+    template <typename T>
+    inline void release_unique(const T* obj)
     {
-        std::atomic_thread_fence(std::memory_order_acquire);
-        return weak_counter->ref_count();
+        SKR_ASSERT(obj != nullptr);
+        SKR_ASSERT(unsafe_release_unique() == 0);
+
+        notify_weak_ref_counter_dead();
+        RCDeleterTraits<T>::do_delete(const_cast<T*>(obj));
     }
-}
-inline static RCWeakRefCounter* rc_get_or_new_weak_ref_counter(
-    std::atomic<RCWeakRefCounter*>& counter)
-{
-    RCWeakRefCounter* weak_counter = counter.load(std::memory_order_relaxed);
-    if (weak_counter)
+
+    // weak api
+    inline RCCounterType weak_lock()
     {
-        return rc_is_weak_ref_released(weak_counter) ? nullptr : weak_counter;
-    }
-    else
-    {
-        RCWeakRefCounter* new_counter = SkrNew<RCWeakRefCounter>();
-        if (counter.compare_exchange_weak(
-                weak_counter,
-                new_counter,
-                std::memory_order_release))
+        for (RCCounterType old = _ref_count.load(std::memory_order_relaxed); old != 0;)
         {
-            std::atomic_thread_fence(std::memory_order_acquire);
-            // add ref for keep it alive until any weak ref and self released
-            new_counter->add_ref();
-            return new_counter;
+            SKR_ASSERT(!_is_unique(old) && "try to lock a unique object");
+            if (_ref_count.compare_exchange_weak(
+                    old,
+                    old + 1,
+                    std::memory_order_relaxed
+                ))
+            {
+                return old;
+            }
+        }
+        return 0;
+    }
+    inline RCCounterType weak_ref_count() const
+    {
+        RCWeakRefCounter* weak_counter = _weak_counter.load(std::memory_order_relaxed);
+        if (!weak_counter || _is_object_released(weak_counter))
+        { // no weak counter or object has been released by other thread
+            return 0;
         }
         else
         {
             std::atomic_thread_fence(std::memory_order_acquire);
-            if (rc_is_weak_ref_released(weak_counter))
+            return weak_counter->ref_count();
+        }
+    }
+    inline RCWeakRefCounter* get_or_new_weak_ref_counter()
+    {
+        RCWeakRefCounter* weak_counter = _weak_counter.load(std::memory_order_relaxed);
+        if (weak_counter)
+        {
+            return _is_object_released(weak_counter) ? nullptr : weak_counter;
+        }
+        else
+        {
+            RCWeakRefCounter* new_counter = SkrNew<RCWeakRefCounter>();
+            if (_weak_counter.compare_exchange_weak(
+                    weak_counter,
+                    new_counter,
+                    std::memory_order_release
+                ))
             {
-                // object has been released, delete the new one
-                SkrDelete(new_counter);
-                return nullptr;
+                std::atomic_thread_fence(std::memory_order_acquire);
+                // add ref for keep it alive until any weak ref and self released
+                new_counter->add_ref();
+                return new_counter;
             }
             else
             {
-                // another thread created a weak counter, delete the new one
-                SkrDelete(new_counter);
-                return weak_counter;
+                std::atomic_thread_fence(std::memory_order_acquire);
+                if (_is_object_released(weak_counter))
+                {
+                    // object has been released, delete the new one
+                    SkrDelete(new_counter);
+                    return nullptr;
+                }
+                else
+                {
+                    // another thread created a weak counter, delete the new one
+                    SkrDelete(new_counter);
+                    return weak_counter;
+                }
             }
         }
     }
-}
-inline static void rc_notify_weak_ref_counter_dead(
-    std::atomic<RCWeakRefCounter*>& counter)
-{
-    RCWeakRefCounter* weak_counter = counter.load(std::memory_order_relaxed);
 
-    // take release permissions
-    while (!counter.compare_exchange_weak(
-        weak_counter,
-        rc_get_weak_ref_released(),
-        std::memory_order_release))
+    // notify weak counter the object is dead
+    inline void notify_weak_ref_counter_dead()
     {
-        if (rc_is_weak_ref_released(weak_counter))
+        RCWeakRefCounter* weak_counter = _weak_counter.load(std::memory_order_relaxed);
+
+        // take release permissions
+        while (!_weak_counter.compare_exchange_weak(
+            weak_counter,
+            _weak_ref_on_obj_released(),
+            std::memory_order_release
+        ))
         {
-            // unexpected, another thread released the weak counter
-            SKR_UNREACHABLE_CODE();
+            if (_is_object_released(weak_counter))
+            {
+                // unexpected, another thread released the object
+                // release race should handled in release() or release_unique()
+                SKR_UNREACHABLE_CODE();
+            }
+            else
+            {
+                // another thread created a weak counter when we are deleting the object
+                SKR_ASSERT(weak_counter != nullptr);
+            }
         }
-        else
+
+        // now release the weak counter
+        if (weak_counter)
         {
-            // another thread created a weak counter
-            SKR_ASSERT(weak_counter != nullptr);
+            // lock for delete
+            weak_counter->lock_for_delete_object();
+
+            // release
+            std::atomic_thread_fence(std::memory_order_acquire);
+            weak_counter->notify_object_dead();
+            weak_counter->release();
+
+            // unlock for delete
+            weak_counter->unlock_for_delete_object();
         }
     }
 
-    // now release the weak counter
-    if (weak_counter)
+    //! Note: reset for pooling object,
+    inline void unsafe_reset()
     {
-        // lock for delete
-        weak_counter->lock_for_delete();
-
-        // release
-        std::atomic_thread_fence(std::memory_order_acquire);
-        weak_counter->notify_dead();
-        weak_counter->release();
-
-        // unlock for delete
-        weak_counter->unlock_for_delete();
+        _ref_count.store(0, std::memory_order_relaxed);
+        _weak_counter.store(nullptr, std::memory_order_relaxed);
     }
-}
 
-// concept
-template <typename T>
-concept ObjectWithRC = requires(const T* const_obj, T* obj) {
-    { const_obj->skr_rc_count() } -> std::same_as<skr::RCCounterType>;
-    { const_obj->skr_rc_add_ref() } -> std::same_as<skr::RCCounterType>;
-    { const_obj->skr_rc_add_ref_unique() } -> std::same_as<skr::RCCounterType>;
-    { const_obj->skr_rc_release_unique() } -> std::same_as<skr::RCCounterType>;
-    { const_obj->skr_rc_weak_lock() } -> std::same_as<skr::RCCounterType>;
-    { const_obj->skr_rc_release() } -> std::same_as<skr::RCCounterType>;
-    { const_obj->skr_rc_weak_ref_count() } -> std::same_as<skr::RCCounterType>;
-    { const_obj->skr_rc_weak_ref_counter() } -> std::same_as<skr::RCWeakRefCounter*>;
-};
-template <typename T>
-concept ObjectWithRCDeleter = requires(const T* const_obj, T* obj) {
-    { obj->skr_rc_delete() } -> std::same_as<void>;
-};
-template <typename From, typename To>
-concept RCConvertible = requires(From obj) {
-    ObjectWithRC<From>;
-    ObjectWithRC<To>;
-    std::convertible_to<From*, To*>;
-};
-
-// deleter traits
-template <typename T>
-struct RCDeleterTraits
-{
-    inline static void do_delete(T* obj)
+private:
+    inline static bool _is_unique(RCCounterType counter)
     {
-        SkrDelete(obj);
+        return (counter & kRCCounterUniqueFlag) != 0;
     }
-};
-template <ObjectWithRCDeleter T>
-struct RCDeleterTraits<T>
-{
-    inline static void do_delete(T* obj)
+    // use 0xFFFF'FFFF'FFFF'FFFF to indicate the object has been released
+    inline static RCWeakRefCounter* _weak_ref_on_obj_released()
     {
-        obj->skr_rc_delete();
+        return reinterpret_cast<RCWeakRefCounter*>(std::numeric_limits<std::uintptr_t>::max());
     }
+    inline static bool _is_object_released(RCWeakRefCounter* weak_counter)
+    {
+        return reinterpret_cast<std::uintptr_t>(weak_counter) == std::numeric_limits<std::uintptr_t>::max();
+    }
+
+private:
+    std::atomic<RCCounterType> _ref_count = 0;
+    std::atomic<RCWeakRefCounter*> _weak_counter = nullptr;
 };
 
 // release helper
@@ -295,64 +350,22 @@ inline void rc_release_with_delete(T* p)
 } // namespace skr
 
 // interface macros
-#define SKR_RC_INTEFACE()                                               \
-    virtual skr::RCCounterType skr_rc_count() const = 0;                \
-    virtual skr::RCCounterType skr_rc_add_ref() const = 0;              \
-    virtual skr::RCCounterType skr_rc_add_ref_unique() const = 0;       \
-    virtual skr::RCCounterType skr_rc_release_unique() const = 0;       \
-    virtual skr::RCCounterType skr_rc_weak_lock() const = 0;            \
-    virtual skr::RCCounterType skr_rc_release() const = 0;              \
-    virtual skr::RCCounterType skr_rc_weak_ref_count() const = 0;       \
-    virtual skr::RCWeakRefCounter* skr_rc_weak_ref_counter() const = 0; \
-    virtual void skr_rc_weak_ref_counter_notify_dead() const = 0;
+#define SKR_RC_INTEFACE() \
+    virtual skr::RCBlock* skr_rc_get_block() const = 0;
 
 #define SKR_RC_DELETER_INTERFACE() \
     virtual void skr_rc_delete() = 0;
 
 // impl macros
-#define SKR_RC_IMPL(__SUFFIX)                                                      \
-private:                                                                           \
-    sattr(serde = @disable)                                                        \
-    mutable ::std::atomic<::skr::RCCounterType> zz_skr_rc = 0;                     \
-    sattr(serde = @disable)                                                        \
-    mutable ::std::atomic<::skr::RCWeakRefCounter*> zz_skr_weak_counter = nullptr; \
-                                                                                   \
-public:                                                                            \
-    inline skr::RCCounterType skr_rc_count() const __SUFFIX                        \
-    {                                                                              \
-        return skr::rc_ref_count(zz_skr_rc);                                       \
-    }                                                                              \
-    inline skr::RCCounterType skr_rc_add_ref() const __SUFFIX                      \
-    {                                                                              \
-        return skr::rc_add_ref(zz_skr_rc);                                         \
-    }                                                                              \
-    inline skr::RCCounterType skr_rc_add_ref_unique() const __SUFFIX               \
-    {                                                                              \
-        return skr::rc_add_ref_unique(zz_skr_rc);                                  \
-    }                                                                              \
-    inline skr::RCCounterType skr_rc_release_unique() const __SUFFIX               \
-    {                                                                              \
-        return skr::rc_release_unique(zz_skr_rc);                                  \
-    }                                                                              \
-    inline skr::RCCounterType skr_rc_weak_lock() const __SUFFIX                    \
-    {                                                                              \
-        return skr::rc_weak_lock(zz_skr_rc);                                       \
-    }                                                                              \
-    inline skr::RCCounterType skr_rc_release() const __SUFFIX                      \
-    {                                                                              \
-        return skr::rc_release(zz_skr_rc);                                         \
-    }                                                                              \
-    inline skr::RCCounterType skr_rc_weak_ref_count() const __SUFFIX               \
-    {                                                                              \
-        return skr::rc_weak_ref_count(zz_skr_weak_counter);                        \
-    }                                                                              \
-    inline skr::RCWeakRefCounter* skr_rc_weak_ref_counter() const __SUFFIX         \
-    {                                                                              \
-        return skr::rc_get_or_new_weak_ref_counter(zz_skr_weak_counter);           \
-    }                                                                              \
-    inline void skr_rc_weak_ref_counter_notify_dead() const __SUFFIX               \
-    {                                                                              \
-        skr::rc_notify_weak_ref_counter_dead(zz_skr_weak_counter);                 \
+#define SKR_RC_IMPL(__SUFFIX)                                \
+private:                                                     \
+    [[sattr(serde = @disable)]]                                \
+    mutable ::skr::RCBlock zz_skr_rc_block;                  \
+                                                             \
+public:                                                      \
+    inline ::skr::RCBlock* skr_rc_get_block() const __SUFFIX \
+    {                                                        \
+        return &zz_skr_rc_block;                             \
     }
 
 #define SKR_RC_DELETER_IMPL_DEFAULT(__SUFFIX) \

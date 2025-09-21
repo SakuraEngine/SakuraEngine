@@ -3,16 +3,18 @@
 
 namespace skr
 {
-struct V8ErrorCache {
+struct V8ErrorCache
+{
     enum class EKind
     {
         Error,
         Warning,
     };
 
-    struct Data {
+    struct Data
+    {
         String content;
-        EKind  kind;
+        EKind kind;
     };
 
     template <typename... Args>
@@ -32,18 +34,19 @@ struct V8ErrorCache {
         ++_warning_count;
     }
 
-    inline bool                has_any_msg() const { return _error_count > 0 || _warning_count > 0; }
-    inline bool                has_error() const { return _error_count > 0; }
-    inline bool                has_warning() const { return _warning_count > 0; }
+    inline bool has_any_msg() const { return _error_count > 0 || _warning_count > 0; }
+    inline bool has_error() const { return _error_count > 0; }
+    inline bool has_warning() const { return _warning_count > 0; }
     inline const Vector<Data>& data() const { return _data; }
 
 private:
-    Vector<Data> _data          = {};
-    uint32_t     _error_count   = 0;
-    uint32_t     _warning_count = 0;
+    Vector<Data> _data = {};
+    uint32_t _error_count = 0;
+    uint32_t _warning_count = 0;
 };
 
-struct V8ErrorBuilderTreeStyle {
+struct V8ErrorBuilderTreeStyle
+{
     enum class EIndentNode : uint8_t
     {
         Empty,      // means last node in this indent level
@@ -51,9 +54,10 @@ struct V8ErrorBuilderTreeStyle {
         NodeEntry,  // means entry a sub node
         NodeExit,   // mean exit a sub node
     };
-    struct LineData {
-        String                        content      = {};
-        uint32_t                      indent       = 0;
+    struct LineData
+    {
+        String content = {};
+        uint32_t indent = 0;
         InlineVector<EIndentNode, 16> indent_nodes = {};
     };
 
@@ -64,9 +68,9 @@ struct V8ErrorBuilderTreeStyle {
         // next line
         if (_is_line_start)
         {
-            auto& line_data  = _lines.add_default().ref();
+            auto& line_data = _lines.add_default().ref();
             line_data.indent = _cur_indent;
-            _is_line_start   = false;
+            _is_line_start = false;
         }
 
         // append content
@@ -121,12 +125,12 @@ struct V8ErrorBuilderTreeStyle {
             uint32_t cur_indent;
             {
                 auto& line_data = _lines[0];
-                cur_indent      = line_data.indent;
+                cur_indent = line_data.indent;
 
                 // record entry node
                 for (uint32_t i = 0; i <= cur_indent; ++i)
                 {
-                    last_enter_line[i]        = 0;
+                    last_enter_line[i] = 0;
                     line_data.indent_nodes[i] = EIndentNode::NodeEntry;
                 }
             }
@@ -147,7 +151,7 @@ struct V8ErrorBuilderTreeStyle {
                     // setup new indent entry node
                     for (uint32_t i = cur_indent + 1; i <= line_data.indent; ++i)
                     {
-                        last_enter_line[i]        = line_idx;
+                        last_enter_line[i] = line_idx;
                         line_data.indent_nodes[i] = EIndentNode::NodeEntry;
                     }
 
@@ -272,9 +276,9 @@ private:
     }
 
 private:
-    Vector<LineData> _lines         = {};
-    uint32_t         _cur_indent    = 0;
-    bool             _is_line_start = true;
+    Vector<LineData> _lines = {};
+    uint32_t _cur_indent = 0;
+    bool _is_line_start = true;
 };
 
 } // namespace skr

@@ -1,5 +1,5 @@
-#include "SkrArchive/json/reader.h"
 #include "SkrCore/memory/sp.hpp"
+#include "SkrCore/serialize/json_archive.hpp"
 #include "SkrOS/shared_library.hpp"
 #include "SkrOS/filesystem.hpp"
 #include "SkrContainersDef/hashmap.hpp"
@@ -39,7 +39,6 @@ namespace skr
 {
 ModuleSubsystem::~ModuleSubsystem() SKR_NOEXCEPT
 {
-
 }
 
 struct ModuleContext
@@ -174,9 +173,7 @@ public:
     skr::String name = u8"";
 };
 
-static skr::Path GetVersionPath(const skr::Path& basepath,
-    unsigned version,
-    const skr::Path& temppath)
+static skr::Path GetVersionPath(const skr::Path& basepath, unsigned version, const skr::Path& temppath)
 {
     auto basePath = basepath.normalize();
     auto folder = basePath.parent_directory();
@@ -222,7 +219,7 @@ bool ModuleManagerImpl::loadHotfixModule(SharedLibrary& lib, const skr::String& 
         {
             SKR_LOG_ERROR(u8"hotfix module %s pdb process failed, debugging may be "
                           "affected and/or reload may fail",
-                path.string().data());
+                          path.string().data());
         }
 #endif
     }
@@ -325,33 +322,38 @@ IModule* ModuleManagerImpl::spawnDynamicModule(const skr::String& name, bool hot
 ModuleInfo ModuleManagerImpl::parseMetaData(const char8_t* metadata)
 {
     ModuleInfo info;
-    skr::archive::_JsonReader reader(metadata);
-    reader.StartObject(u8"");
+    auto reader = skr::ArReadJson::ReadBuffer(metadata, std::char_traits<char8_t>::length(metadata));
     {
-        reader.ReadString(u8"api", info.core_version);
-        reader.ReadString(u8"name", info.name);
-        reader.ReadString(u8"prettyname", info.prettyname);
-        reader.ReadString(u8"version", info.version);
-        reader.ReadString(u8"linking", info.linking);
-        // reader.ReadString(u8"url", info.url);
-        // reader.ReadString(u8"license", info.license);
-        // reader.ReadString(u8"copyright", info.copyright);
+        skr::Archive::ObjectScope obj_scope{ reader };
+        SKR_FAST_CHECK(obj_scope.is_success(), {});
 
-        size_t dep_count;
-        reader.StartArray(u8"dependencies", dep_count);
-        for (size_t i = 0; i < dep_count; i++)
+        SKR_FAST_CHECK(reader.key_value(u8"api", info.core_version), {});
+        SKR_FAST_CHECK(reader.key_value(u8"name", info.name), {});
+        SKR_FAST_CHECK(reader.key_value(u8"prettyname", info.prettyname), {});
+        SKR_FAST_CHECK(reader.key_value(u8"version", info.version), {});
+        SKR_FAST_CHECK(reader.key_value(u8"linking", info.linking), {});
+
+        SKR_FAST_CHECK(reader.key(u8"dependencies"), {});
         {
-            ModuleDependency dep;
-            reader.StartObject(u8"");
-            reader.ReadString(u8"name", dep.name);
-            reader.ReadString(u8"version", dep.version);
-            reader.ReadString(u8"kind", dep.kind);
-            reader.EndObject();
-            info.dependencies.add(dep);
+            skr::Archive::ArrayScope arr_scope{ reader };
+            SKR_FAST_CHECK(arr_scope.is_success(), {});
+
+            uint64_t arr_count;
+            SKR_FAST_CHECK(reader.array_size(arr_count), {});
+            info.dependencies.reserve(arr_count);
+
+            for (uint64_t i = 0; i < arr_count; i++)
+            {
+                auto& dep = info.dependencies.add_default().ref();
+
+                skr::Archive::ObjectScope dep_obj_scope{ reader };
+                SKR_FAST_CHECK(dep_obj_scope.is_success(), {});
+                SKR_FAST_CHECK(reader.key_value(u8"name", dep.name), {});
+                SKR_FAST_CHECK(reader.key_value(u8"version", dep.version), {});
+                SKR_FAST_CHECK(reader.key_value(u8"kind", dep.kind), {});
+            }
         }
-        reader.EndArray();
     }
-    reader.EndObject();
     return info;
 }
 
@@ -401,11 +403,10 @@ bool ModuleManagerImpl::__internal_DestroyModuleGraph(const skr::String& nodenam
     if (!get_module_property(nodename).bActive)
         return true;
     auto node = nodeMap.find(nodename)->second;
-    dependency_graph->foreach_inv_neighbors(node,
-        [this](DependencyGraphNode* node) {
-            ModuleProperty* property = static_cast<ModuleProperty*>(node);
-            __internal_DestroyModuleGraph(property->name);
-        });
+    dependency_graph->foreach_inv_neighbors(node, [this](DependencyGraphNode* node) {
+        ModuleProperty* property = static_cast<ModuleProperty*>(node);
+        __internal_DestroyModuleGraph(property->name);
+    });
     auto this_module = get_module(nodename);
     // subsystems
     for (auto&& subsystem : this_module->subsystems)
@@ -499,11 +500,10 @@ bool ModuleManagerImpl::__internal_UpdateModuleGraph(const skr::String& entry)
     if (hotfixTraversalSet.find(entry) != hotfixTraversalSet.end())
         return true;
     auto node = nodeMap.find(entry)->second;
-    dependency_graph->foreach_neighbors(node,
-        [this](DependencyGraphNode* node) {
-            ModuleProperty* property = static_cast<ModuleProperty*>(node);
-            __internal_UpdateModuleGraph(property->name);
-        });
+    dependency_graph->foreach_neighbors(node, [this](DependencyGraphNode* node) {
+        ModuleProperty* property = static_cast<ModuleProperty*>(node);
+        __internal_UpdateModuleGraph(property->name);
+    });
     auto iter = hotfixModules.find(entry);
     if (iter == hotfixModules.end())
         return true;

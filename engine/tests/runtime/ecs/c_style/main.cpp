@@ -2,8 +2,8 @@
 #include "SkrBase/atomic/atomic.h"
 #include "SkrCore/log.h"
 #include "SkrTask/parallel_for.hpp"
-#include "SkrRT/sugoi/sugoi.h"
-#include "SkrRT/sugoi/array.hpp"
+#include "SkrRuntime/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/array.hpp"
 #include "SkrTestFramework/framework.hpp"
 #include <memory>
 #include <algorithm>
@@ -593,10 +593,6 @@ void register_managed_component()
         +[](sugoi_type_index_t, sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, const char* src) { new (dst) managed(*(managed*)src); },
         +[](sugoi_type_index_t, sugoi_chunk_t* chunk, EIndex index, char* data) { ((managed*)data)->~managed(); },
         +[](sugoi_type_index_t, sugoi_chunk_t* chunk, EIndex index, char* dst, sugoi_chunk_t* schunk, EIndex sindex, char* src) { new (dst) managed(std::move(*(managed*)src)); },
-        +[](sugoi_type_index_t, sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryWriter* v) {
-        },
-        +[](sugoi_type_index_t, sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryReader* v) {
-        },
         nullptr
     };
     type_managed = sugoiT_register_type(&desc);

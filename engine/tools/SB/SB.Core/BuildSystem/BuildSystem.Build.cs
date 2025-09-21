@@ -47,8 +47,9 @@ namespace SB
         }
         public static TaskEmitter? GetTaskEmitter(string Name) => TaskEmitters.TryGetValue(Name, out var Found) ? Found : null;
 
-        public static void RunBuild(string? SingleTargetName = null)
+        public static int RunBuild(string? SingleTargetName = null)
         {
+            int ErrorCount = 0;
             try
             {
                 Log.Verbose("Run Build... ");
@@ -65,6 +66,7 @@ namespace SB
             {
                 bool First = true;
                 TaskFatalError? Fatal = null;
+                const int MaxDisplayCount = 5;
                 while (TaskManager.FatalErrors.TryDequeue(out Fatal))
                 {
                     if (First)
@@ -72,12 +74,14 @@ namespace SB
                         Log.Error("{FatalTidy} Detail:\n{FatalMessage}", Fatal.Tidy, Fatal.Message);
                         First = false;
                     }
-                    else
+                    else if (ErrorCount < MaxDisplayCount)
                     {
                         Log.Error("{FatalTidy}", Fatal.Tidy);
                     }
+                    ErrorCount += 1;
                 }
             }
+            return ErrorCount;
         }
 
         private struct PlanKey
@@ -514,15 +518,7 @@ namespace SB
             Target.SetAttribute(new CppCompileAttribute());
             Target.SetAttribute(new CppLinkAttribute());
         });
-        public static DependDatabase CppCompileDepends(bool IsPak) => IsPak ? pkgCompileDepends.Value : targetCompileDepends.Value;
-        public static DependDatabase CppCompileDepends(Target Target) => Target.IsFromPackage ? pkgCompileDepends.Value : targetCompileDepends.Value;
-        public static Lazy<DependDatabase> pkgCompileDepends = new Lazy<DependDatabase>(
-            () => new DependDatabase(PackageBuildPath!, "CppCompile.Paks." + BuildSystem.GlobalConfiguration)
-        );
-        public static Lazy<DependDatabase> targetCompileDepends = new Lazy<DependDatabase>(
-            () => new DependDatabase(BuildPath!, "CppCompile.Targets." + BuildSystem.GlobalConfiguration)
-        );
-        
+
         public static void Cleanup()
         {
             // Clear static collections
@@ -538,7 +534,7 @@ namespace SB
         {
             foreach (var Action in Actions)
             {
-                using (Profiler.BeginZone($"Action | {Target.Name}", color: (uint)Profiler.ColorType.Green)) 
+                using (Profiler.BeginZone($"Action | {Target.Name}", color: (uint)Profiler.ColorType.Green))
                 {
                     Action(Target);
                 }

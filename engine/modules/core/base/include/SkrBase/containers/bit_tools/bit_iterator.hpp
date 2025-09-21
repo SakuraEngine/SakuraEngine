@@ -29,7 +29,8 @@ template <typename TBlock, typename TSize, bool kConst>
 using FalseBitIterInv = CursorIter<FalseBitCursor<TBlock, TSize, kConst>, true>;
 
 template <typename TBlock, typename TSize, bool kConst>
-struct BitCursor {
+struct BitCursor
+{
     static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
     using DataType = std::conditional_t<kConst, const TBlock, TBlock>;
     using RefType  = std::conditional_t<kConst, bool, BitRef<TBlock>>;
@@ -101,7 +102,8 @@ private:
     SizeType  _bit_index;
 };
 template <typename TBlock, typename TSize, bool kConst>
-struct TrueBitCursor {
+struct TrueBitCursor
+{
     static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
     using DataType = std::conditional_t<kConst, const TBlock, TBlock>;
     using RefType  = std::conditional_t<kConst, bool, BitRef<TBlock>>;
@@ -230,7 +232,8 @@ private:
     SizeType  _bit_index;
 };
 template <typename TBlock, typename TSize, bool kConst>
-struct FalseBitCursor {
+struct FalseBitCursor
+{
     static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
     using DataType = std::conditional_t<kConst, const TBlock, TBlock>;
     using RefType  = std::conditional_t<kConst, bool, BitRef<TBlock>>;

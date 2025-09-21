@@ -8,5 +8,5 @@
 namespace skr
 {
 template <typename T, size_t Extent = skr::container::kDynamicExtent>
-using span = container::Span<T, size_t, Extent>;
+using Span [[sfinal_alias]] = container::Span<T, size_t, Extent>;
 }

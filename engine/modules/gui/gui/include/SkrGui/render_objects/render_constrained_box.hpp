@@ -1,19 +1,18 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_proxy_box.hpp"
-#ifndef __meta__
-    #include "SkrGui/render_objects/render_constrained_box.generated.h"
-#endif
+#include "SkrGui/render_objects/render_constrained_box.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "4d40a67a-1bd4-457a-bd23-b5be13e7d04d")
-RenderConstrainedBox : public RenderProxyBox {
+struct [[sattr(guid = "4d40a67a-1bd4-457a-bd23-b5be13e7d04d")]]
+RenderConstrainedBox : public RenderProxyBox
+{
     SKR_GENERATE_BODY(RenderConstrainedBox)
     using Super = RenderProxyBox;
 
     // getter setter
     inline const BoxConstraints& additional_constraint() const SKR_NOEXCEPT { return _additional_constraint; }
-    inline void                  set_additional_constraint(const BoxConstraints& constraint) SKR_NOEXCEPT
+    inline void set_additional_constraint(const BoxConstraints& constraint) SKR_NOEXCEPT
     {
         if (_additional_constraint != constraint)
         {

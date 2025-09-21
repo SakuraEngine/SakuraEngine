@@ -8,7 +8,8 @@
 namespace skr::container
 {
 template <typename Memory>
-struct SparseHashBase : protected SparseVector<Memory> {
+struct SparseHashBase : protected SparseVector<Memory>
+{
     using Super = SparseVector<Memory>;
 
     // sparse vector configure
@@ -65,7 +66,8 @@ struct SparseHashBase : protected SparseVector<Memory> {
     // memory op
     void clear();
     void release(SizeType capacity = 0);
-    void reserve(SizeType capacity);
+    void reserve(SizeType expect_capacity);
+    void grow_to(SizeType expect_capacity);
     void shrink();
     bool compact();
     bool compact_stable();
@@ -361,9 +363,15 @@ SKR_INLINE void SparseHashBase<Memory>::release(SizeType capacity)
     _clean_bucket();
 }
 template <typename Memory>
-SKR_INLINE void SparseHashBase<Memory>::reserve(SizeType capacity)
+SKR_INLINE void SparseHashBase<Memory>::reserve(SizeType expect_capacity)
 {
-    Super::reserve(capacity);
+    Super::reserve(expect_capacity);
+    rehash_if_need();
+}
+template <typename Memory>
+SKR_INLINE void SparseHashBase<Memory>::grow_to(SizeType expect_capacity)
+{
+    Super::grow_to(expect_capacity);
     rehash_if_need();
 }
 template <typename Memory>

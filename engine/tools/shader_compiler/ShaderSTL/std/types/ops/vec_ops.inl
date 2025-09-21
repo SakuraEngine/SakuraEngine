@@ -41,27 +41,41 @@ constexpr void set(U v, Args...args) {
 }
 
 template<typename X>
-static constexpr bool same_family = cppsl::is_same_v<X, ThisType> || cppsl::is_same_v<X, ElementType>;
+static constexpr bool is_same_dim_vec_or_scalar_v = (is_scalar_v<X> || same_dim_v<ThisType, X>);
 
 template<typename X>
-static constexpr bool arithmetical = (is_scalar_v<X> || same_dim_v<ThisType, X>) && is_arithmetic_v<X>;
+static constexpr bool same_family = is_same_dim_vec_or_scalar_v<T> && 
+(
+    cppsl::is_same_v<X, ThisType> || 
+    cppsl::is_same_v<X, ElementType> ||
+    (is_int_family_v<X> && is_int_family_v<ThisType>) // mix sint & uint
+);
+
+template<typename X>
+static constexpr bool arithmetical = is_same_dim_vec_or_scalar_v<X> && is_arithmetic_v<X>;
+
+template<class E, uint32_t N> using NoDoubleVec = vec<cppsl::conditional_t<cppsl::is_same_v<E, double>, float, E>, N>;
+template<class U> using MulT = NoDoubleVec<decltype(cppsl::declval<ElementType>() * cppsl::declval<scalar_type<U>>()), dim>;
+template<class U> using AddT = NoDoubleVec<decltype(cppsl::declval<ElementType>() + cppsl::declval<scalar_type<U>>()), dim>;
+template<class U> using SubT = NoDoubleVec<decltype(cppsl::declval<ElementType>() - cppsl::declval<scalar_type<U>>()), dim>;
+template<class U> using DivT = NoDoubleVec<decltype(cppsl::declval<ElementType>() / cppsl::declval<scalar_type<U>>()), dim>;
+template<class U> using ModT = NoDoubleVec<decltype(cppsl::declval<ElementType>() % cppsl::declval<scalar_type<U>>()), dim>;
 
 [[unaop("PLUS")]] ThisType operator+() const;
 [[unaop("MINUS")]] ThisType operator-() const;
 
 template <typename U> requires(cppsl::is_same_v<U, matrix<dim>>)
-[[binop("MUL")]] ThisType operator*(const U&) const;
-
+[[binop("MUL")]] MulT<U> operator*(const U&) const;
 template <typename U> requires(same_family<U> || arithmetical<U>)
-[[binop("ADD")]] ThisType operator+(const U&) const;
+[[binop("ADD")]] AddT<U> operator+(const U&) const;
 template <typename U> requires(same_family<U> || arithmetical<U>)
-[[binop("SUB")]] ThisType operator-(const U&) const;
+[[binop("SUB")]] SubT<U> operator-(const U&) const;
 template <typename U> requires(same_family<U> || arithmetical<U>)
-[[binop("MUL")]] ThisType operator*(const U&) const;
+[[binop("MUL")]] MulT<U> operator*(const U&) const;
 template <typename U> requires(same_family<U> || arithmetical<U>)
-[[binop("DIV")]] ThisType operator/(const U&) const;
+[[binop("DIV")]] DivT<U> operator/(const U&) const;
 template <typename U> requires(same_family<U> || arithmetical<U>)
-[[binop("MOD")]] ThisType operator%(const U&) const requires(is_int_family_v<ThisType>);
+[[binop("MOD")]] ModT<U> operator%(const U&) const requires(is_int_family_v<ThisType>);
 
 template <typename U> requires(same_family<U>)
 [[binop("BIT_AND")]] ThisType operator&(const U&) const requires(is_int_family_v<ThisType>);
@@ -77,6 +91,7 @@ template <typename U> requires(same_family<U>)
 [[binop("AND")]] ThisType operator&&(const U&) const requires(is_bool_family_v<ThisType>);
 template <typename U> requires(same_family<U>)
 [[binop("OR")]] ThisType operator||(const U&) const requires(is_bool_family_v<ThisType>);
+
 template <typename U> requires(same_family<U>)
 [[binop("LESS")]] vec<bool, dim> operator<(const U&) const requires(!is_bool_family_v<ThisType>);
 template <typename U> requires(same_family<U>)

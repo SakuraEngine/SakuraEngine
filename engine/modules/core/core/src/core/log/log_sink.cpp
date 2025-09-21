@@ -23,7 +23,7 @@ struct BufCache
     std::string buf;
 };
 
-LogSink::LogSink(skr_guid_t pattern) SKR_NOEXCEPT
+LogSink::LogSink(GUID pattern) SKR_NOEXCEPT
     : pattern_(pattern)
 {
 
@@ -34,7 +34,7 @@ LogSink::~LogSink() SKR_NOEXCEPT
     flush();
 }
 
-LogConsoleSink::LogConsoleSink(skr_guid_t pattern) SKR_NOEXCEPT
+LogConsoleSink::LogConsoleSink(GUID pattern) SKR_NOEXCEPT
     : LogSink(pattern), buf_cache_(SkrNew<BufCache>())
 {
     set_front_color(LogLevel::kTrace, EConsoleColor::WHILE);
@@ -62,7 +62,7 @@ LogConsoleSink::~LogConsoleSink() SKR_NOEXCEPT
         SkrDelete(buf_cache_);
 }
 
-LogANSIOutputSink::LogANSIOutputSink(skr_guid_t pattern) SKR_NOEXCEPT
+LogANSIOutputSink::LogANSIOutputSink(GUID pattern) SKR_NOEXCEPT
     : LogConsoleSink(pattern)
 {
     ::setvbuf(stdout, NULL, _IOFBF, bufSize);
@@ -76,7 +76,7 @@ LogANSIOutputSink::~LogANSIOutputSink() SKR_NOEXCEPT
 
 }
 
-LogConsoleWindowSink::LogConsoleWindowSink(skr_guid_t pattern) SKR_NOEXCEPT
+LogConsoleWindowSink::LogConsoleWindowSink(GUID pattern) SKR_NOEXCEPT
     : LogConsoleSink(pattern)
 {
 #ifdef USE_WIN32_CONSOLE
@@ -111,7 +111,7 @@ LogConsoleWindowSink::~LogConsoleWindowSink() SKR_NOEXCEPT
 
 }
 
-LogDebugOutputSink::LogDebugOutputSink(skr_guid_t pattern) SKR_NOEXCEPT
+LogDebugOutputSink::LogDebugOutputSink(GUID pattern) SKR_NOEXCEPT
     : LogConsoleSink(pattern)
 {
 

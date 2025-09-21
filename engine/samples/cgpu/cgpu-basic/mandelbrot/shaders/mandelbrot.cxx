@@ -1,10 +1,8 @@
 #include <std/std.hxx>
 
+RWStructuredBuffer<float4> buf;
 
-
-RWBuffer<float4> buf;
-
-[[compute_shader("compute_main"), kernel_2d(32, 32)]]
+[[compute_shader("compute_main"), numthreads(32, 32, 1)]]
 void kernel([[sv_thread_id]] uint2 tid)
 {
     const uint2 tsize = uint2(3200, 2400);
@@ -32,7 +30,7 @@ void kernel([[sv_thread_id]] uint2 tid)
         const float3 e = float3(-0.2f, -0.3f, -0.5f);
         const float3 f = float3(2.1f, 2.0f, 3.0f);
         const float3 g = float3(0.0f, 0.1f, 0.0f);
-        return float4(d + (e * cos(((f * t) + g) * 2.f * pi)), 1.0f);
+        return float4(d + (e * cos(((f * t) + g) * 2.f * 3.14159265358979323846f)), 1.0f);
     };
     buf.Store(tid.x + tid.y * row_pitch, mandelbrot());
 }

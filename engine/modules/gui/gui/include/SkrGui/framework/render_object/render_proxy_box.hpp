@@ -1,17 +1,16 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/framework/render_object/single_child_render_object.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/render_object/render_proxy_box.generated.h"
-#endif
+#include "SkrGui/framework/render_object/render_proxy_box.generated.h"
 
 namespace skr::gui
 {
 
 // 代理 Box，其渲染 Sizef 等属性严格由 child 决定，通常起到修饰作用
-sreflect_struct(guid = "5b0d4830-6eea-4ab5-91df-2b6d5633f473")
-RenderProxyBox : public RenderBox,
-                 public ISingleChildRenderObject {
+struct [[sattr(guid = "5b0d4830-6eea-4ab5-91df-2b6d5633f473")]]
+RenderProxyBox : public RenderBox
+    , public ISingleChildRenderObject
+{
     SKR_GENERATE_BODY(RenderProxyBox)
 
     // hit test

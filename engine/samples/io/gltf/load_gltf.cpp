@@ -2,7 +2,7 @@
 
 #define CGLTF_IMPLEMENTATION
 #include "cgltf/cgltf.h"
-#include "SkrRT/misc/cmd_parser.hpp"
+#include "SkrRuntime/misc/cmd_parser.hpp"
 #include "SkrContainersDef/string.hpp"
 #include <iostream>
 #include <fstream>

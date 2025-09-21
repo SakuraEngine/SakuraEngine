@@ -1,57 +1,62 @@
-#include "SkrRT/resource/resource_header.hpp"
-
-bool SResourceHeader::ReadWithoutDeps(SBinaryReader* reader)
-{
-    uint32_t function = 1;
-    if (!skr::bin_read(reader, function))
-        return false;
-    if (!skr::bin_read(reader, version))
-        return false;
-    if (!skr::bin_read(reader, guid))
-        return false;
-    if (!skr::bin_read(reader, type))
-        return false;
-    return true;
-}
+#include "SkrRuntime/resource/resource_header.hpp"
 
 namespace skr
 {
-bool BinSerde<SResourceHeader>::read(SBinaryReader* r, SResourceHeader& v)
+void Serialize<SResourceHeader>::read(ArchiveRead& r, SResourceHeader& v)
 {
-    if (!v.ReadWithoutDeps(r))
-        return false;
-    uint32_t size = 0;
-    if (!bin_read(r, size))
-        return false;
-    v.dependencies.resize_default(size);
-    for (uint32_t i = 0; i < size; i++)
-    {
-        if (!bin_read(r, v.dependencies[i]))
-            return false;
-    }
-    return true;
-}
+    Archive::ObjectScope obj_scope(r);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
 
-bool BinSerde<SResourceHeader>::write(SBinaryWriter* w, const SResourceHeader& v)
-{
-    uint32_t function = 1;
-    if (!bin_write(w, function))
-        return false;
-    if (!bin_write(w, v.version))
-        return false;
-    if (!bin_write(w, v.guid))
-        return false;
-    if (!bin_write(w, v.type))
-        return false;
-    const auto dependencies_size = (uint32_t)v.dependencies.size();
-    if (!bin_write(w, dependencies_size))
-        return false;
-    for (auto& dep : v.dependencies)
+    uint32_t function = 0;
+
+    SKR_FAST_CHECK(r.key_value(u8"function", function), );
+    SKR_FAST_CHECK(r.key_value(u8"version", v.version), );
+    SKR_FAST_CHECK(r.key_value(u8"guid", v.guid), );
+    SKR_FAST_CHECK(r.key_value(u8"type", v.type), );
+
+    SKR_FAST_CHECK(r.key(u8"dependencies"), );
     {
-        if (!bin_write(w, dep))
-            return false;
+        Archive::ArrayScope arr_scope(r);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // read dependencies count
+        uint64_t dependencies_size = 0;
+        SKR_FAST_CHECK(r.array_size<uint64_t>(dependencies_size), );
+        v.dependencies.resize_unsafe((size_t)dependencies_size);
+
+        // read each dependency guid
+        for (uint64_t i = 0; i < dependencies_size; i++)
+        {
+            SKR_FAST_CHECK(r.value(v.dependencies[i]), );
+        }
     }
-    return true;
+}
+void Serialize<SResourceHeader>::write(ArchiveWrite& w, const SResourceHeader& v)
+{
+    Archive::ObjectScope obj_scope(w);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    uint32_t function = 1;
+
+    SKR_FAST_CHECK(w.key_value(u8"function", function), );
+    SKR_FAST_CHECK(w.key_value(u8"version", v.version), );
+    SKR_FAST_CHECK(w.key_value(u8"guid", v.guid), );
+    SKR_FAST_CHECK(w.key_value(u8"type", v.type), );
+
+    SKR_FAST_CHECK(w.key(u8"dependencies"), );
+    {
+        Archive::ArrayScope arr_scope(w);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // write dependencies count
+        SKR_FAST_CHECK(w.array_size<uint64_t>((uint64_t)v.dependencies.size()), );
+
+        // write each dependency guid
+        for (const auto& dep : v.dependencies)
+        {
+            SKR_FAST_CHECK(w.value(dep), );
+        }
+    }
 }
 } // namespace skr
 

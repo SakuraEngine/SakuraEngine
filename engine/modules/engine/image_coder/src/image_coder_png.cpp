@@ -44,7 +44,7 @@ struct PNGImageCoderHelper
     inline static void user_write_compressed(png_structp png_ptr, png_bytep data, png_size_t length)
     {
         PNGImageEncoder* encoder = (PNGImageEncoder*)png_get_io_ptr(png_ptr);
-        skr::span<uint8_t> oldView = { encoder->encoded_data, encoder->encoded_size };
+        skr::Span<uint8_t> oldView = { encoder->encoded_data, encoder->encoded_size };
         auto newMemory = (uint8_t*)PNGImageDecoder::Allocate(oldView.size() + length, encoder->get_alignment());
         memcpy(newMemory, oldView.data(), oldView.size());
         PNGImageDecoder::Deallocate((uint8_t*)oldView.data(), encoder->get_alignment());

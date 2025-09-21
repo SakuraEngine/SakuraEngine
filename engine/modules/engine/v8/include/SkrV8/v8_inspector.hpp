@@ -10,7 +10,8 @@ struct V8Isolate;
 struct V8Context;
 
 // websocket
-struct SKR_V8_API V8WebSocketServer {
+struct SKR_V8_API V8WebSocketServer
+{
     V8WebSocketServer();
     ~V8WebSocketServer();
 
@@ -32,14 +33,14 @@ private:
     void _combine_json_response();
 
 private:
-    hv::WebSocketService _ws_service        = {};
-    hv::HttpService      _http_service      = {};
-    hv::WebSocketServer  _ws_server         = {};
-    WebSocketChannelPtr  _main_channel      = nullptr;
-    Vector<String>       _received_messages = {};
-    std::mutex           _mutex             = {};
-    int                  _port              = 0;
-    bool                 _is_running        = false;
+    hv::WebSocketService _ws_service = {};
+    hv::HttpService _http_service = {};
+    hv::WebSocketServer _ws_server = {};
+    WebSocketChannelPtr _main_channel = nullptr;
+    Vector<String> _received_messages = {};
+    std::mutex _mutex = {};
+    int _port = 0;
+    bool _is_running = false;
 
     // receive
     String _json_version;
@@ -47,7 +48,8 @@ private:
 };
 
 // channel
-struct SKR_V8_API V8InspectorChannel : v8_inspector::V8Inspector::Channel {
+struct SKR_V8_API V8InspectorChannel : v8_inspector::V8Inspector::Channel
+{
     // override
     void sendResponse(int callId, std::unique_ptr<v8_inspector::StringBuffer> message) override;
     void sendNotification(std::unique_ptr<v8_inspector::StringBuffer> message) override;
@@ -57,7 +59,8 @@ struct SKR_V8_API V8InspectorChannel : v8_inspector::V8Inspector::Channel {
 };
 
 // inspector client
-struct SKR_V8_API V8InspectorClient : v8_inspector::V8InspectorClient {
+struct SKR_V8_API V8InspectorClient : v8_inspector::V8InspectorClient
+{
     friend struct V8Isolate;
 
 private:
@@ -77,19 +80,19 @@ public:
     void notify_context_destroyed(V8Context* context);
 
     // getter
-    inline v8_inspector::V8InspectorSession*       v8_session() { return _session.get(); }
+    inline v8_inspector::V8InspectorSession* v8_session() { return _session.get(); }
     inline const v8_inspector::V8InspectorSession* v8_session() const { return _session.get(); }
-    inline v8_inspector::V8Inspector*              v8_inspector() { return _inspector.get(); }
-    inline const v8_inspector::V8Inspector*        v8_inspector() const { return _inspector.get(); }
-    inline bool                                    is_connected() const { return _connected; }
+    inline v8_inspector::V8Inspector* v8_inspector() { return _inspector.get(); }
+    inline const v8_inspector::V8Inspector* v8_inspector() const { return _inspector.get(); }
+    inline bool is_connected() const { return _connected; }
 
     // debug control
     void pause_on_next_statement(StringView reason);
     void run_message_loop_on_next_pause();
 
 public:
-    static constexpr int        kContextGroupId = 1;
-    static constexpr StringView kContextName    = u8"test_context";
+    static constexpr int kContextGroupId = 1;
+    static constexpr StringView kContextName = u8"test_context";
 
     V8WebSocketServer* server = nullptr;
 
@@ -104,13 +107,13 @@ private:
     V8Isolate* _isolate = nullptr;
 
     // v8 component
-    std::unique_ptr<v8_inspector::V8Inspector>        _inspector;
+    std::unique_ptr<v8_inspector::V8Inspector> _inspector;
     std::unique_ptr<v8_inspector::V8InspectorSession> _session;
-    V8InspectorChannel                                _channel;
+    V8InspectorChannel _channel;
 
     // message loop
     bool _is_runing_message_loop = false;
-    bool _run_message_loop       = false;
+    bool _run_message_loop = false;
 };
 
 } // namespace skr

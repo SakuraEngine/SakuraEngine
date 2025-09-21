@@ -4,9 +4,7 @@
 #include "SkrOS/shared_library.hpp"
 #include "SkrContainers/stl_string.hpp"
 #include "SkrRenderer/resources/shader_resource.hpp"
-#ifndef __meta__
-    #include "SkrShaderCompiler/dxc_compiler.generated.h" // IWYU pragma: export
-#endif
+#include "SkrShaderCompiler/dxc_compiler.generated.h" // IWYU pragma: export
 
 struct IDxcUtils;
 struct IDxcCompiler3;
@@ -31,9 +29,9 @@ public:
     static SDXCCompiledShader* Create(ECGPUShaderStage shader_stage, ECGPUShaderBytecodeType type, IDxcBlobEncoding* source, IDxcResult* result) SKR_NOEXCEPT;
 
     ECGPUShaderStage GetShaderStage() const SKR_NOEXCEPT override;
-    skr::span<const uint8_t> GetBytecode() const SKR_NOEXCEPT override;
-    skr::span<const uint8_t> GetPDB() const SKR_NOEXCEPT override;
-    bool GetHashCode(uint32_t* flags, skr::span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT override;
+    skr::Span<const uint8_t> GetBytecode() const SKR_NOEXCEPT override;
+    skr::Span<const uint8_t> GetPDB() const SKR_NOEXCEPT override;
+    bool GetHashCode(uint32_t* flags, skr::Span<uint32_t, 4> encoded_digits) const SKR_NOEXCEPT override;
 
 protected:
     ECGPUShaderStage shader_stage;
@@ -55,28 +53,28 @@ protected:
     IDxcBlob* debugDxilContainer = nullptr;
 };
 
-sreflect_struct(guid = "fef60053-e3d6-4296-8aae-5c508896930b")
-SKR_SHADER_COMPILER_API SDXCCompiler : public IShaderCompiler
+struct [[sattr(guid = "fef60053-e3d6-4296-8aae-5c508896930b"
+)]] SKR_SHADER_COMPILER_API SDXCCompiler : public IShaderCompiler
 {
 public:
-    SDXCCompiler(IDxcUtils * utils, IDxcCompiler3 * compiler) SKR_NOEXCEPT;
+    SDXCCompiler(IDxcUtils* utils, IDxcCompiler3* compiler) SKR_NOEXCEPT;
     ~SDXCCompiler() SKR_NOEXCEPT;
     static IShaderCompiler* Create() SKR_NOEXCEPT;
-    static void Free(IShaderCompiler * compiler) SKR_NOEXCEPT;
+    static void Free(IShaderCompiler* compiler) SKR_NOEXCEPT;
 
     EShaderSourceType GetSourceType() const SKR_NOEXCEPT override;
     bool IsSupportedTargetFormat(ECGPUShaderBytecodeType format) const SKR_NOEXCEPT override;
 
-    void SetShaderSwitches(skr::span<ShaderOptionTemplate> opt_defs, skr::span<ShaderOptionInstance> options, const StableShaderHash& hash) SKR_NOEXCEPT override;
-    void SetShaderOptions(skr::span<ShaderOptionTemplate> opt_defs, skr::span<ShaderOptionInstance> options, const StableShaderHash& hash) SKR_NOEXCEPT override;
+    void SetShaderSwitches(skr::Span<ShaderOptionTemplate> opt_defs, skr::Span<ShaderOptionInstance> options, const StableShaderHash& hash) SKR_NOEXCEPT override;
+    void SetShaderOptions(skr::Span<ShaderOptionTemplate> opt_defs, skr::Span<ShaderOptionInstance> options, const StableShaderHash& hash) SKR_NOEXCEPT override;
 
     ICompiledShader* Compile(ECGPUShaderBytecodeType format, const ShaderSourceCode& source, const ShaderImporter& importer) SKR_NOEXCEPT override;
-    void FreeCompileResult(ICompiledShader * compiled) SKR_NOEXCEPT override;
+    void FreeCompileResult(ICompiledShader* compiled) SKR_NOEXCEPT override;
 
-    void SetIncludeHandler(IDxcIncludeHandler * includeHandler) SKR_NOEXCEPT;
+    void SetIncludeHandler(IDxcIncludeHandler* includeHandler) SKR_NOEXCEPT;
 
 protected:
-    void createDefArgsFromOptions(skr::span<ShaderOptionTemplate> opt_defs, skr::span<ShaderOptionInstance> options, skr::Vector<skr::stl_wstring> & def_args) SKR_NOEXCEPT;
+    void createDefArgsFromOptions(skr::Span<ShaderOptionTemplate> opt_defs, skr::Span<ShaderOptionInstance> options, skr::Vector<skr::stl_wstring>& def_args) SKR_NOEXCEPT;
 
     IDxcUtils* utils = nullptr;
     IDxcCompiler3* compiler = nullptr;
@@ -91,8 +89,10 @@ protected:
     StableShaderHash options_hash = {};
 };
 
-sreflect_struct(guid = "ae28a9e5-39cf-4eab-aa27-6103f42cbf2d"; rttr = @minimal;)
-SKR_SHADER_COMPILER_API SDXCLibrary : public skr::ModuleSubsystem
+struct [[sattr(
+    guid = "ae28a9e5-39cf-4eab-aa27-6103f42cbf2d"; 
+    rttr = @minimal;
+)]] SKR_SHADER_COMPILER_API SDXCLibrary : public skr::ModuleSubsystem
 {
     friend struct DxcCreateInstanceT;
 

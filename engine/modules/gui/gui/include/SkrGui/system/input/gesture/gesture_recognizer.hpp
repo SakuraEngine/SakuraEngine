@@ -1,9 +1,7 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/system/input/pointer_event.hpp"
-#ifndef __meta__
-    #include "SkrGui/system/input/gesture/gesture_recognizer.generated.h"
-#endif
+#include "SkrGui/system/input/gesture/gesture_recognizer.generated.h"
 
 namespace skr::gui
 {
@@ -14,9 +12,10 @@ struct InputManager;
 // Double Click 事件会在第一次 Click 之后延长判定时长，并在第二次 click 后主动触发
 // Drag 事件会在抵达开始拖拽的距离之后主动触发
 // 如此 Drag 会最先主动触发，随后是 Double Click，Click 永远以被动姿态触发
-struct CombinePointerId {
+struct CombinePointerId
+{
     uint32_t pointer_id = 0;
-    uint32_t button_id  = 0;
+    uint32_t button_id = 0;
 
     inline bool operator==(const CombinePointerId& other) const SKR_NOEXCEPT
     {
@@ -38,8 +37,9 @@ struct CombinePointerId {
 //  2. Touch 手势，相比于 Pointer 手势更复杂，用于移动端，不一一展开
 //
 // 但是，出于某些手势的复用性考虑，这里不进行继承结构上的区分
-sreflect_struct(guid = "8fb085fd-9412-4a1b-bc95-a518e32746f2")
-SKR_GUI_API GestureRecognizer : virtual public skr::IObject {
+struct [[sattr(guid = "8fb085fd-9412-4a1b-bc95-a518e32746f2"
+)]] SKR_GUI_API GestureRecognizer : virtual public skr::IObject
+{
     SKR_GENERATE_BODY(GestureRecognizer)
 
     GestureRecognizer(NotNull<InputManager*> manager);
@@ -48,7 +48,7 @@ SKR_GUI_API GestureRecognizer : virtual public skr::IObject {
     virtual void add_pointer(NotNull<Event*> event) = 0;
 
     // 事件处理
-    virtual bool handle_event(Event* event)             = 0;
+    virtual bool handle_event(Event* event) = 0;
     virtual bool handle_event_from_widget(Event* event) = 0;
 
     // 手势竞争

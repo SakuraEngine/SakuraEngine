@@ -171,7 +171,7 @@ static SKR_FORCEINLINE const char8_t* skr_vfs_filemode_to_string(ESkrFileMode mo
         default: return u8"r";
     }
 }
-static SKR_FORCEINLINE const char8_t* skr_vfs_overwirte_filemode_to_string(ESkrFileMode mode)
+static SKR_FORCEINLINE const char8_t* skr_vfs_overwrite_filemode_to_string(ESkrFileMode mode)
 {
     switch (mode)
     {

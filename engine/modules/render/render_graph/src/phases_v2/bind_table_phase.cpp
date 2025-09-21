@@ -18,7 +18,8 @@ const CGPUShaderResource* find_shader_resource(const char8_t* name, uint64_t nam
     {
         for (uint32_t j = 0; j < root_sig->tables[i].resources_count; j++)
         {
-            const auto& resource = root_sig->tables[i].resources[j];
+            const auto& table = root_sig->tables[i];
+            const auto& resource = table.resources[j];
             if (resource.name_hash == name_hash && 
                 strcmp((const char*)resource.name, (const char*)name) == 0)
             {
@@ -210,7 +211,12 @@ CGPUXBindTableId BindTablePhase::create_bind_table_for_pass(RenderGraph* graph_,
             view_desc.mip_level_count = read_edge->get_mip_count();
             view_desc.format = view_desc.texture->info->format;
             view_desc.view_usages = CGPU_TEXTURE_VIEW_USAGE_SRV;
-            view_desc.dims = read_edge->get_dimension();
+            view_desc.dims = resource->dim;
+            if (view_desc.dims == CGPU_TEXTURE_DIMENSION_3D) 
+            {
+                view_desc.base_array_layer = 0;
+                view_desc.array_layer_count = texture_readed->get_desc().depth;
+            }
             
             const bool is_depth_stencil = FormatUtil_IsDepthStencilFormat(view_desc.format);
             const bool is_depth_only = FormatUtil_IsDepthOnlyFormat(view_desc.format);
@@ -249,15 +255,20 @@ CGPUXBindTableId BindTablePhase::create_bind_table_for_pass(RenderGraph* graph_,
             // Create UAV texture view
             CGPUTextureViewDescriptor view_desc = {};
             view_desc.texture = resource_allocation_phase_.get_resource(texture_readwrite);
-            view_desc.base_array_layer = 0;
-            view_desc.array_layer_count = 1;
-            view_desc.base_mip_level = 0;
+            view_desc.base_array_layer = rw_edge->get_array_base();
+            view_desc.array_layer_count = rw_edge->get_array_count();
+            view_desc.base_mip_level = rw_edge->get_mip_level();
             view_desc.mip_level_count = 1;
             view_desc.aspects = CGPU_TEXTURE_VIEW_ASPECTS_COLOR;
             view_desc.format = view_desc.texture->info->format;
             view_desc.view_usages = CGPU_TEXTURE_VIEW_USAGE_UAV;
-            view_desc.dims = CGPU_TEXTURE_DIMENSION_2D;
-            
+            view_desc.dims = resource->dim;
+            if (view_desc.dims == CGPU_TEXTURE_DIMENSION_3D) 
+            {
+                view_desc.base_array_layer = 0;
+                view_desc.array_layer_count = texture_readwrite->get_desc().depth;
+            }
+
             tex_uavs[e_idx] = graph->get_texture_view_pool().allocate(view_desc, graph->get_frame_index());
             update.textures = &tex_uavs[e_idx];
             desc_set_updates.emplace(update);

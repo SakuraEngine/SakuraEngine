@@ -4,7 +4,7 @@
 #include "rtm/matrix4x4f.h"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainers/vector.hpp"
-#include "SkrRT/ecs/query.hpp"
+#include "SkrRuntime/ecs/query.hpp"
 #include "SkrRenderer/render_viewport.h"
 #include "SkrRenderer/skr_renderer.h"
 

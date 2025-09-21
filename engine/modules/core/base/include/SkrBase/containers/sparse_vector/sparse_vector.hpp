@@ -12,7 +12,8 @@
 namespace skr::container
 {
 template <typename Memory>
-struct SparseVector : protected Memory {
+struct SparseVector : protected Memory
+{
     // from core
     using typename Memory::SizeType;
     using typename Memory::DataType;
@@ -90,6 +91,7 @@ struct SparseVector : protected Memory {
     void clear();
     void release(SizeType reserve_capacity = 0);
     void reserve(SizeType expect_capacity);
+    void grow_to(SizeType expect_capacity);
     void shrink();
     bool compact();
     bool compact_stable();
@@ -674,6 +676,14 @@ SKR_INLINE void SparseVector<Memory>::reserve(SizeType expect_capacity)
     }
 }
 template <typename Memory>
+SKR_INLINE void SparseVector<Memory>::grow_to(SizeType expect_capacity)
+{
+    if (expect_capacity > capacity())
+    {
+        Memory::grow_to(expect_capacity);;
+    }
+}
+template <typename Memory>
 SKR_INLINE void SparseVector<Memory>::shrink()
 {
     compact_top();
@@ -697,7 +707,8 @@ SKR_INLINE bool SparseVector<Memory>::compact()
                 do
                 {
                     --search_index;
-                } while (!has_data(search_index));
+                }
+                while (!has_data(search_index));
 
                 // move element to the hole
                 ::skr::memory::move<DataType, DataType>(&storage()[free_node]._sparse_vector_data, &storage()[search_index]._sparse_vector_data);
@@ -1442,7 +1453,8 @@ SKR_INLINE const SparseVector<Memory>& SparseVector<Memory>::readonly() const
 namespace skr::container
 {
 template <typename Memory>
-struct ContainerTraits<SparseVector<Memory>> {
+struct ContainerTraits<SparseVector<Memory>>
+{
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()

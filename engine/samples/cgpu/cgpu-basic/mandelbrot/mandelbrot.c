@@ -115,7 +115,6 @@ void ComputeFunc(void* usrdata)
     // Create root signature
     CGPUShaderEntryDescriptor compute_shader_entry = {
         .entry = "compute_main",
-        .stage = CGPU_SHADER_STAGE_COMPUTE,
         .library = compute_shader
     };
     CGPURootSignatureDescriptor root_desc = {
@@ -192,9 +191,10 @@ void ComputeFunc(void* usrdata)
         CGPUComputePassEncoderId encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
         cgpu_compute_encoder_bind_pipeline(encoder, pipeline);
         cgpu_compute_encoder_bind_descriptor_set(encoder, set);
+        cgpu_compute_encoder_set_threadgroup_size(encoder, 32, 32, 1);
         cgpu_compute_encoder_dispatch(encoder,
-            (uint32_t)ceil(MANDELBROT_WIDTH / (float)32),
-            (uint32_t)ceil(MANDELBROT_HEIGHT / (float)32),
+            MANDELBROT_WIDTH,
+            MANDELBROT_HEIGHT,
             1);
         cgpu_cmd_end_compute_pass(cmd, encoder);
         // Barrier UAV buffer to transfer source

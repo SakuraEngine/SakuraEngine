@@ -63,7 +63,8 @@ enum class EColorEncodeMethod : uint8_t
 // TODO. color encoding TransferFunctions.h
 
 // chromaticities in xy coordinate
-struct Chromaticities {
+struct Chromaticities
+{
     Chromaticities(EColorSpace color_space);
     Chromaticities(
         const double2& red,
@@ -131,7 +132,8 @@ struct Chromaticities {
 };
 
 // color space
-struct ColorSpace {
+struct ColorSpace
+{
     ColorSpace(EColorSpace color_space);
     ColorSpace(
         const double2& red,
@@ -157,7 +159,8 @@ struct ColorSpace {
 };
 
 // color encoding
-struct ColorEncode {
+struct ColorEncode
+{
     // srgb
     inline static float SRGB_encode(float v)
     {
@@ -607,17 +610,19 @@ inline float luminance(const float3& color, const float3& factor)
 {
     return dot(color, factor);
 }
-inline float luminance(const float3& color)
+inline float luminance(const float3& color, EColorSpace color_space = EColorSpace::Rec709)
 {
-    return dot(color, float3{ 0.299f, 0.587f, 0.114f });
+    ColorSpace cs(color_space);
+    return (float)cs.color_to_XYZ((double3)color).y;
 }
 inline double luminance(const double3& color, const double3& factor)
 {
     return dot(color, factor);
 }
-inline double luminance(const double3& color)
+inline double luminance(const double3& color, EColorSpace color_space = EColorSpace::Rec709)
 {
-    return dot(color, double3{ 0.299, 0.587, 0.114 });
+    ColorSpace cs(color_space);
+    return cs.color_to_XYZ(color).y;
 }
 
 // rgb <=> hsv
@@ -837,8 +842,8 @@ inline double2 Chromaticities::cct_to_xy_daylight(double cct)
     cct *= 1.4388 / 1.438;
     float rcp_cct = 1.0 / cct;
     float x       = cct <= 7000 ?
-                        0.244063 + (0.09911e3 + (2.9678e6 - 4.6070e9 * rcp_cct) * rcp_cct) * rcp_cct :
-                        0.237040 + (0.24748e3 + (1.9018e6 - 2.0064e9 * rcp_cct) * rcp_cct) * rcp_cct;
+              0.244063 + (0.09911e3 + (2.9678e6 - 4.6070e9 * rcp_cct) * rcp_cct) * rcp_cct :
+              0.237040 + (0.24748e3 + (1.9018e6 - 2.0064e9 * rcp_cct) * rcp_cct) * rcp_cct;
 
     float y = -3 * x * x + 2.87 * x - 0.275;
 

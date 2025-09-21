@@ -2,7 +2,7 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/time.h"
 #include "SkrCore/platform/vfs.h"
-#include "SkrRT/ecs/query.hpp"
+#include "SkrRuntime/ecs/query.hpp"
 #include "SkrRenderer/render_device.h"
 #include "SkrLive2D/l2d_renderer.hpp"
 #include "SkrLive2D/l2d_render_model.h"
@@ -54,7 +54,7 @@ struct Live2DRendererImpl : public skr::Live2DRenderer
     const float kMotionFramesPerSecond = 240.0f;
     const bool kUseHighPrecisionMask = false;
 
-    skr::Map<skr_live2d_render_model_id, skr::span<const uint32_t>> sorted_drawable_list;
+    skr::Map<skr_live2d_render_model_id, skr::Span<const uint32_t>> sorted_drawable_list;
     skr::Map<skr_live2d_render_model_id, skr::InlineVector<uint32_t, 4>> sorted_mask_drawable_lists;
     skr::Map<skr_live2d_render_model_id, STimer> motion_timers;
     skr::Vector<skr_primitive_draw_t> model_drawcalls;
@@ -556,10 +556,10 @@ protected:
     {
         rtm::matrix4x4f projection_matrix;
         rtm::matrix4x4f clip_matrix;
-        skr_float4_t base_color;
-        skr_float4_t multiply_color;
-        skr_float4_t screen_color;
-        skr_float4_t channel_flag;
+        skr::float4 base_color;
+        skr::float4 multiply_color;
+        skr::float4 screen_color;
+        skr::float4 channel_flag;
         float use_mask;
         float pad0;
         float pad1;
@@ -614,8 +614,8 @@ CGPUShaderLibraryId Live2DRendererImpl::create_shader_library(skr::RenderDevice*
 
 void Live2DRendererImpl::prepare_pipeline_settings()
 {
-    vertex_layout.attributes[0] = { u8"pos", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-    vertex_layout.attributes[1] = { u8"uv", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[0] = { u8"pos", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, 0, sizeof(skr::float2), CGPU_INPUT_RATE_VERTEX };
+    vertex_layout.attributes[1] = { u8"uv", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr::float2), CGPU_INPUT_RATE_VERTEX };
     vertex_layout.attribute_count = 2;
 
     rs_state.cull_mode = CGPU_CULL_MODE_NONE;
@@ -641,11 +641,9 @@ void Live2DRendererImpl::prepare_pipeline(skr::RenderDevice* render_device)
     CGPUShaderEntryDescriptor ppl_shaders[2];
     CGPUShaderEntryDescriptor& ppl_vs = ppl_shaders[0];
     ppl_vs.library = vs;
-    ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
     ppl_vs.entry = u8"vertex_shader";
     CGPUShaderEntryDescriptor& ppl_ps = ppl_shaders[1];
     ppl_ps.library = ps;
-    ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
     ppl_ps.entry = u8"model_fs";
 
     const char8_t* static_sampler_name = u8"color_sampler";
@@ -725,11 +723,9 @@ void Live2DRendererImpl::prepare_mask_pipeline(skr::RenderDevice* render_device)
     CGPUShaderEntryDescriptor ppl_shaders[2];
     CGPUShaderEntryDescriptor& ppl_vs = ppl_shaders[0];
     ppl_vs.library = vs;
-    ppl_vs.stage = CGPU_SHADER_STAGE_VERT;
     ppl_vs.entry = u8"vertex_shader";
     CGPUShaderEntryDescriptor& ppl_ps = ppl_shaders[1];
     ppl_ps.library = ps;
-    ppl_ps.stage = CGPU_SHADER_STAGE_FRAG;
     ppl_ps.entry = u8"mask_fs";
 
     const char8_t* static_sampler_name = u8"color_sampler";

@@ -1,8 +1,8 @@
 #pragma once
 #include "SkrCore/memory/sp.hpp"
 #include "SkrGraphics/cgpux.h"
-#include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/io/vram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
+#include "SkrRuntime/io/vram_io.hpp"
 #include "SkrBase/config.h"
 #include "SkrGui/backend/resource/resource.hpp"
 

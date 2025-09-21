@@ -25,10 +25,10 @@ struct SKR_INPUT_SYSTEM_API InputValueStorage {
     {
     }
     InputValueStorage(float v) SKR_NOEXCEPT;
-    InputValueStorage(skr_float2_t v) SKR_NOEXCEPT;
-    InputValueStorage(skr_float3_t v) SKR_NOEXCEPT;
+    InputValueStorage(float2 v) SKR_NOEXCEPT;
+    InputValueStorage(float3 v) SKR_NOEXCEPT;
     InputValueStorage(bool v) SKR_NOEXCEPT;
-    InputValueStorage(EValueType type, skr_float4_t raw) SKR_NOEXCEPT;
+    InputValueStorage(EValueType type, float4 raw) SKR_NOEXCEPT;
     InputValueStorage(const InputValueStorage& rhs) SKR_NOEXCEPT;
 
     ~InputValueStorage() SKR_NOEXCEPT;
@@ -38,16 +38,16 @@ struct SKR_INPUT_SYSTEM_API InputValueStorage {
     EValueType get_type() const SKR_NOEXCEPT;
 
     bool         get_float(float& out_f) const SKR_NOEXCEPT;
-    bool         get_float2(skr_float2_t& out_f2) const SKR_NOEXCEPT;
-    bool         get_float3(skr_float3_t& out_f3) const SKR_NOEXCEPT;
+    bool         get_float2(float2& out_f2) const SKR_NOEXCEPT;
+    bool         get_float3(float3& out_f3) const SKR_NOEXCEPT;
     bool         get_bool(bool& out_bool) const SKR_NOEXCEPT;
-    skr_float4_t get_raw() const SKR_NOEXCEPT;
+    float4 get_raw() const SKR_NOEXCEPT;
 
     float get_magnitude_val() const SKR_NOEXCEPT;
 
 protected:
     EValueType   type;
-    skr_float4_t v;
+    float4 v;
     /*
     struct
     {

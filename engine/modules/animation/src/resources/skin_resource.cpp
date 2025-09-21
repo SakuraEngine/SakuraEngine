@@ -2,7 +2,7 @@
 
 namespace skr
 {
-skr_guid_t SkinFactory::GetResourceType()
+GUID SkinFactory::GetResourceType()
 {
     using namespace skr;
     return skr::type_id_of<SkinResource>();

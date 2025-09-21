@@ -1,5 +1,5 @@
 #include "CppSL/Expr.hpp"
-#include "CppSL/AST.hpp"
+#include "CppSL/CppSLAST.hpp"
 #include "CppSL/magic_enum/magic_enum.hpp"
 
 namespace skr::CppSL {

@@ -131,10 +131,8 @@ void ProviderRenderer::create_render_pipeline()
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = u8"main";
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = u8"main";
     ppl_shaders[1].library = fragment_shader;
     CGPURootSignatureDescriptor rs_desc = {};
@@ -176,10 +174,8 @@ void ProviderRenderer::create_blit_pipeline()
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = u8"main";
     ppl_shaders[0].library = screen_vs;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = u8"main";
     ppl_shaders[1].library = blit_fs;
     const char8_t* static_sampler_name = u8"texture_sampler";
@@ -344,7 +340,7 @@ int provider_main(int argc, char* argv[])
                     .extent(to_import->info->width, to_import->info->height)
                     .format((ECGPUFormat)to_import->info->format)
                     .with_flags(CGPU_TEXTURE_FLAG_EXPORT_BIT)
-                    .allocate_dedicated()
+                    .heap_dedicated()
                     .allow_render_target();
             });
         graph->add_render_pass(

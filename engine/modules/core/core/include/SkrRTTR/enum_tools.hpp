@@ -102,7 +102,8 @@ inline constexpr EEnumUnderlyingType get_underlying_type()
     }
 }
 
-struct EnumValue {
+struct EnumValue
+{
     EnumValue()
         : _underlying_type(EEnumUnderlyingType::INVALID)
     {
@@ -150,14 +151,14 @@ struct EnumValue {
 
     // getter
     SKR_INLINE EEnumUnderlyingType underlying_type() const { return _underlying_type; }
-    SKR_INLINE uint8_t             value_uint8() const { return static_cast<uint8_t>(_value_unsigned); }
-    SKR_INLINE int8_t              value_int8() const { return static_cast<int8_t>(_value_signed); }
-    SKR_INLINE uint16_t            value_uint16() const { return static_cast<uint16_t>(_value_unsigned); }
-    SKR_INLINE int16_t             value_int16() const { return static_cast<int16_t>(_value_signed); }
-    SKR_INLINE uint32_t            value_uint32() const { return static_cast<uint32_t>(_value_unsigned); }
-    SKR_INLINE int32_t             value_int32() const { return static_cast<int32_t>(_value_signed); }
-    SKR_INLINE uint64_t            value_uint64() const { return static_cast<uint64_t>(_value_unsigned); }
-    SKR_INLINE int64_t             value_int64() const { return static_cast<int64_t>(_value_signed); }
+    SKR_INLINE uint8_t value_uint8() const { return static_cast<uint8_t>(_value_unsigned); }
+    SKR_INLINE int8_t value_int8() const { return static_cast<int8_t>(_value_signed); }
+    SKR_INLINE uint16_t value_uint16() const { return static_cast<uint16_t>(_value_unsigned); }
+    SKR_INLINE int16_t value_int16() const { return static_cast<int16_t>(_value_signed); }
+    SKR_INLINE uint32_t value_uint32() const { return static_cast<uint32_t>(_value_unsigned); }
+    SKR_INLINE int32_t value_int32() const { return static_cast<int32_t>(_value_signed); }
+    SKR_INLINE uint64_t value_uint64() const { return static_cast<uint64_t>(_value_unsigned); }
+    SKR_INLINE int64_t value_int64() const { return static_cast<int64_t>(_value_signed); }
 
     // sign
     SKR_INLINE bool is_unsigned() const
@@ -287,7 +288,7 @@ struct EnumValue {
 
     // validate
     SKR_INLINE bool is_valid() const { return _underlying_type != EEnumUnderlyingType::INVALID; }
-    SKR_INLINE      operator bool() const { return is_valid(); }
+    SKR_INLINE operator bool() const { return is_valid(); }
 
     // compare
     SKR_INLINE bool operator==(const EnumValue& rhs) const
@@ -331,7 +332,7 @@ private:
     EEnumUnderlyingType _underlying_type;
     union
     {
-        int64_t  _value_signed;
+        int64_t _value_signed;
         uint64_t _value_unsigned;
     };
 };
@@ -342,7 +343,8 @@ private:
 namespace skr
 {
 template <class T>
-struct EnumAsValue {
+struct EnumAsValue
+{
     static_assert(std::is_enum_v<T>, "T must be an enum type");
     using UnderlyingType = std::underlying_type_t<T>;
 
@@ -394,38 +396,22 @@ private:
 };
 } // namespace skr
 
-// strongly enum binary serde
-#include "SkrSerde/bin_serde.hpp"
+// enum as value serialize
+#include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
-template <class T>
-struct BinSerde<EnumAsValue<T>> {
-    inline static bool read(SBinaryReader* r, EnumAsValue<T>& v)
-    {
-        return bin_read(r, v.underlying_value());
-    }
-    inline static bool write(SBinaryWriter* w, const EnumAsValue<T>& v)
-    {
-        return bin_write(w, v.underlying_value());
-    }
-};
-} // namespace skr
+template <typename T>
+struct Serialize<EnumAsValue<T>>
+{
+    using UT = typename EnumAsValue<T>::UnderlyingType;
 
-// strongly enum json serde
-#include "SkrSerde/json_serde.hpp"
-namespace skr
-{
-template <class T>
-struct JsonSerde<EnumAsValue<T>> {
-    inline static bool read(skr::archive::JsonReader* r, EnumAsValue<T>& v)
+    inline static void read(ArchiveRead& r, EnumAsValue<T>& v)
     {
-        using UT = typename EnumAsValue<T>::UnderlyingType;
-        return json_read<UT>(r, v.underlying_value());
+        r.value<UT>(v.underlying_value());
     }
-    inline static bool write(skr::archive::JsonWriter* w, const EnumAsValue<T>& v)
+    inline static void write(ArchiveWrite& w, const EnumAsValue<T>& v)
     {
-        using UT = typename EnumAsValue<T>::UnderlyingType;
-        return json_write<UT>(w, v.underlying_value());
+        w.value<UT>(v.underlying_value());
     }
 };
 } // namespace skr

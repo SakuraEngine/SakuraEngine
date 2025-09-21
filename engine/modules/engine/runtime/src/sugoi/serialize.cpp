@@ -1,311 +1,606 @@
 #include "SkrProfile/profile.h"
-#include "SkrRT/sugoi/sugoi.h"
-#include "SkrRT/sugoi/array.hpp"
-#include "SkrRT/sugoi/type_registry.hpp"
-#include "SkrSerde/bin_serde.hpp"
+#include "SkrRuntime/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/array.hpp"
+#include "SkrRuntime/sugoi/type_registry.hpp"
 
-#include "SkrRT/sugoi/chunk.hpp"
+#include "SkrRuntime/sugoi/chunk.hpp"
 #include "chunk_view.hpp"
 #include "./impl/storage.hpp"
 #include "./stack.hpp"
-#include "SkrRT/sugoi/archetype.hpp"
+#include "SkrRuntime/sugoi/archetype.hpp"
 
-#ifndef forloop
-    #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
-#endif
-
-template <class T>
-static void WriteBuffer(SBinaryWriter* writer, const T* buffer, uint32_t count)
+namespace sugoi::serde_help
 {
-    writer->write((const void*)buffer, sizeof(T) * count);
-}
-
-template <class T>
-static void ReadBuffer(SBinaryReader* reader, T* buffer, uint32_t count)
+// write entities
+inline static void write_entities(skr::ArchiveWrite* writer, const sugoi_entity_t* buffer, uint64_t count)
 {
-    reader->read((void*)buffer, sizeof(T) * count);
-}
-
-static void serialize_impl(const sugoi_chunk_view_t& view, sugoi_type_index_t type, EIndex offset, uint32_t size, uint32_t elemSize, SBinaryWriter* s, SBinaryReader* ds, void (*serializer)(sugoi_type_index_t type, sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryWriter* writer), void (*deserializer)(sugoi_type_index_t type, sugoi_chunk_t* chunk, EIndex index, char* data, EIndex count, SBinaryReader* writer))
-{
-    using namespace sugoi;
-
-    bool isSerialize = s != nullptr;
-    char* src = view.chunk->data() + (size_t)offset + (size_t)size * view.start;
-    if (!isSerialize)
-    {   
-        sugoi::construct_view(view);
-    }
-    if (type_index_t(type).is_buffer())
+    if (writer->is_structured())
     {
-        // array component is pointer based and must be converted to persistent data format
-        if (isSerialize)
+        skr::Archive::ArrayScope arr_scope(*writer);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        for (uint64_t i = 0; i < count; i++)
         {
-            forloop (i, 0, view.count)
-            {
-                auto array = (sugoi_array_comp_t*)((size_t)i * size + src);
-                intptr_t padding = ((char*)array->BeginX - (char*)(array + 1));
-                intptr_t length = ((char*)array->EndX - (char*)array->BeginX);
-                skr::bin_write(s, (uint32_t)padding);
-                skr::bin_write(s, (uint32_t)length);
-                if (serializer)
-                    serializer(type, view.chunk, view.start + i, (char*)array->BeginX, (EIndex)(length / elemSize), s);
-                else
-                    WriteBuffer(s, (uint8_t*)array->BeginX, static_cast<uint32_t>(length));
-            }
-        }
-        else
-        {
-            forloop (i, 0, view.count)
-            {
-                auto array = (sugoi_array_comp_t*)((size_t)i * size + src);
-                uint32_t padding = 0, length = 0;
-                skr::bin_read(ds, padding);
-                skr::bin_read(ds, length);
-                if (padding > elemSize) // array on heap
-                {
-                    array->BeginX = llvm_vecsmall::SmallVectorBase::allocate(length);
-                    array->CapacityX = array->EndX = (char*)array->BeginX + length;
-                }
-                else
-                {
-                    array->BeginX = (char*)(array + 1) + padding;
-                    array->EndX = (char*)array->BeginX + length;
-                    array->CapacityX = (char*)array + size;
-                }
-                if (deserializer)
-                    deserializer(type, view.chunk, view.start + i, (char*)array->BeginX, (EIndex)length, ds);
-                else
-                    ReadBuffer(ds, (uint8_t*)array->BeginX, length);
-            }
+            SKR_FAST_CHECK(writer->value(buffer[i]), );
         }
     }
     else
     {
-        if (isSerialize)
-        {
-            if (serializer)
-                serializer(type, view.chunk, view.start, src, view.count, s);
-            else
-                WriteBuffer(s, src, size * view.count);
-        }
-        else
-        {
-            if (deserializer)
-                deserializer(type, view.chunk, view.start, src, view.count, ds);
-            else
-                ReadBuffer(ds, src, size * view.count);
-        }
+        SKR_FAST_CHECK(writer->bytes(buffer, count * sizeof(sugoi_entity_t)), );
     }
 }
-
-void sugoi_storage_t::serialize_view(sugoi_group_t* group, sugoi_chunk_view_t& view, SBinaryWriter* s, SBinaryReader* ds, bool withEntities)
+inline static void read_entities(skr::ArchiveRead* reader, sugoi_entity_t* buffer, uint64_t count)
 {
-    using namespace sugoi;
+    if (reader->is_structured())
+    {
+        skr::Archive::ArrayScope arr_scope(*reader);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
 
-    if (s)
-        skr::bin_write(s, view.count);
+        uint64_t arr_count, adjusted_count;
+        SKR_FAST_CHECK(reader->array_size_structured(arr_count), );
+        SKR_FAST_CHECK(reader->adjust_array_size(arr_count, count, adjusted_count), );
+        for (uint64_t i = 0; i < count; i++)
+        {
+            SKR_FAST_CHECK(reader->value(buffer[i]), );
+        }
+    }
     else
     {
-        skr::bin_read(ds, view.count);
-        SKR_ASSERT(view.count);
-        view = allocateViewStrict(group, view.count);
-    }
-
-    archetype_t* type = view.chunk->structure;
-    const auto* offsets = type->offsets[(int)view.chunk->pt];
-    const auto* sizes = type->sizes;
-    const auto* elemSizes = type->elemSizes;
-    if (withEntities)
-    {
-        if (s)
-            WriteBuffer(s, view.chunk->get_entities() + view.start, view.count);
-        else
-            ReadBuffer(ds, view.chunk->get_entities() + view.start, view.count);
-    }
-    for (SIndex i = 0; i < type->firstChunkComponent; ++i)
-        serialize_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], s, ds, type->callbacks[i].serialize, type->callbacks[i].deserialize);
-}
-
-void sugoi_storage_t::serialize_type(const sugoi_entity_type_t& type, SBinaryWriter* s, bool keepMeta)
-{
-    using namespace sugoi;
-
-    // group is define by entity_type, so we just serialize it's type
-    // todo: assert(s.is_serialize());
-    skr::bin_write(s, type.type.length);
-    auto& reg = TypeRegistry::get();
-    for (SIndex i = 0; i < type.type.length; i++)
-    {
-        auto tid = type_index_t(type.type.data[i]).index();
-        skr::bin_write(s, reg.get_type_desc(tid)->guid);
-    }
-    if (keepMeta)
-    {
-        skr::bin_write(s, type.meta.length);
-        WriteBuffer(s, type.meta.data, type.meta.length);
+        SKR_FAST_CHECK(reader->bytes(buffer, count * sizeof(sugoi_entity_t)), );
     }
 }
 
-sugoi_entity_type_t sugoi_storage_t::deserialize_type(sugoi::fixed_stack_t& stack, SBinaryReader* s, bool keepMeta)
+// write components
+inline static void write_components(
+    skr::ArchiveWrite* writer,
+    const sugoi_chunk_view_t& view
+)
 {
-    using namespace sugoi;
+    // prepare data
+    archetype_t* arch_type = view.chunk->structure;
+    const auto* comp_types = arch_type->type.data;
+    const auto* comp_offsets = arch_type->offsets[(int)view.chunk->pt];
+    const auto* comp_sizes = arch_type->sizes;
+    const auto* comp_elem_sizes = arch_type->elemSizes;
+    const auto* comp_callbacks = arch_type->callbacks;
 
-    // deserialize type, and get/create group from it
-    sugoi_entity_type_t type = {};
-    skr::bin_read(s, type.type.length);
-    auto guids = stack.allocate<guid_t>(type.type.length);
-    ReadBuffer(s, guids, type.type.length);
-    type.type.data = stack.allocate<sugoi_type_index_t>(type.type.length);
-    auto& reg = TypeRegistry::get();
-    forloop (i, 0, type.type.length) // todo: check type existence
-        ((sugoi_type_index_t*)type.type.data)[i] = reg.get_type(guids[i]);
-    std::sort((sugoi_type_index_t*)type.type.data, (sugoi_type_index_t*)type.type.data + type.type.length);
-    if (keepMeta)
+    skr::Archive::ArrayScope arr_scope(*writer);
+    SKR_FAST_CHECK(arr_scope.is_success(), );
+
+    for (SIndex i = 0; i < arch_type->firstChunkComponent; ++i)
     {
-        skr::bin_read(s, type.meta.length);
-        if (type.meta.length > 0)
+        // prepare component info
+        auto comp_type = comp_types[i];
+        auto comp_offset = comp_offsets[i];
+        auto comp_size = comp_sizes[i];
+        auto comp_elem_size = comp_elem_sizes[i];
+        auto* comp_callback = &comp_callbacks[i];
+        char* comp_src = view.chunk->data() + (size_t)comp_offset + (size_t)comp_size * view.start;
+
+        //! skip if component serialize is not implemented
+        if (!comp_callback || !comp_callback->serialize)
         {
-            // todo: how to patch meta? guid?
-            type.meta.data = stack.allocate<sugoi_entity_t>(type.meta.length);
-            ReadBuffer(s, type.meta.data, type.meta.length);
-            std::sort((sugoi_entity_t*)type.meta.data, (sugoi_entity_t*)type.meta.data + type.meta.length);
+            continue;
+        }
+
+        // do write
+        if (type_index_t(comp_type).is_buffer())
+        { // write array component
+            for (uint64_t i = 0; i < view.count; i++)
+            {
+                // prepare array info
+                auto array = (sugoi_array_comp_t*)((size_t)i * comp_size + comp_src);
+                int64_t padding = ((char*)array->BeginX - (char*)(array + 1));
+                void* array_data = array->BeginX;
+                uint64_t array_data_length = (uint64_t)((char*)array->EndX - (char*)array->BeginX);
+                uint64_t array_count = array_data_length / comp_elem_size;
+
+                // write array component as object
+                {
+                    skr::Archive::ObjectScope obj_scope(*writer);
+                    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+                    // write array info
+                    SKR_FAST_CHECK(writer->key_value(u8"padding", padding), );
+                    SKR_FAST_CHECK(writer->key_value(u8"data_length", array_data_length), );
+
+                    // write array data
+                    SKR_FAST_CHECK(writer->key(u8"data"), );
+                    SKR_FAST_CHECK(
+                        comp_callback->serialize(
+                            comp_type,
+                            array_data,
+                            array_count,
+                            writer
+                        ),
+                    );
+                }
+            }
+        }
+        else
+        { // write component as array
+            SKR_FAST_CHECK(
+                comp_callback->serialize(
+                    comp_type,
+                    comp_src,
+                    view.count,
+                    writer
+                ),
+            );
         }
     }
-    return type;
 }
-
-void sugoi_storage_t::serialize_single(sugoi_entity_t e, SBinaryWriter* s)
+inline static void read_components(
+    skr::ArchiveRead* reader,
+    sugoi_chunk_view_t& view
+)
 {
-    using namespace sugoi;
-    auto view = entity_view(e);
-    auto type = view.chunk->group->type;
-    type.meta.length = 0; // remove meta
-    serialize_type(type, s, false);
-    serialize_view(view.chunk->group, view, s, nullptr, false);
-}
+    // prepare data
+    archetype_t* arch_type = view.chunk->structure;
+    const auto* comp_types = arch_type->type.data;
+    const auto* comp_offsets = arch_type->offsets[(int)view.chunk->pt];
+    const auto* comp_sizes = arch_type->sizes;
+    const auto* comp_elem_sizes = arch_type->elemSizes;
+    const auto* comp_callbacks = arch_type->callbacks;
 
-sugoi_entity_t sugoi_storage_t::deserialize_single(SBinaryReader* s)
-{
-    using namespace sugoi;
-    fixed_stack_scope_t _(localStack);
-    auto type = deserialize_type(localStack, s, false);
-    auto group = get_group(type);
-    sugoi_chunk_view_t view;
-    serialize_view(group, view, nullptr, s, false);
-    entity_registry.fill_entities(view);
-    return view.chunk->get_entities()[view.start];
-}
+    skr::Archive::ArrayScope arr_scope(*reader);
+    SKR_FAST_CHECK(arr_scope.is_success(), );
 
-//[count] ([group] [slice])*
-void sugoi_storage_t::serialize_prefab(sugoi_entity_t e, SBinaryWriter* s)
-{
-    using namespace sugoi;
+    // check array size
+    //! 可能有一些不支持序列化的 component 导致数量不匹配，依赖数组越界报错比较好
+    // if (reader->is_structured())
+    // {
+    //     uint64_t arr_count;
+    //     SKR_FAST_CHECK(reader->array_size_structured(arr_count), );
+    //     if (arr_count != (uint64_t)arch_type->firstChunkComponent)
+    //     {
+    //         reader->error(
+    //             u8"sugoi::serde_help::read_components: component count mismatch, expect {}, got {}",
+    //             arch_type->firstChunkComponent,
+    //             arr_count
+    //         );
+    //     }
+    // }
 
-    skr::bin_write(s, (EIndex)1);
-    serialize_single(e, s);
-}
-
-void sugoi_storage_t::serialize_prefab(sugoi_entity_t* es, EIndex n, SBinaryWriter* s)
-{
-    using namespace sugoi;
-
-    skr::bin_write(s, n);
-    linked_to_prefab(es, n);
-    forloop (i, 0, n)
-        serialize_single(es[i], s);
-    prefab_to_linked(es, n);
-}
-
-sugoi_entity_t sugoi_storage_t::deserialize_prefab(SBinaryReader* s)
-{
-    using namespace sugoi;
-
-    EIndex count = 0;
-    skr::bin_read(s, count);
-    // todo: assert(count > 0)
-    if (count == 1)
+    for (SIndex i = 0; i < arch_type->firstChunkComponent; ++i)
     {
-        return deserialize_single(s);
-    }
-    else if (count > 1)
-    {
-        fixed_stack_scope_t _(localStack);
-        auto prefab = localStack.allocate<sugoi_entity_t>(count);
-        forloop (i, 0, count)
-            prefab[i] = deserialize_single(s);
-        prefab_to_linked(prefab, count);
-        return prefab[0];
-    }
-    SKR_UNREACHABLE_CODE();
-    return sugoi_entity_t();
-}
+        // prepare component info
+        auto comp_type = comp_types[i];
+        auto comp_offset = comp_offsets[i];
+        auto comp_size = comp_sizes[i];
+        auto comp_elem_size = comp_elem_sizes[i];
+        auto* comp_callback = &comp_callbacks[i];
+        char* comp_src = view.chunk->data() + (size_t)comp_offset + (size_t)comp_size * view.start;
 
-void sugoi_storage_t::serialize(SBinaryWriter* s)
+        //! skip if component deserialize is not implemented
+        if (!comp_callback || !comp_callback->deserialize)
+        {
+            continue;
+        }
+
+        // do read
+        if (type_index_t(comp_type).is_buffer())
+        { // read array component
+            for (uint64_t i = 0; i < view.count; i++)
+            {
+                // prepare array info
+                auto array = (sugoi_array_comp_t*)((size_t)i * comp_size + comp_src);
+
+                // read array component as object
+                {
+                    skr::Archive::ObjectScope obj_scope(*reader);
+                    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+                    // read array info
+                    int64_t padding = false;
+                    uint64_t array_data_length = 0;
+                    SKR_FAST_CHECK(reader->key_value(u8"padding", padding), );
+                    SKR_FAST_CHECK(reader->key_value(u8"data_length", array_data_length), );
+                    uint64_t array_count = array_data_length / comp_elem_size;
+
+                    // alloc array data
+                    if (padding < 0 || padding > comp_elem_size)
+                    { // heap alloc
+                        array->BeginX = llvm_vecsmall::SmallVectorBase::allocate(array_data_length);
+                        array->EndX = (char*)array->BeginX + array_data_length;
+                        array->CapacityX = array->EndX;
+                    }
+                    else
+                    { // inline alloc
+                        array->BeginX = (char*)(array + 1) + padding;
+                        array->EndX = (char*)array->BeginX + array_data_length;
+                        array->CapacityX = array->EndX;
+                    }
+
+                    // construct array elements
+                    if (auto ctor = comp_callback->constructor)
+                    {
+                        for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += comp_elem_size)
+                        {
+                            ctor(comp_type, view.chunk, view.start + i, curr);
+                        }
+                    }
+
+                    // read array data
+                    SKR_FAST_CHECK(reader->key(u8"data"), );
+                    SKR_FAST_CHECK(
+                        comp_callback->deserialize(
+                            comp_type,
+                            array->BeginX,
+                            array_count,
+                            reader
+                        ),
+                    );
+                }
+            }
+        }
+        else
+        { // read component as array
+            SKR_FAST_CHECK(
+                comp_callback->deserialize(
+                    comp_type,
+                    comp_src,
+                    view.count,
+                    reader
+                ),
+            );
+        }
+    }
+}
+} // namespace sugoi::serde_help
+
+// serialize
+void sugoi_storage_t::serialize_type(skr::ArchiveWrite* writer, const sugoi_entity_type_t& group, bool keep_meta)
 {
+    using namespace sugoi;
+
+    skr::Archive::ObjectScope obj_scope(*writer);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // write types
+    {
+        SKR_FAST_CHECK(writer->key(u8"types"), );
+        skr::Archive::ArrayScope arr_scope(*writer);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // write types count
+        SKR_FAST_CHECK(writer->array_size<uint64_t>(group.type.length), );
+
+        // write each type guid
+        auto& reg = TypeRegistry::get();
+        for (SIndex i = 0; i < group.type.length; i++)
+        {
+            auto tid = type_index_t(group.type.data[i]).index();
+            SKR_FAST_CHECK(writer->value<skr::GUID>(reg.get_type_desc(tid)->guid), );
+        }
+    }
+
+    // write meta entities
+    if (keep_meta)
+    {
+        SKR_FAST_CHECK(writer->key_value(u8"meta_count", (uint64_t)group.meta.length), );
+        SKR_FAST_CHECK(writer->key(u8"meta"), );
+        serde_help::write_entities(
+            writer,
+            group.meta.data,
+            group.meta.length
+        );
+        SKR_FAST_CHECK(writer->checkpoint(), );
+    }
+}
+void sugoi_storage_t::serialize_view(skr::ArchiveWrite* writer, const sugoi_chunk_view_t& view, bool with_entities)
+{
+    using namespace sugoi;
+
+    skr::Archive::ObjectScope obj_scope(*writer);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // write count
+    SKR_FAST_CHECK(writer->key_value(u8"count", view.count), );
+
+    // write entities id
+    if (with_entities)
+    {
+        SKR_FAST_CHECK(writer->key(u8"entities"), );
+        serde_help::write_entities(
+            writer,
+            view.chunk->get_entities() + view.start,
+            view.count
+        );
+        SKR_FAST_CHECK(writer->checkpoint(), );
+    }
+
+    // write components
+    SKR_FAST_CHECK(writer->key(u8"components"), );
+    serde_help::write_components(writer, view);
+    SKR_FAST_CHECK(writer->checkpoint(), );
+}
+void sugoi_storage_t::serialize(skr::ArchiveWrite* writer)
+{
+    using namespace sugoi;
     SkrZoneScopedN("sugoi_storage_t::serialize");
+
+    skr::Archive::ObjectScope obj_scope(*writer);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // write entity registry
+    SKR_FAST_CHECK(writer->key(u8"entity_registry"), );
+    entity_registry.serialize(writer);
+    SKR_FAST_CHECK(writer->checkpoint(), );
+
+    // write group and chunks
+    SKR_FAST_CHECK(writer->key(u8"groups"), );
+    {
+        pimpl->groups.read_versioned(
+            [&](const sugoi_storage_t::Impl::groups_t& groups) -> void {
+                skr::Archive::ArrayScope arr_scope_group_data(*writer);
+                SKR_FAST_CHECK(arr_scope_group_data.is_success(), );
+
+                // write groups count
+                SKR_FAST_CHECK(writer->array_size<uint64_t>((uint64_t)groups.size()), );
+
+                // write each group
+                for (const auto& pair : groups)
+                {
+                    SkrZoneScopedN("group");
+                    auto* group = pair.second;
+
+                    skr::Archive::ObjectScope obj_scope_group(*writer);
+                    SKR_FAST_CHECK(obj_scope_group.is_success(), );
+
+                    // write group types
+                    SKR_FAST_CHECK(writer->key(u8"types"), );
+                    serialize_type(writer, group->type, true);
+                    SKR_FAST_CHECK(writer->checkpoint(), );
+
+                    // write group chunks
+                    SKR_FAST_CHECK(writer->key(u8"chunks"), );
+                    {
+                        skr::Archive::ArrayScope arr_scope_chunk_data(*writer);
+                        SKR_FAST_CHECK(arr_scope_chunk_data.is_success(), );
+
+                        // write chunk count
+                        SKR_FAST_CHECK(writer->array_size<uint64_t>((uint64_t)group->chunks.size()), );
+
+                        // write each chunk
+                        for (auto& chunk : group->chunks)
+                        {
+                            SkrZoneScopedN("chunk");
+                            sugoi_chunk_view_t view = { chunk, 0, chunk->count };
+                            serialize_view(writer, view, true);
+                            SKR_FAST_CHECK(writer->checkpoint(), );
+                        }
+                    }
+                }
+            },
+            [&]() {
+                return pimpl->groups_timestamp;
+            }
+        );
+    }
+}
+void sugoi_storage_t::serialize_single(skr::ArchiveWrite* writer, sugoi_entity_t entity)
+{
     using namespace sugoi;
 
-    {
-        SkrZoneScopedN("serialize entities");
-        entity_registry.serialize(s);
-    }
-    pimpl->groups.read_versioned([&](auto& groups) {
-        skr::bin_write(s, (uint32_t)groups.size());
-        for (auto& pair : groups)
-        {
-            SkrZoneScopedN("serialize group");
-            auto group = pair.second;
-            serialize_type(group->type, s, true);
-            skr::bin_write(s, (uint32_t)group->chunks.size());
-            for (auto c : group->chunks)
-            {
-                SkrZoneScopedN("serialize chunk");
-                sugoi_chunk_view_t view = { c, 0, c->count };
-                serialize_view(group, view, s, nullptr, true);
-            }
-        } },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+    skr::Archive::ObjectScope obj_scope(*writer);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    auto view = entity_view(entity);
+    auto types = view.chunk->group->type;
+
+    // write types
+    SKR_FAST_CHECK(writer->key(u8"types"), );
+    serialize_type(writer, types, false);
+    SKR_FAST_CHECK(writer->checkpoint(), );
+
+    // write entity
+    SKR_FAST_CHECK(writer->key(u8"data"), );
+    serialize_view(writer, view, false);
+    SKR_FAST_CHECK(writer->checkpoint(), );
 }
 
-void sugoi_storage_t::deserialize(SBinaryReader* s)
+// deserialize
+void sugoi_storage_t::deserialize_type(skr::ArchiveRead* reader, sugoi_entity_type_t& out_type, sugoi::fixed_stack_t& stack, bool keep_meta)
+{
+    using namespace sugoi;
+
+    skr::Archive::ObjectScope obj_scope(*reader);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    auto& reg = TypeRegistry::get();
+
+    // read types
+    {
+        SKR_FAST_CHECK(reader->key_required(u8"types"), );
+        skr::Archive::ArrayScope arr_scope(*reader);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // read types count
+        uint64_t type_count = 0;
+        SKR_FAST_CHECK(reader->array_size<uint64_t>(type_count), );
+        out_type.type.length = (SIndex)type_count;
+
+        // alloc temp use memory
+        out_type.type.data = stack.allocate<sugoi_type_index_t>(out_type.type.length);
+        auto* type_data = const_cast<sugoi_type_index_t*>(out_type.type.data);
+
+        // read each type guid
+        for (SIndex i = 0; i < out_type.type.length; i++)
+        {
+            // read guid
+            skr::GUID guid;
+            SKR_FAST_CHECK(reader->value<skr::GUID>(guid), );
+
+            // solve type index
+            type_data[i] = reg.get_type(guid);
+        }
+
+        // sort type index
+        std::sort(
+            type_data,
+            type_data + out_type.type.length
+        );
+    }
+
+    // read meta entities
+    if (keep_meta)
+    {
+        // read meta length
+        uint64_t meta_length = 0;
+        SKR_FAST_CHECK(reader->key_value(u8"meta_count", meta_length), );
+        out_type.meta.length = (SIndex)meta_length;
+        SKR_FAST_CHECK(out_type.meta.length > 0, );
+
+        // alloc mete data
+        out_type.meta.data = stack.allocate<sugoi_entity_t>(out_type.meta.length);
+
+        // sort meta entities
+        SKR_FAST_CHECK(reader->key_required(u8"meta"), );
+        serde_help::read_entities(
+            reader,
+            stack.allocate<sugoi_entity_t>(out_type.meta.length),
+            out_type.meta.length
+        );
+        SKR_FAST_CHECK(reader->checkpoint(), );
+
+        // sort meta entities
+        auto* meta_data = const_cast<sugoi_entity_t*>(out_type.meta.data);
+        std::sort(
+            meta_data,
+            meta_data + out_type.meta.length
+        );
+    }
+}
+void sugoi_storage_t::deserialize_view(skr::ArchiveRead* reader, sugoi_group_t* group, sugoi_chunk_view_t& out_view, bool with_entities)
+{
+    using namespace sugoi;
+
+    skr::Archive::ObjectScope obj_scope(*reader);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // read count
+    SKR_FAST_CHECK(reader->key_value(u8"count", out_view.count), );
+    SKR_FAST_CHECK(out_view.count > 0, );
+
+    // alloc view
+    out_view = allocateViewStrict(group, out_view.count);
+
+    // read entities id
+    if (with_entities)
+    {
+        SKR_FAST_CHECK(reader->key_required(u8"entities"), );
+        serde_help::read_entities(
+            reader,
+            const_cast<sugoi_entity_t*>(out_view.chunk->get_entities()) + out_view.start,
+            out_view.count
+        );
+        SKR_FAST_CHECK(reader->checkpoint(), );
+    }
+
+    // construct view
+    sugoi::construct_view(out_view);
+
+    // read components
+    SKR_FAST_CHECK(reader->key_required(u8"components"), );
+    serde_help::read_components(reader, out_view);
+    SKR_FAST_CHECK(reader->checkpoint(), );
+}
+void sugoi_storage_t::deserialize(skr::ArchiveRead* reader)
 {
     using namespace sugoi;
     SkrZoneScopedN("sugoi_storage_t::deserialize");
 
+    skr::Archive::ObjectScope obj_scope(*reader);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // read entry
+    SKR_FAST_CHECK(reader->key_required(u8"entity_registry"), );
+    entity_registry.deserialize(reader);
+    SKR_FAST_CHECK(reader->checkpoint(), );
+
+    // read group and chunks
+    SKR_FAST_CHECK(reader->key_required(u8"groups"), );
     {
-        SkrZoneScopedN("deserialize entities");
-        entity_registry.deserialize(s);
-    }
-    uint32_t groupSize = 0;
-    skr::bin_read(s, groupSize);
-    // remap entries
-    {
-        forloop (i, 0, groupSize)
+        skr::Archive::ArrayScope arr_scope(*reader);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // read groups count
+        uint64_t group_count = 0;
+        SKR_FAST_CHECK(reader->array_size(group_count), );
+
+        // read each group
+        for (uint64_t i = 0; i < group_count; i++)
         {
-            SkrZoneScopedN("deserialize group");
-            fixed_stack_scope_t _(localStack);
-            auto type = deserialize_type(localStack, s, true);
-            auto group = allocateGroup(type);
-            uint32_t chunkCount = 0;
-            skr::bin_read(s, chunkCount);
-            forloop (j, 0, chunkCount)
+            SkrZoneScopedN("group");
+
+            skr::Archive::ObjectScope obj_scope_group(*reader);
+            SKR_FAST_CHECK(obj_scope_group.is_success(), );
+
+            fixed_stack_scope_t fixed_stack_scope{ localStack };
+
+            // read group types
+            sugoi_entity_type_t group_types;
+            SKR_FAST_CHECK(reader->key_required(u8"types"), );
+            deserialize_type(reader, group_types, localStack, true);
+            SKR_FAST_CHECK(reader->checkpoint(), );
+
+            // alloc group
+            auto group = allocateGroup(group_types);
+
+            // read group chunks
+            SKR_FAST_CHECK(reader->key_required(u8"chunks"), );
             {
-                SkrZoneScopedN("deserialize chunk");
-                sugoi_chunk_view_t view;
-                serialize_view(group, view, nullptr, s, true);
-                auto ents = sugoiV_get_entities(&view);
-                forloop (k, 0, view.count)
+                skr::Archive::ArrayScope arr_scope_chunk_data(*reader);
+                SKR_FAST_CHECK(arr_scope_chunk_data.is_success(), );
+
+                // read chunk count
+                uint64_t chunk_count = 0;
+                SKR_FAST_CHECK(reader->array_size<uint64_t>(chunk_count), );
+
+                // read each chunk
+                for (uint64_t j = 0; j < chunk_count; j++)
                 {
-                    EntityRegistry::Entry entry;
-                    entry.chunk = view.chunk;
-                    entry.indexInChunk = k + view.start;
-                    entry.version = e_version(ents[k]);
-                    entity_registry.entries[e_id(ents[k])] = entry;
+                    SkrZoneScopedN("chunk");
+                    sugoi_chunk_view_t view;
+                    deserialize_view(reader, group, view, true);
+                    SKR_FAST_CHECK(reader->checkpoint(), );
+
+                    // update registry
+                    auto entities = sugoiV_get_entities(&view);
+                    for (uint64_t k = 0; k < view.count; ++k)
+                    {
+                        auto& entry = entity_registry.entries[e_id(entities[k])];
+                        entry.chunk = view.chunk;
+                        entry.indexInChunk = k + view.start;
+                        entry.version = e_version(entities[k]);
+                    }
                 }
             }
         }
     }
+}
+void sugoi_storage_t::deserialize_single(skr::ArchiveRead* reader, sugoi_entity_t& out_entity)
+{
+    using namespace sugoi;
+
+    fixed_stack_scope_t fixed_stack_scope(localStack);
+
+    skr::Archive::ObjectScope obj_scope(*reader);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // read types
+    sugoi_entity_type_t types;
+    SKR_FAST_CHECK(reader->key_required(u8"types"), );
+    deserialize_type(reader, types, localStack, false);
+    SKR_FAST_CHECK(reader->checkpoint(), );
+
+    // read entity
+    auto group = get_group(types);
+    sugoi_chunk_view_t view;
+    SKR_FAST_CHECK(reader->key_required(u8"data"), );
+    deserialize_view(reader, group, view, false);
+    SKR_FAST_CHECK(reader->checkpoint(), );
+    entity_registry.fill_entities(view);
+    out_entity = view.chunk->get_entities()[view.start];
 }

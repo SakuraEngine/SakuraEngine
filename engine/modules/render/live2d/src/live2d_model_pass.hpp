@@ -21,7 +21,7 @@ struct Live2DRenderPass
                 .format(back_desc->format)
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_render_target();
-            if (back_desc->height > 2048) builder.allocate_dedicated();
+            if (back_desc->height > 2048) builder.heap_dedicated();
         });(void)msaaTarget;
         
         auto depth = render_graph->create_texture(
@@ -34,11 +34,11 @@ struct Live2DRenderPass
                 .format(live2d_depth_format)
                 .sample_count((ECGPUSampleCount)sample_level)
                 .allow_depth_stencil();
-            if (back_desc->height > 2048) builder.allocate_dedicated();
+            if (back_desc->height > 2048) builder.heap_dedicated();
         });(void)depth;
     }
 
-    static void execute(skr::render_graph::RenderGraph* render_graph, skr::span<skr_primitive_draw_t> drawcalls)
+    static void execute(skr::render_graph::RenderGraph* render_graph, skr::Span<skr_primitive_draw_t> drawcalls)
     {
         auto backbuffer = render_graph->get_texture(u8"backbuffer");
         const auto back_desc = render_graph->resolve_descriptor(backbuffer);

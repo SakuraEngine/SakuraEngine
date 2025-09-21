@@ -1,6 +1,6 @@
-#include "SkrRT/sugoi/type_index.hpp"
-#include "SkrRT/sugoi/chunk.hpp"
-#include "SkrRT/sugoi/archetype.hpp"
+#include "SkrRuntime/sugoi/type_index.hpp"
+#include "SkrRuntime/sugoi/chunk.hpp"
+#include "SkrRuntime/sugoi/archetype.hpp"
 #include "./pool.hpp"
 
 sugoi_chunk_t* sugoi_chunk_t::create(sugoi::pool_type_t poolType)

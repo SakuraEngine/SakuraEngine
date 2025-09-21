@@ -4,7 +4,7 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/memory/memory.h"
-#include "SkrRT/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.h"
 #include "option_utils.hpp"
 
 namespace skr
@@ -12,10 +12,10 @@ namespace skr
 using namespace skr;
 
 StableShaderHash::StableShaderHash(uint32_t a, uint32_t b, uint32_t c, uint32_t d) SKR_NOEXCEPT
-    : valuea(a),
-      valueb(b),
-      valuec(c),
-      valued(d)
+    : valuea(a)
+    , valueb(b)
+    , valuec(c)
+    , valued(d)
 {
 }
 
@@ -29,10 +29,10 @@ StableShaderHash StableShaderHash::hash_string(const char* str, uint32_t size) S
     if (!size) return StableShaderHash(0, 0, 0, 0);
     auto result = make_zeroed<StableShaderHash>();
     const uint32_t seeds[4] = { 114u, 514u, 1919u, 810u };
-    result.valuea           = skr_hash32_of(str, size, seeds[0]);
-    result.valueb           = skr_hash32_of(str, size, seeds[1]);
-    result.valuec           = skr_hash32_of(str, size, seeds[2]);
-    result.valued           = skr_hash32_of(str, size, seeds[3]);
+    result.valuea = skr_hash32_of(str, size, seeds[0]);
+    result.valueb = skr_hash32_of(str, size, seeds[1]);
+    result.valuec = skr_hash32_of(str, size, seeds[2]);
+    result.valued = skr_hash32_of(str, size, seeds[3]);
     return result;
 }
 
@@ -90,7 +90,7 @@ uint32_t ShaderOptionSequence::find_value_index(skr::StringView in_key, skr::Str
     return find_value_index(key_index, in_value);
 }
 
-StableShaderHash ShaderOptionSequence::calculate_stable_hash(const ShaderOptionSequence& seq, skr::span<uint32_t> indices)
+StableShaderHash ShaderOptionSequence::calculate_stable_hash(const ShaderOptionSequence& seq, skr::Span<uint32_t> indices)
 {
     skr::String signatureString;
     option_utils::stringfy(signatureString, seq, indices);
@@ -109,7 +109,7 @@ struct SKR_RENDERER_API ShaderResourceFactoryImpl : public ShaderResourceFactory
     }
 
     ~ShaderResourceFactoryImpl() noexcept = default;
-    skr_guid_t GetResourceType() override;
+    GUID GetResourceType() override;
     bool AsyncIO() override { return true; }
     bool Unload(SResourceRecord* record) override;
     ESkrInstallStatus Install(SResourceRecord* record) override;
@@ -144,7 +144,7 @@ ECGPUShaderBytecodeType ShaderResourceFactory::GetRuntimeBytecodeType(ECGPUBacke
     }
 }
 
-skr_guid_t ShaderResourceFactoryImpl::GetResourceType()
+GUID ShaderResourceFactoryImpl::GetResourceType()
 {
     const auto resource_type = ::skr::type_id_of<ShaderCollectionResource>();
     return resource_type;

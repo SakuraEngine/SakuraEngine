@@ -1,8 +1,8 @@
 #include "SkrRTTR/type.hpp"
 #include "SkrRTTR/type_registry.hpp"
 #include "SkrSceneCore/scene_components.h"
-#include "SkrRT/ecs/world.hpp"
-#include "SkrRT/sugoi/sugoi_config.h"
+#include "SkrRuntime/ecs/world.hpp"
+#include "SkrRuntime/sugoi/sugoi_config.h"
 #include "SkrScene/actor.h"
 #include "SkrScene/actor_manager.h"
 
@@ -15,7 +15,7 @@ void Actor::Initialize()
     Initialize(guid);
 }
 
-void Actor::Initialize(skr_guid_t _guid)
+void Actor::Initialize(GUID _guid)
 {
     this->guid = _guid;
     attach_rule = EAttachRule::Default;
@@ -36,18 +36,19 @@ void Actor::Initialize(skr_guid_t _guid)
             this->scene_entities.resize_zeroed(1);
             this->scene_entities[0] = Context.entities()[0];
             SKR_LOG_INFO(u8"Actor {%s} created with entity: {%u}", this->GetDisplayName().c_str(), this->GetEntity());
-        });
+        }
+    );
 }
 
 Actor::~Actor() SKR_NOEXCEPT
 {
-    
 }
 
 void Actor::DetachAllChildren()
 {
-    for (auto& child : children)
+    while (!children.is_empty())
     {
+        auto child = children.back();
         child->DetachFromParent();
     }
 }
@@ -59,7 +60,7 @@ void Actor::serialize() SKR_NOEXCEPT
     {
         children_serialized.push_back(child->GetGUID());
     }
-    parent_serialized = _parent ? _parent->GetGUID() : skr_guid_t{};
+    parent_serialized = _parent ? _parent->GetGUID() : GUID::Zero();
     scene_entities_serialized.reserve(scene_entities.size());
     for (auto& entity : scene_entities)
     {
@@ -78,7 +79,7 @@ void Actor::deserialize() SKR_NOEXCEPT
             children.push_back(child.lock());
         }
     }
-    if (parent_serialized != skr_guid_t{})
+    if (!parent_serialized.is_zero())
     {
         if (auto parent = manager.GetActor(parent_serialized))
         {
@@ -91,6 +92,7 @@ void Actor::deserialize() SKR_NOEXCEPT
     {
         scene_entities.push_back(skr::ecs::Entity(entity));
     }
+    world = manager.GetRoot().lock()->GetWorld();
 }
 
 skr::RCWeak<RootActor> Actor::GetRoot()
@@ -134,18 +136,14 @@ void Actor::DetachFromParent()
     {
         // Remove this actor from parent's children list
         auto& siblings = _parent->children;
-        auto it = std::find(siblings.begin(), siblings.end(), this);
-        if (it != siblings.end())
-        {
-            siblings.erase(it);
-        }
+        siblings.remove_if([&](auto sibling) { return sibling.get() == this; });
         skr::ActorManager::GetInstance().UpdateHierarchy(_parent, this, attach_rule);
         _parent = nullptr; // Clear parent reference
     }
 }
 
-
-skr::Vector<skr::GUID> Actor::GetChildrenGUIDs() const SKR_NOEXCEPT {
+skr::Vector<skr::GUID> Actor::GetChildrenGUIDs() const SKR_NOEXCEPT
+{
     skr::Vector<skr::GUID> children_guids;
     for (auto& child : children)
     {
@@ -176,11 +174,11 @@ bool ActorManager::DestroyActor(skr::GUID guid)
     auto it = scene->actors.find(guid);
     if (!it)
     {
-        SKR_LOG_ERROR(u8"Actor with GUID {%s} not found", guid);
+        SKR_LOG_FMT_ERROR(u8"Actor with GUID {{{}}} not found", guid);
         return false;
     }
-    it.value()->DetachFromParent();
     it.value()->DetachAllChildren();
+    it.value()->DetachFromParent();
     DestroyActorEntity(it.value()); // Destroy the actor's entity in ECS world
 
     scene->actors.remove(guid); // when ref-counted -> 0, it will call SkrDelete with release()
@@ -281,7 +279,7 @@ skr::RCWeak<RootActor> ActorManager::GetRoot()
         auto _root = CreateActorInstance<RootActor>();
         _root->Initialize(scene->root_actor_guid);
         scene->actors.add(_root->GetGUID(), _root);
-        root = _root;
+        root = _root.cast_static<RootActor>();
     }
     return root; // Return the root actor reference
 }

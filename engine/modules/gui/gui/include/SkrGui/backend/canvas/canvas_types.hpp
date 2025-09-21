@@ -49,11 +49,11 @@ struct BlendMode {
 };
 
 struct PaintVertex {
-    skr_float4_t position;
-    skr_float2_t texcoord;
-    skr_float2_t aa;
-    skr_float2_t clipUV; // uv in clip-space
-    skr_float2_t clipUV2;
+    float4 position;
+    float2 texcoord;
+    float2 aa;
+    float2 clipUV; // uv in clip-space
+    float2 clipUV2;
     uint32_t     color;
 };
 using PaintIndex = uint16_t;

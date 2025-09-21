@@ -30,7 +30,7 @@ V8BTEnum* V8BTEnum::TryCreate(V8Isolate* isolate, const RTTRType* type)
 
     V8BTEnum* result = SkrNew<V8BTEnum>();
     result->set_isolate(isolate);
-    result->_rttr_type  = type;
+    result->_rttr_type = type;
     result->_underlying = underlying;
 
     // export items
@@ -79,9 +79,9 @@ v8::Local<v8::Value> V8BTEnum::to_v8(
     return _underlying->to_v8(native_data);
 }
 bool V8BTEnum::to_native(
-    void*                native_data,
+    void* native_data,
     v8::Local<v8::Value> v8_value,
-    bool                 is_init
+    bool is_init
 ) const
 {
     return _underlying->to_native(native_data, v8_value, is_init);
@@ -95,7 +95,7 @@ bool V8BTEnum::match_param(
     return _underlying->match_param(v8_param);
 }
 void V8BTEnum::push_param_native(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp,
     v8::Local<v8::Value> v8_value
 ) const
@@ -107,7 +107,7 @@ void V8BTEnum::push_param_native(
     );
 }
 void V8BTEnum::push_param_native_pure_out(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -117,7 +117,7 @@ void V8BTEnum::push_param_native_pure_out(
     );
 }
 v8::Local<v8::Value> V8BTEnum::read_return_native(
-    DynamicStack&         stack,
+    DynamicStack& stack,
     const V8BTDataReturn& return_bind_tp
 ) const
 {
@@ -127,7 +127,7 @@ v8::Local<v8::Value> V8BTEnum::read_return_native(
     );
 }
 v8::Local<v8::Value> V8BTEnum::read_return_from_out_param(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -139,7 +139,7 @@ v8::Local<v8::Value> V8BTEnum::read_return_from_out_param(
 
 // invoke v8 api
 v8::Local<v8::Value> V8BTEnum::make_param_v8(
-    void*                native_data,
+    void* native_data,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -151,8 +151,8 @@ v8::Local<v8::Value> V8BTEnum::make_param_v8(
 
 // field api
 v8::Local<v8::Value> V8BTEnum::get_field(
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -164,8 +164,8 @@ v8::Local<v8::Value> V8BTEnum::get_field(
 }
 void V8BTEnum::set_field(
     v8::Local<v8::Value> v8_value,
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -183,7 +183,7 @@ v8::Local<v8::Value> V8BTEnum::get_static_field(
     return _underlying->get_static_field(field_bind_tp);
 }
 void V8BTEnum::set_static_field(
-    v8::Local<v8::Value>       v8_value,
+    v8::Local<v8::Value> v8_value,
     const V8BTDataStaticField& field_bind_tp
 ) const
 {
@@ -196,8 +196,8 @@ void V8BTEnum::set_static_field(
 // check api
 void V8BTEnum::solve_invoke_behaviour(
     const V8BTDataParam& param_bind_tp,
-    bool&                appare_in_return,
-    bool&                appare_in_param
+    bool& appare_in_return,
+    bool& appare_in_param
 ) const
 {
     _underlying->solve_invoke_behaviour(
@@ -208,7 +208,7 @@ void V8BTEnum::solve_invoke_behaviour(
 }
 bool V8BTEnum::check_param(
     const V8BTDataParam& param_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     if (!_basic_type_check(param_bind_tp.modifiers, errors))
@@ -219,7 +219,7 @@ bool V8BTEnum::check_param(
 }
 bool V8BTEnum::check_return(
     const V8BTDataReturn& return_bind_tp,
-    V8ErrorCache&         errors
+    V8ErrorCache& errors
 ) const
 {
     if (!_basic_type_check(return_bind_tp.modifiers, errors))
@@ -230,7 +230,7 @@ bool V8BTEnum::check_return(
 }
 bool V8BTEnum::check_field(
     const V8BTDataField& field_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     if (field_bind_tp.modifiers.is_decayed_pointer())
@@ -244,7 +244,7 @@ bool V8BTEnum::check_field(
 }
 bool V8BTEnum::check_static_field(
     const V8BTDataStaticField& field_bind_tp,
-    V8ErrorCache&              errors
+    V8ErrorCache& errors
 ) const
 {
     if (field_bind_tp.modifiers.is_decayed_pointer())
@@ -258,13 +258,11 @@ bool V8BTEnum::check_static_field(
 }
 
 // v8 export
-bool V8BTEnum::has_v8_export_obj(
-) const
+bool V8BTEnum::has_v8_export_obj() const
 {
     return true;
 }
-v8::Local<v8::Value> V8BTEnum::get_v8_export_obj(
-) const
+v8::Local<v8::Value> V8BTEnum::get_v8_export_obj() const
 {
     auto isolate = v8::Isolate::GetCurrent();
     auto context = isolate->GetCurrentContext();
@@ -311,13 +309,11 @@ void V8BTEnum::dump_ts_def(
     });
     builder.$line(u8"}}");
 }
-String V8BTEnum::get_ts_type_name(
-) const
+String V8BTEnum::get_ts_type_name() const
 {
     return _rttr_type->name();
 }
-bool V8BTEnum::ts_is_nullable(
-) const
+bool V8BTEnum::ts_is_nullable() const
 {
     return false;
 }
@@ -326,7 +322,7 @@ void V8BTEnum::_enum_to_string(const ::v8::FunctionCallbackInfo<::v8::Value>& in
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get user data
@@ -340,7 +336,7 @@ void V8BTEnum::_enum_to_string(const ::v8::FunctionCallbackInfo<::v8::Value>& in
     }
 
     // get value
-    int64_t  enum_singed;
+    int64_t enum_singed;
     uint64_t enum_unsigned;
     if (bind_tp->_is_signed)
     {
@@ -388,7 +384,7 @@ void V8BTEnum::_enum_from_string(const ::v8::FunctionCallbackInfo<::v8::Value>& 
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get user data

@@ -1,9 +1,7 @@
 #include <std/std.hxx>
 
-
-
-RWTexture2D<float> output_texture;
-Accel SceneTLAS;
+RWTexture2D output_texture;
+RaytracingAccelerationStructure SceneTLAS;
 
 // Push constants - camera parameters
 struct CameraConstants 
@@ -17,7 +15,7 @@ struct CameraConstants
 ConstantBuffer<CameraConstants> camera_constants;
 
 // Ray tracing constants
-trait RayTracingConstants {
+struct RayTracingConstants {
     static constexpr uint32 MAX_BOUNCES = 1;
     static constexpr float EPSILON = 0.001f;
     static constexpr float MAX_DISTANCE = 100000.0f;
@@ -57,7 +55,7 @@ Ray generate_camera_ray(uint2 pixel_coord, uint2 screen_size)
 float4 shade_sphere_hit(RayQuery<RayQueryFlags::AcceptFirstAndEndSearch>& query) 
 {
     // Get instance ID (corresponding to sphere index)
-    uint instance_id = query.CommittedInstanceID();
+    uint instance_id = query.CommittedInstanceIndex();
     
     // Generate colors uniformly distributed in RGB space
     uint hash = instance_id * 12345u + 67890u;
@@ -97,7 +95,7 @@ float4 trace_scene(uint2 pixel_coord, uint2 screen_size)
         query.TraceRayInline(SceneTLAS, 0xff, debug_ray);
         query.Proceed();
         
-        if (query.CommittedStatus() == HitType::HitTriangle) {
+        if (query.CommittedStatus() == HitStatus::HitTriangle) {
             // TLAS working - green corner
             return float4(0.0f, 1.0f, 0.0f, 1.0f);
         } else {
@@ -111,7 +109,7 @@ float4 trace_scene(uint2 pixel_coord, uint2 screen_size)
     query.Proceed();
     
     // Check hit status
-    if (query.CommittedStatus() == HitType::HitTriangle) {
+    if (query.CommittedStatus() == HitStatus::HitTriangle) {
         // Hit sphere, perform shading
         return shade_sphere_hit(query);
     } else {
@@ -129,7 +127,7 @@ float4 trace_scene(uint2 pixel_coord, uint2 screen_size)
 
 // Compute shader entry point
 [[compute_shader("cs_main")]]
-[[kernel_2d(16, 16)]]
+[[numthreads(16, 16, 1)]]
 void compute_main([[sv_thread_id]] uint3 thread_id) 
 {
     uint2 screen_size = uint2(camera_constants.screenSize);

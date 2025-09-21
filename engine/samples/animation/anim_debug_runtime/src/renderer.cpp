@@ -58,7 +58,7 @@ void Renderer::update_anim(ozz::animation::Skeleton& skeleton, ozz::span<ozz::ma
             continue; // skip joints with very small bone length
         }
         // resize according to bone length
-        auto t = skr::TransformF(skr::QuatF(skr::RotatorF()), skr::float3(0.0f), skr_float3_t(bone_length));
+        auto t = skr::TransformF(skr::QuatF(skr::RotatorF()), skr::float3(0.0f), float3(bone_length));
         auto m = skr::transpose(t.to_matrix());
         mat = mat * m; // apply scale to the matrix
         _instance_data[i] = *(skr_float4x4_t*)&mat;
@@ -204,7 +204,7 @@ void Renderer::build_render_graph(skr::render_graph::RenderGraph* graph, skr::re
             builder.set_name(u8"composite_buffer")
                 .extent(this->_width, this->_height)
                 .format(CGPU_FORMAT_R8G8B8A8_UNORM)
-                .allocate_dedicated()
+                .heap_dedicated()
                 .allow_render_target();
         });
     auto gbuffer_color = graph->create_texture(
@@ -212,7 +212,7 @@ void Renderer::build_render_graph(skr::render_graph::RenderGraph* graph, skr::re
             builder.set_name(u8"gbuffer_color")
                 .extent(this->_width, this->_height)
                 .format(CGPU_FORMAT_R8G8B8A8_UNORM)
-                .allocate_dedicated()
+                .heap_dedicated()
                 .allow_render_target();
         });
     auto gbuffer_depth = graph->create_texture(
@@ -220,7 +220,7 @@ void Renderer::build_render_graph(skr::render_graph::RenderGraph* graph, skr::re
             builder.set_name(u8"gbuffer_depth")
                 .extent(this->_width, this->_height)
                 .format(CGPU_FORMAT_D32_SFLOAT)
-                .allocate_dedicated()
+                .heap_dedicated()
                 .allow_depth_stencil();
         });
     auto gbuffer_normal = graph->create_texture(
@@ -228,7 +228,7 @@ void Renderer::build_render_graph(skr::render_graph::RenderGraph* graph, skr::re
             builder.set_name(u8"gbuffer_normal")
                 .extent(this->_width, this->_height)
                 .format(CGPU_FORMAT_R16G16B16A16_SNORM)
-                .allocate_dedicated()
+                .heap_dedicated()
                 .allow_render_target();
         });
 
@@ -268,7 +268,7 @@ void Renderer::build_render_graph(skr::render_graph::RenderGraph* graph, skr::re
             };
 
             const uint32_t strides[5] = {
-                sizeof(skr_float3_t), sizeof(skr_float2_t), sizeof(uint32_t), sizeof(uint32_t), sizeof(skr_float4x4_t)
+                sizeof(float3), sizeof(float2), sizeof(uint32_t), sizeof(uint32_t), sizeof(skr_float4x4_t)
             };
             const uint32_t offsets[5] = {
                 offsetof(BoneGeometry, g_Positions), offsetof(BoneGeometry, g_TexCoords), offsetof(BoneGeometry, g_Normals), offsetof(BoneGeometry, g_Tangents), 0

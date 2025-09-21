@@ -58,7 +58,7 @@ struct SKR_SYSTEM_API CommonInputDevice {
 
     virtual void Tick() SKR_NOEXCEPT = 0;
 
-    virtual span<const EInputKind> ReportKinds() const SKR_NOEXCEPT                = 0;
+    virtual Span<const EInputKind> ReportKinds() const SKR_NOEXCEPT                = 0;
     virtual bool                   SupportKind(EInputKind kind) const SKR_NOEXCEPT = 0;
 
     virtual EInputResult GetCurrentReading(EInputKind kind, InputReading** out_reading) SKR_NOEXCEPT                           = 0;

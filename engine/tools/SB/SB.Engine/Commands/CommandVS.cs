@@ -10,14 +10,15 @@ public class VSCommand : CommandBase
     public string SolutionName { get; set; } = "SakuraEngine";
 
     [Cli.Option(Name = "output", Help = "Output directory for solution files", IsRequired = false)]
-    public string OutputDirectory { get; set; } = ".sb/VisualStudioSolution";
+    public string OutputDirectory { get; set; } = Path.Combine(BuildDirs.TempDir, "VisualStudio");
+
 
     public override int OnExecute()
     {
         Log.Information("Generating Visual Studio solution...");
 
         // Set output directory for VS emitter
-        VSEmitter.RootDirectory = !string.IsNullOrEmpty(Engine.EngineDirectory) ? Engine.EngineDirectory : Directory.GetCurrentDirectory();
+        VSEmitter.RootDirectory = !string.IsNullOrEmpty(BuildDirs.EngineDir) ? BuildDirs.EngineDir : Directory.GetCurrentDirectory();
         VSEmitter.OutputDirectory = OutputDirectory;
 
         // Add VS emitter to generate project files

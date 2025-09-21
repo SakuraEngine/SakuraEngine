@@ -95,15 +95,14 @@ Logger* LogManagerImpl::GetDefaultLogger() SKR_NOEXCEPT
     return gLogManager->logger_.get();
 }
 
-skr_guid_t LogManagerImpl::RegisterPattern(const char8_t* pattern)
+GUID LogManagerImpl::RegisterPattern(const char8_t* pattern)
 {
-    auto guid = skr_guid_t();
-    skr_make_guid(&guid);
+    auto guid = GUID::Create();
     patterns_.emplace(guid, skr::UPtr<LogPattern>::New(pattern));
     return guid;
 }
 
-bool LogManagerImpl::RegisterPattern(skr_guid_t guid, const char8_t* pattern)
+bool LogManagerImpl::RegisterPattern(GUID guid, const char8_t* pattern)
 {
     if (patterns_.find(guid) != patterns_.end())
         return false;
@@ -111,7 +110,7 @@ bool LogManagerImpl::RegisterPattern(skr_guid_t guid, const char8_t* pattern)
     return true;
 }
 
-LogPattern* LogManagerImpl::QueryPattern(skr_guid_t guid)
+LogPattern* LogManagerImpl::QueryPattern(GUID guid)
 {
     auto it = patterns_.find(guid);
     if (it != patterns_.end())
@@ -119,15 +118,14 @@ LogPattern* LogManagerImpl::QueryPattern(skr_guid_t guid)
     return nullptr;
 }
 
-skr_guid_t LogManagerImpl::RegisterSink(skr::UPtr<LogSink> sink)
+GUID LogManagerImpl::RegisterSink(skr::UPtr<LogSink> sink)
 {
-    auto guid = skr_guid_t();
-    skr_make_guid(&guid);
+    auto guid = GUID::Create();
     sinks_.emplace(guid, std::move(sink));
     return guid;
 }
 
-bool LogManagerImpl::RegisterSink(skr_guid_t guid, skr::UPtr<LogSink> sink)
+bool LogManagerImpl::RegisterSink(GUID guid, skr::UPtr<LogSink> sink)
 {
     if (sinks_.find(guid) != sinks_.end())
         return false;
@@ -135,7 +133,7 @@ bool LogManagerImpl::RegisterSink(skr_guid_t guid, skr::UPtr<LogSink> sink)
     return true;
 }
 
-LogSink* LogManagerImpl::QuerySink(skr_guid_t guid)
+LogSink* LogManagerImpl::QuerySink(GUID guid)
 {
     auto it = sinks_.find(guid);
     if (it != sinks_.end())
@@ -145,7 +143,7 @@ LogSink* LogManagerImpl::QuerySink(skr_guid_t guid)
 
 void LogManagerImpl::PatternAndSink(const LogEvent& event, skr::StringView formatted_message) SKR_NOEXCEPT
 {
-    static thread_local skr::FlatHashMap<skr_guid_t, skr::String, skr::Hash<skr_guid_t>> patterns_set_;
+    static thread_local skr::FlatHashMap<GUID, skr::String, skr::Hash<GUID>> patterns_set_;
     patterns_set_.clear();
     {
         SkrZoneScopedN("PatternAll");

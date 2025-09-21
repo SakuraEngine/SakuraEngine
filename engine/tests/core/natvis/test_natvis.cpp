@@ -22,8 +22,8 @@ inline void test_basic_types()
     using namespace skr::literals;
 
     // guid
-    skr_guid_t test_guid = u8"bc91a90c-be2b-46b7-9f07-5c931b1f2eab"_guid;
-    test_guid            = skr_guid_t::Create();
+    GUID test_guid = u8"bc91a90c-be2b-46b7-9f07-5c931b1f2eab"_guid;
+    test_guid            = GUID::Create();
     SKR_LOG_FMT_INFO(u8"test_guid: {}", test_guid);
 }
 
@@ -198,16 +198,16 @@ inline void test_span()
 
     Vector<uint32_t> src_test = { 1, 1, 4, 5, 1, 4 };
 
-    span<uint32_t> test       = src_test;
-    span<uint32_t> test_empty = {};
+    Span<uint32_t> test       = src_test;
+    Span<uint32_t> test_empty = {};
 }
 
 inline void test_optional()
 {
     using namespace skr;
 
-    Optional<skr_guid_t> test       = skr_guid_t::Create();
-    Optional<skr_guid_t> test_empty = {};
+    Optional<GUID> test       = GUID::Create();
+    Optional<GUID> test_empty = {};
 }
 
 inline void test_phmap()

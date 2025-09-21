@@ -2,18 +2,17 @@
 #include "SkrToolCore/fwd_types.hpp"
 #include "SkrContainers/path.hpp"
 #include "SkrContainersDef/hashmap.hpp"
-#ifndef __meta__
-    #include "SkrToolCore/project/project.generated.h" // IWYU pragma: export
-#endif
+#include "SkrToolCore/project/project.generated.h" // IWYU pragma: export
 
 namespace skd
 {
 
 using URI = skr::Path;
 
-sreflect_struct(
-    guid = "D153957A-2272-45F8-92DA-EEEB67821D20" serde = @json)
-SProjectConfig
+struct [[sattr(
+    guid = "D153957A-2272-45F8-92DA-EEEB67821D20" 
+    serde = @enable
+)]] SProjectConfig
 {
     skr::Path assetDirectory;
     skr::Path resourceDirectory;

@@ -19,9 +19,7 @@ public class BuildCommand : CommandBase
         {
             Engine.AddEngineTaskEmitters(Toolchain);
         }
-        Engine.RunBuild(SingleTarget);
-
-        return 0;
+        return Engine.RunBuild(SingleTarget);
     }
 
     [Cli.RegisterCmd(Name = "build", ShortName = 'b', Help = "Build the project", Usage = "SB build [options]\nSB b [options]")]

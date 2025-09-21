@@ -7,7 +7,8 @@ template <typename Container, bool kConst>
 struct SparseHashSetCursor;
 
 template <typename Container, bool kConst>
-struct SparseHashSetIter : public CursorIter<SparseHashSetCursor<Container, kConst>, false> {
+struct SparseHashSetIter : public CursorIter<SparseHashSetCursor<Container, kConst>, false>
+{
     using Super = CursorIter<SparseHashSetCursor<Container, kConst>, false>;
     using Super::Super;
 
@@ -18,7 +19,8 @@ struct SparseHashSetIter : public CursorIter<SparseHashSetCursor<Container, kCon
 };
 
 template <typename Container, bool kConst>
-struct SparseHashSetIterInv : public CursorIter<SparseHashSetCursor<Container, kConst>, true> {
+struct SparseHashSetIterInv : public CursorIter<SparseHashSetCursor<Container, kConst>, true>
+{
     using Super = CursorIter<SparseHashSetCursor<Container, kConst>, true>;
     using Super::Super;
 
@@ -29,7 +31,8 @@ struct SparseHashSetIterInv : public CursorIter<SparseHashSetCursor<Container, k
 };
 
 template <typename Container, bool kConst>
-struct SparseHashSetCursor : protected SparseVectorCursor<Container, kConst> {
+struct SparseHashSetCursor : protected SparseVectorCursor<Container, kConst>
+{
     using Super         = SparseVectorCursor<Container, kConst>;
     using ContainerType = std::conditional_t<kConst, const Container, Container>;
     using SizeType      = typename ContainerType::SizeType;

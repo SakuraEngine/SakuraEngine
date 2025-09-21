@@ -46,6 +46,26 @@ constexpr T bit_ceil_log2(T v);
 // 得到 bit 中 1 的个数
 template <typename T>
 constexpr T pop_count(T v);
+
+// byte swap
+// 字节序列反转
+template <typename T>
+constexpr T byteswap(T v);
+
+// endian
+// 大小端信息
+#if SKR_CXX_VERSION >= 20
+using std::endian;
+#elif
+enum class endian
+{
+    little = 0,
+    big    = 1,
+    native = little
+};
+#endif
+
+static_assert(endian::native == endian::little, "only support little endian platform");
 } // namespace skr
 
 // fallback
@@ -66,7 +86,8 @@ SKR_INLINE constexpr T countl_zero_fallback(T v)
             v = ret;
         }
         c >>= 1;
-    } while (c != 0);
+    }
+    while (c != 0);
     return static_cast<T>(n) - static_cast<T>(v);
 }
 template <typename T>
@@ -190,6 +211,26 @@ SKR_INLINE constexpr T pop_count(T v)
     return std::popcount(v);
 #else
     return detail::pop_count_fallback(v);
+#endif
+}
+
+// byte swap
+// 字节序列反转
+template <typename T>
+SKR_INLINE constexpr T byteswap(T v)
+{
+    static_assert(std::is_integral_v<T> && !std::is_signed_v<T>);
+#if SKR_CXX_VERSION >= 23
+    return ::std::byteswap(v);
+#else
+    T result = 0;
+    for (size_t i = 0; i < sizeof(T); ++i)
+    {
+        result <<= 8;
+        result |= (v & 0xFF);
+        v >>= 8;
+    }
+    return result;
 #endif
 }
 } // namespace skr

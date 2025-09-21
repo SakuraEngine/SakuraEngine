@@ -4,15 +4,14 @@
 #include "SkrContainers/string.hpp"
 #include "SkrToolCore/cook_system/importer.hpp"
 #include "SkrToolCore/cook_system/cooker.hpp"
-#ifndef __meta__
-    #include "SkrShaderCompiler/assets/material_type_asset.generated.h" // IWYU pragma: export
-#endif
+#include "SkrShaderCompiler/assets/material_type_asset.generated.h" // IWYU pragma: export
 
 namespace skd::asset
 {
-sreflect_struct(
-    guid = "329fddb1-73a6-4b4b-8f9f-f4acca58a6e5" serde = @bin | @json)
-MaterialTypeAsset
+struct [[sattr(
+    guid = "329fddb1-73a6-4b4b-8f9f-f4acca58a6e5"
+    serde = @enable
+)]] MaterialTypeAsset
 {
     uint32_t version;
 
@@ -33,20 +32,22 @@ MaterialTypeAsset
     VertexLayoutId vertex_type;
 };
 
-sreflect_struct(
-    guid = "c0fc5581-f644-4752-bb30-0e7f652533b7" serde = @json)
-SKR_SHADER_COMPILER_API MaterialTypeImporter final : public Importer
+struct [[sattr(
+    guid = "c0fc5581-f644-4752-bb30-0e7f652533b7"
+    serde = @enable
+)]] SKR_SHADER_COMPILER_API MaterialTypeImporter final : public Importer
 {
     String jsonPath;
 
-    void* Import(skr::io::IRAMService*, CookContext * context) override;
+    void* Import(skr::io::IRAMService*, CookContext* context) override;
     void Destroy(void* resource) override;
 };
 
-sreflect_struct(guid = "816f9dd4-9a49-47e5-a29a-3bdf7241ad35")
-SKR_SHADER_COMPILER_API MaterialTypeCooker final : public Cooker
+struct [[sattr(
+    guid = "816f9dd4-9a49-47e5-a29a-3bdf7241ad35"
+)]] SKR_SHADER_COMPILER_API MaterialTypeCooker final : public Cooker
 {
-    bool Cook(CookContext * ctx) override;
+    bool Cook(CookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 };
 

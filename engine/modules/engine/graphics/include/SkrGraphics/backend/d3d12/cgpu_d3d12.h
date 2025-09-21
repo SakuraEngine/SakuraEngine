@@ -51,13 +51,6 @@ CGPU_API CGPURootSignaturePoolId cgpu_create_root_signature_pool_d3d12(CGPUDevic
 CGPU_API void cgpu_free_root_signature_pool_d3d12(CGPURootSignaturePoolId pool);
 CGPU_API CGPURootSignatureId cgpu_create_root_signature_d3d12(CGPUDeviceId device, const struct CGPURootSignatureDescriptor* desc);
 CGPU_API void cgpu_free_root_signature_d3d12(CGPURootSignatureId signature);
-CGPU_API CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
-CGPU_API void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
-CGPU_API void cgpu_free_descriptor_set_d3d12(CGPUDescriptorSetId set);
-CGPU_API CGPUDescriptorBufferId cgpu_create_descriptor_buffer_d3d12(CGPUDeviceId device, const struct CGPUDescriptorBufferDescriptor* desc);
-CGPU_API void cgpu_update_descriptor_buffer_d3d12(CGPUDescriptorBufferId buffer, const struct CGPUDescriptorBufferElement* elements, uint32_t count);
-CGPU_API void cgpu_copy_descriptor_buffer_d3d12(CGPUDescriptorBufferId src, CGPUDescriptorBufferId dest, CGPUBufferRange src_range, CGPUBufferRange dst_range);
-CGPU_API void cgpu_free_descriptor_buffer_d3d12(CGPUDescriptorBufferId buffer);
 CGPU_API CGPUComputePipelineId cgpu_create_compute_pipeline_d3d12(CGPUDeviceId device, const struct CGPUComputePipelineDescriptor* desc);
 CGPU_API void cgpu_free_compute_pipeline_d3d12(CGPUComputePipelineId pipeline);
 CGPU_API CGPURenderPipelineId cgpu_create_render_pipeline_d3d12(CGPUDeviceId device, const struct CGPURenderPipelineDescriptor* desc);
@@ -66,6 +59,15 @@ CGPU_API CGPUQueryPoolId cgpu_create_query_pool_d3d12(CGPUDeviceId device, const
 CGPU_API void cgpu_free_query_pool_d3d12(CGPUQueryPoolId pool);
 CGPU_API CGPUMemoryPoolId cgpu_create_memory_pool_d3d12(CGPUDeviceId device, const struct CGPUMemoryPoolDescriptor* desc);
 CGPU_API void cgpu_free_memory_pool_d3d12(CGPUMemoryPoolId pool);
+
+// Descriptor Set/Buffer
+CGPU_API CGPUDescriptorSetId cgpu_create_descriptor_set_d3d12(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
+CGPU_API void cgpu_update_descriptor_set_d3d12(CGPUDescriptorSetId set, const struct CGPUDescriptorData* datas, uint32_t count);
+CGPU_API void cgpu_free_descriptor_set_d3d12(CGPUDescriptorSetId set);
+CGPU_API CGPUDescriptorBufferId cgpu_create_descriptor_buffer_d3d12(CGPUDeviceId device, const struct CGPUDescriptorBufferDescriptor* desc);
+CGPU_API void cgpu_update_descriptor_buffer_d3d12(CGPUDescriptorBufferId buffer, const struct CGPUDescriptorBufferElement* elements, uint32_t count);
+CGPU_API void cgpu_copy_descriptor_buffer_d3d12(CGPUDescriptorBufferId src, CGPUDescriptorBufferId dest, CGPUBufferRange src_range, CGPUBufferRange dst_range);
+CGPU_API void cgpu_free_descriptor_buffer_d3d12(CGPUDescriptorBufferId buffer);
 
 // Queue APIs
 CGPU_API CGPUQueueId cgpu_get_queue_d3d12(CGPUDeviceId device, ECGPUQueueType type, uint32_t index);
@@ -144,6 +146,7 @@ CGPU_API void cgpu_compute_encoder_bind_descriptor_set_d3d12(CGPUComputePassEnco
 CGPU_API void cgpu_compute_encoder_bind_descriptor_buffer_d3d12(CGPUComputePassEncoderId encoder, CGPUDescriptorBufferId args, const char8_t* set_name);
 CGPU_API void cgpu_compute_encoder_push_constants_d3d12(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
 CGPU_API void cgpu_compute_encoder_bind_pipeline_d3d12(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
+CGPU_API void cgpu_compute_encoder_set_threadgroup_size_d3d12(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 CGPU_API void cgpu_compute_encoder_dispatch_d3d12(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 CGPU_API void cgpu_cmd_end_compute_pass_d3d12(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
 
@@ -294,6 +297,10 @@ typedef struct CGPUCommandBuffer_D3D12 {
     uint32_t mType : 3;
     CGPUCommandPool_D3D12* pCmdPool;
     D3D12_RENDER_PASS_ENDING_ACCESS_RESOLVE_SUBRESOURCE_PARAMETERS mSubResolveResource[CGPU_MAX_MRT_COUNT];
+    // Compute threadgroup size
+    uint32_t mThreadgroupSizeX;
+    uint32_t mThreadgroupSizeY;
+    uint32_t mThreadgroupSizeZ;
 } CGPUCommandBuffer_D3D12;
 
 typedef struct CGPUShaderLibrary_D3D12 {
@@ -301,19 +308,19 @@ typedef struct CGPUShaderLibrary_D3D12 {
     struct IDxcBlobEncoding* pShaderBlob;
 } CGPUShaderLibrary_D3D12;
 
-typedef struct BindlessRootParamInfo_D3D12
+typedef struct RootParamInfo_D3D12
 {
     uint32_t set;
     uint32_t param;
-} BindlessRootParamInfo_D3D12;
+} RootParamInfo_D3D12;
 
 typedef struct CGPURootSignature_D3D12 {
     CGPURootSignature super;
     ID3D12RootSignature* pDxRootSignature;
     D3D12_ROOT_PARAMETER1 mRootConstantParam;
     uint32_t mRootParamIndex;
-    uint32_t mBindlessParamCount;
-    BindlessRootParamInfo_D3D12* pBindlessSetParamIndices;
+    uint32_t mTableParamCount;
+    RootParamInfo_D3D12* pSetParamIndices;
 } CGPURootSignature_D3D12;
 
 typedef struct CGPUDescriptorSet_D3D12 {
@@ -427,6 +434,7 @@ typedef struct CGPUSwapChain_D3D12 {
 } CGPUSwapChain_D3D12;
 
 static const D3D_FEATURE_LEVEL d3d_feature_levels[] = {
+    D3D_FEATURE_LEVEL_12_2,
     D3D_FEATURE_LEVEL_12_1,
     D3D_FEATURE_LEVEL_12_0,
     D3D_FEATURE_LEVEL_11_1,
@@ -450,7 +458,11 @@ static const D3D12_COMMAND_LIST_TYPE gDx12CmdTypeTranslator[CGPU_QUEUE_TYPE_COUN
 #endif
 
 #ifndef COM_CALL
+#ifndef __cplusplus
 #define COM_CALL(METHOD, CALLER, ...) (CALLER)->lpVtbl->METHOD(CALLER, ##__VA_ARGS__)
+#else
+#define COM_CALL(METHOD, CALLER, ...) (CALLER)->METHOD(__VA_ARGS__)
+#endif
 #endif
 
 #ifndef IID_REF

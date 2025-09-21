@@ -5,11 +5,11 @@
 
 namespace skr
 {
-using SparseVectorMemoryBase   = container::SparseVectorMemoryBase<uint64_t>;
+using SparseVectorMemoryBase = container::SparseVectorMemoryBase<uint64_t>;
 using SparseVectorFreeListNode = container::SparseVectorFreeListNode<uint64_t>;
 
 template <typename T, typename Allocator = SkrAllocator>
-using SparseVector = container::SparseVector<container::SparseVectorMemory<
+using SparseVector [[sfinal_alias]] = container::SparseVector<container::SparseVectorMemory<
     T,                      /*type*/
     uint64_t,               /*bit block type*/
     SparseVectorMemoryBase, /*base*/
@@ -17,7 +17,7 @@ using SparseVector = container::SparseVector<container::SparseVectorMemory<
     >>;
 
 template <typename T, uint64_t kCount>
-using FixedSparseVector = container::SparseVector<container::FixedSparseVectorMemory<
+using FixedSparseVector [[sfinal_alias]] = container::SparseVector<container::FixedSparseVectorMemory<
     T,                     /*type*/
     uint64_t,              /*bit block type*/
     kCount,                /*count*/
@@ -25,7 +25,7 @@ using FixedSparseVector = container::SparseVector<container::FixedSparseVectorMe
     >>;
 
 template <typename T, uint64_t kInlineCount, typename Allocator = SkrAllocator>
-using InlineSparseVector = container::SparseVector<container::InlineSparseVectorMemory<
+using InlineSparseVector [[sfinal_alias]] = container::SparseVector<container::InlineSparseVectorMemory<
     T,                      /*type*/
     uint64_t,               /*bit block type*/
     kInlineCount,           /*count*/

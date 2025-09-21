@@ -42,15 +42,28 @@ class _Gen {
     b.$line("#pragma once")
 
     // include files
-    b.$line(`#include "SkrRenderer/shared/database.hpp"`)
+    b.$line(`#include "SkrRenderer/shared/gpu_table.hpp"`)
     b.$line(``)
 
     // gen datablocks
     b.$line(`//! BEGIN Data Blocks`)
     b.$line(`namespace skr::gpu {`)
 
+    if (_gen_soa_records.length > 0) {
+      _gen_soa_records.forEach((record) => {
+        const gpu_cfg = record.ml_configs.gpu as RecordConfig;
+        b.$line(`template <>`)
+        b.$line(`struct AOSOAInfo<${record.name}> {`)
+        b.$line(`inline static constexpr bool IsSOA = true;`)
+        b.$line(`inline static constexpr uint32_t SOAPageSize = ${gpu_cfg.soa.page_size};`)
+        b.$line(`};`)
+      })
+    }
+
     if (_gpu_records.length > 0) {
       _gpu_records.forEach((record) => {
+        const is_soa = (record.ml_configs.gpu as RecordConfig).soa.enable;
+
         b.$line(`template <>`)
         b.$line(`struct GPUDatablock<${record.name}> {`)
         b.$indent(_b => {
@@ -91,23 +104,65 @@ class _Gen {
           b.$line(`}`)
           b.$line(``)
 
+          b.$line(`#ifndef __CPPSL__`)
+          if (is_soa) {
+            b.$line(`static void SetupTableConfig(gpu::TableConfig& config) {`)
+            var index = 0;
+            b.$indent(_b => {
+              b.$line(`config.with_page_size(AOSOAInfo<${record.name}>::SOAPageSize);`)
+              record.fields.forEach((f) => {
+                b.$line(`config.add_component(${index++}, sizeof(gpu::GPUDatablock<${f.type}>));`)
+              });
+            })
+            b.$line(`}`)
+            b.$line(``)
+            b.$line(`static void StoreInstance(gpu::TableInstance& Table, uint32_t IndexInTable, const ${record.name}& v) {`)
+            var index = 0;
+            b.$indent(_b => {
+              record.fields.forEach((f) => {
+                b.$line(`Table.Store(${index++}, IndexInTable, v.${f.short_name});`)
+              });
+            })
+            b.$line(`}`)
+          }
+          else {
+            b.$line(`static void SetupTableConfig(gpu::TableConfig& config) {`)
+            b.$indent(_b => {
+              b.$line(`config.with_page_size(AOSOAInfo<${record.name}>::SOAPageSize);`)
+              b.$line(`config.add_component(0, sizeof(gpu::GPUDatablock<${record.name}>));`)
+            })
+            b.$line(`}`)
+            b.$line(``)
+            b.$line(`static void StoreInstance(gpu::TableInstance& Table, uint32_t IndexInTable, const ${record.name}& v) {`)
+            b.$indent(_b => {
+              b.$line(`Table.Store(0, IndexInTable, v);`)
+            })
+            b.$line(`}`)
+          }
+          b.$line(`#endif`)
+
+          if (is_soa) {
+            b.$line(`#ifdef __CPPSL__`)
+            b.$line(`template <typename ByteBufferType>`)
+            b.$line(`static ${record.name} LoadAllSOAElements(ByteBufferType buffer, uint32_t instance, uint32_t buffer_offset) {`)
+            b.$indent(_b => {
+              b.$line(`${record.name} v;`)
+              b.$line(`const auto row = Row<${record.name}>(instance, buffer_offset);`)
+              record.fields.forEach((f) => {
+                b.$line(`v.${f.short_name} = row.Load<SubBlock(${record.name}, ${f.short_name})>(buffer);`)
+              });
+              b.$line(`return v;`)
+            })
+            b.$line(`}`)
+            b.$line(`#endif`)
+          }
+
           record.fields.forEach((f) => {
             b.$line(`const GPUDatablock<${f.type}> _${f.short_name};`)
           })
         });
         b.$line(`};`)
       });
-    }
-
-    if (_gen_soa_records.length > 0) {
-      _gen_soa_records.forEach((record) => {
-        const gpu_cfg = record.ml_configs.gpu as RecordConfig;
-        b.$line(`template <>`)
-        b.$line(`struct AOSOAInfo<${record.name}> {`)
-          b.$line(`inline static constexpr bool IsSOA = true;`)
-          b.$line(`inline static constexpr uint32_t SOAPageSize = ${gpu_cfg.soa.page_size};`)
-        b.$line(`};`)
-      })
     }
 
     b.$line(`} // namespace skr::gpu`)

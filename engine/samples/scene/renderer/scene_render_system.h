@@ -1,6 +1,6 @@
 #pragma once
 // The SceneRenderSystem: A render system for rendering scene using SceneRenderer
-#include "SkrRT/ecs/world.hpp"
+#include "SkrRuntime/ecs/world.hpp"
 
 #include "SkrRenderer/primitive_draw.h"
 #include "scene_renderer.hpp"
@@ -33,7 +33,7 @@ public:
 
     void bind_renderer(skr::SceneRenderer* renderer) SKR_NOEXCEPT;
     void update() SKR_NOEXCEPT;
-    skr::span<skr_primitive_draw_t> get_drawcalls() const SKR_NOEXCEPT;
+    skr::Span<skr_primitive_draw_t> get_drawcalls() const SKR_NOEXCEPT;
     Context const* get_context() const SKR_NOEXCEPT;
 
 private:

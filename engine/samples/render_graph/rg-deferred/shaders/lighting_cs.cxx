@@ -2,10 +2,10 @@
 
 
 
-Texture2D<float> gbuffer_color;
-Texture2D<float> gbuffer_normal;
-Texture2D<float> gbuffer_depth;
-RWTexture2D<float> lighting_output;
+Texture2D gbuffer_color;
+Texture2D gbuffer_normal;
+Texture2D gbuffer_depth;
+RWTexture2D lighting_output;
 
 struct RootConstants
 {
@@ -15,7 +15,7 @@ struct RootConstants
 [[push_constant]]
 ConstantBuffer<RootConstants> push_constants;
 
-[[compute_shader("cs"), kernel_2d(16, 16)]]
+[[compute_shader("cs"), numthreads(16, 16, 1)]]
 void compute([[sv_thread_id]] uint2 threadID)
 {
     if (any(threadID.xy >= uint2(push_constants.viewportSize)))

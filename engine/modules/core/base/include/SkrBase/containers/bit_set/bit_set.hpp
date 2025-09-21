@@ -11,7 +11,8 @@ constexpr size_t bit_set_block_count()
 }
 
 template <size_t N, typename TBlock>
-struct Bitset {
+struct Bitset
+{
     using Algo     = algo::BitAlgo<TBlock>;
     using SizeType = size_t;
 

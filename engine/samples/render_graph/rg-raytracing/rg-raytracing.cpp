@@ -1,5 +1,5 @@
 #include "SkrCore/module/module_manager.hpp"
-#include "SkrRT/ecs/world.hpp"
+#include "SkrRuntime/ecs/world.hpp"
 #include "SkrTask/fib_task.hpp"
 #include "SkrSceneCore/transform_system.h"
 #include "SkrSystem/system_app.h"
@@ -318,8 +318,7 @@ void RGRaytracingSampleModule::spawn_entities()
                 .add_component(&LevelSpawner::children)
                 .add_component(&LevelSpawner::translations)
                 .add_component(&LevelSpawner::rotations)
-                .add_component(&LevelSpawner::scales)
-                .add_component(&LevelSpawner::indices);
+                .add_component(&LevelSpawner::scales);
         }
 
         skr::Vector<Entity> ents;
@@ -328,7 +327,6 @@ void RGRaytracingSampleModule::spawn_entities()
         ComponentView<skr::scene::PositionComponent> translations;
         ComponentView<skr::scene::RotationComponent> rotations;
         ComponentView<skr::scene::ScaleComponent> scales;
-        ComponentView<skr::scene::IndexComponent> indices;
     };
 
     // Level 1 spawner (Cities) - Root entities without parents
@@ -351,8 +349,6 @@ void RGRaytracingSampleModule::spawn_entities()
                 float base_x = (grid_x - 4.5) * (SCENE_SIZE * 0.9 / 10.0);
                 float base_z = (grid_z - 4.5) * (SCENE_SIZE * 0.9 / 10.0);
                 float city_scale = scale_dist(gen) * 4.0f; // Moderate scale
-
-                indices[i].value = entities_count++;
 
                 translations[i].set(
                     base_x + pos_dist(gen) * 0.1f,
@@ -395,8 +391,6 @@ void RGRaytracingSampleModule::spawn_entities()
                 float angle = (i % 9) * (2.0f * skr::kPi / 9.0f) + rotation_dist(gen) * 0.1f;
                 float radius = 100.0f + pos_dist(gen) * 0.1f;
                 float building_scale = scale_dist(gen) * 2.0f; // Medium scale for buildings
-
-                indices[i].value = entities_count++;
 
                 translations[i].set(
                     std::cos(angle) * radius,
@@ -449,7 +443,6 @@ void RGRaytracingSampleModule::spawn_entities()
                 float local_angle = rotation_dist(gen);
                 float local_distance = pos_dist(gen) * 0.01f * local_radius;
 
-                indices[i].value = entities_count++;
                 translations[i].set(
                     std::cos(local_angle) * local_distance,
                     pos_dist(gen) * 5.0f,
@@ -561,7 +554,7 @@ void RGRaytracingSampleModule::create_sphere_blas()
     constexpr int segments = 16;
     constexpr int rings = 8;
 
-    skr::Vector<skr_float3_t> vertices;
+    skr::Vector<skr::float3> vertices;
     skr::Vector<uint16_t> indices;
 
     // Generate sphere vertices (UV sphere)
@@ -577,7 +570,7 @@ void RGRaytracingSampleModule::create_sphere_blas()
             float sin_theta = std::sin(theta);
             float cos_theta = std::cos(theta);
 
-            skr_float3_t vertex = {
+            skr::float3 vertex = {
                 radius * sin_phi * cos_theta,
                 radius * cos_phi,
                 radius * sin_phi * sin_theta
@@ -608,7 +601,7 @@ void RGRaytracingSampleModule::create_sphere_blas()
 
     // Create vertex buffer
     CGPUBufferDescriptor vertex_buffer_desc = {
-        .size = vertices.size() * sizeof(skr_float3_t),
+        .size = vertices.size() * sizeof(skr::float3),
         .name = u8"SphereVertexBuffer",
         .usages = CGPU_BUFFER_USAGE_VERTEX_BUFFER,
         .memory_usage = CGPU_MEM_USAGE_CPU_TO_GPU,
@@ -636,10 +629,13 @@ void RGRaytracingSampleModule::create_sphere_blas()
     blas_geom.vertex_buffer = sphere_vertex_buffer;
     blas_geom.index_buffer = sphere_index_buffer;
     blas_geom.vertex_count = vertices.size();
-    blas_geom.vertex_stride = sizeof(skr_float3_t);
+    blas_geom.vertex_stride = sizeof(skr::float3);
     blas_geom.vertex_format = CGPU_FORMAT_R32G32B32_SFLOAT;
     blas_geom.index_count = indices.size();
     blas_geom.index_stride = sizeof(uint16_t);
+    blas_geom.transform[0] = 1.f;
+    blas_geom.transform[5] = 1.f;
+    blas_geom.transform[10] = 1.f;
 
     SKR_DECLARE_ZERO(CGPUAccelerationStructureDescriptor, blas_desc);
     blas_desc.type = CGPU_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
@@ -664,17 +660,15 @@ void RGRaytracingSampleModule::create_SceneTLAS()
     {
         void build(skr::ecs::AccessBuilder& Builder)
         {
-            Builder.read(&TransformJob::transforms)
-                .read(&TransformJob::indices);
+            Builder.read(&TransformJob::transforms);
         }
-
         ComponentView<const skr::scene::TransformComponent> transforms;
-        ComponentView<const skr::scene::IndexComponent> indices;
     };
     struct GatherTransforms : public TransformJob
     {
-        CGPUAccelerationStructureId sphere_blas;
-        skr::Vector<CGPUAccelerationStructureInstanceDesc>* pInstances;
+        CGPUAccelerationStructureId sphere_blas = nullptr;
+        skr::Vector<CGPUAccelerationStructureInstanceDesc>* pInstances = nullptr;
+        std::atomic_uint32_t* pInstanceCounter = nullptr;
 
         void run(skr::ecs::TaskContext& Context)
         {
@@ -683,7 +677,7 @@ void RGRaytracingSampleModule::create_SceneTLAS()
             {
                 // Create transform matrix from translation, rotation, scale
                 const auto transform = transforms[i].get().to_matrix();
-                auto instance_id = indices[i].value;
+                auto instance_id = pInstanceCounter->fetch_add(1);
 
                 auto& instance = (*pInstances)[instance_id];
                 instance.bottom = sphere_blas;
@@ -706,8 +700,10 @@ void RGRaytracingSampleModule::create_SceneTLAS()
             }
         }
     } transform_job;
+    std::atomic_uint32_t instanceCounter;
     transform_job.sphere_blas = sphere_blas;
     transform_job.pInstances = &tlas_instances;
+    transform_job.pInstanceCounter = &instanceCounter;
 
     // Execute the job to collect transform data
     {
@@ -783,8 +779,7 @@ void RGRaytracingSampleModule::create_compute_pipeline()
     const char8_t* push_constant_name = SKR_UTF8("camera_constants");
     CGPUShaderEntryDescriptor compute_shader_entry = {
         .library = compute_shader,
-        .entry = u8"cs_main",
-        .stage = CGPU_SHADER_STAGE_COMPUTE
+        .entry = u8"cs_main"
     };
     CGPURootSignatureDescriptor root_desc = {
         .shaders = &compute_shader_entry,
@@ -900,9 +895,8 @@ void RGRaytracingSampleModule::render()
             cgpu_compute_encoder_push_constants(ctx.encoder, root_signature, u8"camera_constants", &camera_constants);
 
             // Dispatch compute shader
-            uint32_t group_count_x = (static_cast<uint32_t>(camera_constants.screenSize.x) + 15) / 16;
-            uint32_t group_count_y = (static_cast<uint32_t>(camera_constants.screenSize.y) + 15) / 16;
-            cgpu_compute_encoder_dispatch(ctx.encoder, group_count_x, group_count_y, 1);
+            cgpu_compute_encoder_set_threadgroup_size(ctx.encoder, 16, 16, 1);
+            cgpu_compute_encoder_dispatch(ctx.encoder, camera_constants.screenSize.x, camera_constants.screenSize.y, 1);
         });
 
     // Add copy pass to copy intermediate texture to backbuffer

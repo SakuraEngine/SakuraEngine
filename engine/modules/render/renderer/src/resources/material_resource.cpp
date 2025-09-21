@@ -1,14 +1,14 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/async/thread_job.hpp"
-
+#include "SkrCore/id_range_allocator.hpp"
 #include "SkrCore/memory/sp.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/graphics/shader_map.hpp"
-
 #include "SkrRenderer/graphics/pso_map.hpp"
+#include "SkrRenderer/shared/gpu_scene.hpp"
 
 namespace skr
 {
@@ -20,6 +20,8 @@ struct MaterialFactoryImpl : public MaterialFactory
     MaterialFactoryImpl(const MaterialFactoryImpl::Root& root)
         : root(root)
     {
+        auto cgpu_device = root.render_device->get_cgpu_device();
+
         // 0.async launcher
         launcher = skr::SP<MaterialFutureLancher>::New(root.job_queue);
 
@@ -29,18 +31,27 @@ struct MaterialFactoryImpl : public MaterialFactory
         // 2.create root signature pool
         CGPURootSignaturePoolDescriptor rs_pool_desc = {};
         rs_pool_desc.name = u8"MaterialRootSignaturePool";
-        rs_pool = cgpu_create_root_signature_pool(root.device, &rs_pool_desc);
+        rs_pool = cgpu_create_root_signature_pool(cgpu_device, &rs_pool_desc);
 
         // 3.create pso map
         skr_pso_map_root_t pso_map_root;
         pso_map_root.job_queue = root.job_queue;
-        pso_map_root.device = root.device;
+        pso_map_root.device = cgpu_device;
         pso_map = skr_pso_map_create(&pso_map_root);
 
         // 4.create descriptor buffer
         desc_buffer.count = 4096;
         CGPUDescriptorBufferDescriptor bdls_desc = { .count = desc_buffer.count };
-        desc_buffer.descriptor_buffer = cgpu_create_descriptor_buffer(root.device, &bdls_desc);
+        desc_buffer.descriptor_buffer = cgpu_create_descriptor_buffer(cgpu_device, &bdls_desc);
+
+        if (auto TableManager = root.table_manager)
+        {
+            gpu::TableConfig table_builder(root.render_device->get_cgpu_device(), u8"Materials");
+            table_builder.with_instances(16 * 1024);
+            gpu::GPUDatablock<gpu::Material>::SetupTableConfig(table_builder);
+            mMaterialTable = TableManager->CreateTable(table_builder);
+            mMaterialIdRangeAllocator.resize(mMaterialTable->GetInstanceCapacity());
+        }
     }
 
     ~MaterialFactoryImpl()
@@ -53,9 +64,11 @@ struct MaterialFactoryImpl : public MaterialFactory
 
         if (rs_pool)
             cgpu_free_root_signature_pool(rs_pool);
+
+        mMaterialTable.reset();
     }
 
-    skr_guid_t GetResourceType() override
+    GUID GetResourceType() override
     {
         return ::skr::type_id_of<MaterialResource>();
     }
@@ -100,6 +113,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         {
             unloaded &= Unload_Pass(pass);
         }
+        mMaterialIdRangeAllocator.deallocate(material->mat_id);
         return unloaded;
     }
 
@@ -134,7 +148,7 @@ struct MaterialFactoryImpl : public MaterialFactory
                             const auto platform_ids = multiShader.GetDynamicVariants(option_hash);
                             for (auto platform_id : platform_ids)
                             {
-                                const auto backend = root.device->adapter->instance->backend;
+                                const auto backend = root.render_device->get_backend();
                                 const auto bytecode_type = ShaderResourceFactory::GetRuntimeBytecodeType(backend);
                                 if (bytecode_type == platform_id.bytecode_type)
                                 {
@@ -163,6 +177,7 @@ struct MaterialFactoryImpl : public MaterialFactory
             }
         }
         createBindlessDescriptors(material);
+        addToGPUTable(material);
         return material ? SKR_INSTALL_STATUS_INPROGRESS : SKR_INSTALL_STATUS_FAILED;
     }
 
@@ -171,14 +186,13 @@ struct MaterialFactoryImpl : public MaterialFactory
         return true;
     }
 
-    CGPURootSignatureId createMaterialRS(MaterialResource::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders) const
+    CGPURootSignatureId createMaterialRS(MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders) const
     {
         CGPUShaderEntryDescriptor ppl_shaders[CGPU_SHADER_STAGE_COUNT];
         for (size_t i = 0; i < installed_pass.shaders.size(); i++)
         {
             ppl_shaders[i].library = shaders[i];
             ppl_shaders[i].entry = (const char8_t*)installed_pass.shaders[i].entry.data();
-            ppl_shaders[i].stage = installed_pass.shaders[i].stage;
         }
         CGPURootSignatureDescriptor rs_desc = {};
         rs_desc.pool = rs_pool;
@@ -191,7 +205,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         rs_desc.static_sampler_count = 0;
         rs_desc.static_samplers = nullptr;
         rs_desc.static_sampler_names = nullptr;
-        const auto root_signature = cgpu_create_root_signature(root.device, &rs_desc);
+        const auto root_signature = cgpu_create_root_signature(root.render_device->get_cgpu_device(), &rs_desc);
         return root_signature;
     }
 
@@ -206,6 +220,49 @@ struct MaterialFactoryImpl : public MaterialFactory
     CGPUDescriptorBufferId descriptor_buffer() override
     {
         return desc_buffer.descriptor_buffer;
+    }
+
+    skr::RC<gpu::TableInstance> material_table() override
+    {
+        return mMaterialTable;
+    }
+
+    skr::render_graph::BufferHandle UpdateGPUTable(skr::render_graph::RenderGraph* graph) override
+    {
+        auto handle = mMaterialTable->UpdateTableBuffer(graph, mMaterialIdRangeAllocator.getMaxIds());
+        mMaterialTable->DispatchSparseUpload(graph, {});
+        return handle;
+    }
+
+    void addToGPUTable(MaterialResource* material)
+    {
+        auto id_range = mMaterialIdRangeAllocator.allocate(1);
+        if (id_range.empty())
+        {
+            auto neededCount = 1 + mMaterialIdRangeAllocator.getMaxIds();
+            mMaterialIdRangeAllocator.resize(neededCount * 2);
+            id_range = mMaterialIdRangeAllocator.allocate(1);
+        }
+
+        gpu::Material mat_data;
+        mat_data.global_index = id_range.start;
+        mat_data.basecolor_tex = ~0;
+        mat_data.metallic_roughness_tex = ~0;
+        mat_data.emission_tex = ~0;
+        mat_data.normal_tex = ~0;
+        for (const auto& tex : material->overrides.textures)
+        {
+            if (tex.slot_name == u8"BaseColor")
+                mat_data.basecolor_tex = tex.bindless_id;
+            else if (tex.slot_name == u8"MetallicRoughness")
+                mat_data.metallic_roughness_tex = tex.bindless_id;
+            else if (tex.slot_name == u8"Emissive")
+                mat_data.emission_tex = tex.bindless_id;
+            else if (tex.slot_name == u8"NormalMap")
+                mat_data.normal_tex = tex.bindless_id;
+        }
+        gpu::GPUDatablock<gpu::Material>::StoreInstance(*mMaterialTable, mat_data.global_index, mat_data);
+        material->mat_id = mat_data.global_index;
     }
 
     void createBindlessDescriptors(MaterialResource* material)
@@ -286,7 +343,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         }
         table_desc.names_count = (uint32_t)slot_names.size();
         table_desc.names = slot_names.data();
-        const auto bind_table = cgpux_create_bind_table(root.device, &table_desc);
+        const auto bind_table = cgpux_create_bind_table(root.render_device->get_cgpu_device(), &table_desc);
 
         // 2.update values
         skr::InlineVector<CGPUDescriptorData, 16> updates;
@@ -314,7 +371,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         return bind_table;
     }
 
-    CGPURootSignatureId requestRS(SResourceRecord* record, MaterialResource::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders)
+    CGPURootSignatureId requestRS(SResourceRecord* record, MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders)
     {
         auto material = static_cast<MaterialResource*>(record->resource);
         // 0.return if ready
@@ -340,7 +397,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         return nullptr;
     }
 
-    skr_pso_map_key_id makePsoMapKey(MaterialResource* material, MaterialResource::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders) const SKR_NOEXCEPT
+    skr_pso_map_key_id makePsoMapKey(MaterialResource* material, MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders) const SKR_NOEXCEPT
     {
         auto desc = make_zeroed<CGPURenderPipelineDescriptor>();
         desc.root_signature = installed_pass.root_signature;
@@ -381,10 +438,6 @@ struct MaterialFactoryImpl : public MaterialFactory
             }
             ref->library = shaders[i];
             ref->entry = installed_pass.shaders[i].entry.data();
-            ref->stage = installed_pass.shaders[i].stage;
-            // TODO: const spec
-            ref->constants = nullptr;
-            ref->num_constants = 0;
         }
         // 2.fill vertex layout
         auto vert_layout = make_zeroed<CGPUVertexLayout>();
@@ -464,7 +517,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         return skr_pso_map_create_key(pso_map, &desc);
     }
 
-    CGPURenderPipelineId requestPSO(SResourceRecord* record, MaterialResource::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders, bool& fail)
+    CGPURenderPipelineId requestPSO(SResourceRecord* record, MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders, bool& fail)
     {
         auto material = static_cast<MaterialResource*>(record->resource);
         if (!installed_pass.key)
@@ -520,7 +573,7 @@ struct MaterialFactoryImpl : public MaterialFactory
     struct RootSignatureRequest
         : public skr::AsyncProgress<MaterialFutureLancher, int, bool>
     {
-        RootSignatureRequest(const MaterialResource* material, MaterialFactoryImpl* factory, MaterialResource::installed_pass& installed_pass, skr::span<CGPUShaderLibraryId> shaders)
+        RootSignatureRequest(const MaterialResource* material, MaterialFactoryImpl* factory, MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders)
             : material(material)
             , installed_pass(installed_pass)
             , factory(factory)
@@ -543,8 +596,11 @@ struct MaterialFactoryImpl : public MaterialFactory
         skr::InlineVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
 
-    skr::FlatHashMap<skr_guid_t, SP<RootSignatureRequest>, skr::Hash<skr_guid_t>> mRootSignatureRequests;
+    skr::FlatHashMap<GUID, SP<RootSignatureRequest>, skr::Hash<GUID>> mRootSignatureRequests;
     skr::SP<MaterialFutureLancher> launcher = nullptr;
+
+    skr::IdRangeAllocator mMaterialIdRangeAllocator;
+    skr::RC<gpu::TableInstance> mMaterialTable;
 
     ShaderMap* shader_map = nullptr;
     skr_pso_map_id pso_map = nullptr;

@@ -2,7 +2,7 @@
 #include "SkrSceneCore/scene_components.h"
 #include "rtm/qvvf.h"
 #include "SkrContainers/hashmap.hpp"
-#include "SkrRT/ecs/world.hpp"
+#include "SkrRuntime/ecs/world.hpp"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrSceneCore/transform_system.h"
 
@@ -35,15 +35,14 @@ struct TransformFromRootJob
             .access(&TransformFromRootJob::transform_accessor);
     }
 
-    void calculate(skr::ecs::Entity entity, const skr::scene::Transform& prev_transform)
+    void calculate(skr::ecs::Entity entity, const skr::scene::Transform& prev_transform, bool force_update = false)
     {
         auto pOptionalRotation = rotation_accessor.get(entity);
         auto pOptionalScale = scale_accessor.get(entity);
         const auto& Position = position_accessor[entity];
 
-        const bool dirty = check_dirty(Position, pOptionalRotation, pOptionalScale);
+        const bool dirty = force_update || check_dirty(Position, pOptionalRotation, pOptionalScale);
         auto& transform = transform_accessor[entity];
-
         // TODO: 当前的更新逻辑存在问题
         // 1. 对于根节点，需要手动设置Position来触发更新，否则会默认初始化为0
         // 2. 对于某些希望保持世界变换的节点更新逻辑没有照顾到
@@ -52,7 +51,7 @@ struct TransformFromRootJob
             transform.set(
                 Position.get(),
                 pOptionalRotation ? skr::QuatF(pOptionalRotation->get()) : skr::QuatF(0, 0, 0, 1),
-                pOptionalScale ? pOptionalScale->get() : skr_float3_t{ 1, 1, 1 });
+                pOptionalScale ? pOptionalScale->get() : float3{ 1, 1, 1 });
             transform.set(prev_transform * transform.get());
 
             Position.dirty = false;
@@ -64,7 +63,7 @@ struct TransformFromRootJob
 
         for (const auto& child : children_accessor[entity])
         {
-            calculate(child.entity, transform.get());
+            calculate(child.entity, transform.get(), dirty || force_update);
         }
     }
 
@@ -165,7 +164,7 @@ void TransformSystem::CalculateTransform(sugoi_entity_t entity) SKR_NOEXCEPT
             transform.set(
                 Position.get(),
                 pOptionalRotation ? skr::QuatF(pOptionalRotation->get()) : skr::QuatF(0, 0, 0, 1),
-                pOptionalScale ? pOptionalScale->get() : skr_float3_t{ 1, 1, 1 });
+                pOptionalScale ? pOptionalScale->get() : float3{ 1, 1, 1 });
             transform.set(prev_transform * transform.get());
 
             Position.dirty = false;

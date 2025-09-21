@@ -3593,7 +3593,7 @@ void TextServerAdvanced::_font_draw_glyph(const RID& p_font_rid, const RID& p_ca
                         struct float8 {
                             float x, y, w, h, u, v, u2, v2;
                         };
-                        [[maybe_unused]] skr_float4_t color = { p_color.r, p_color.g, p_color.b, p_color.a };
+                        [[maybe_unused]] skr::float4 color = { p_color.r, p_color.g, p_color.b, p_color.a };
 
                         auto              image_texture = FontAtlasImage::texture_owner().get_or_null(texture);
                         auto              draw_texture  = image_texture->render_image();

@@ -149,13 +149,13 @@ class _Gen {
     const _gen_enums = header.enums.filter(_Gen.filter_enum);
 
     b.$line(`// BEGIN RTTR GENERATED`);
-    b.$line(`// RTTRTraits`)
-    b.$line(`#include "SkrRTTR/rttr_traits.hpp"`);
+    b.$line(`// TypeInfo`)
+    b.$line(`#include <SkrBase/type_info.hpp>`);
     _gen_records.forEach((record) => {
-      b.$line(`SKR_RTTR_TYPE(${record.name}, "${record.ml_configs.guid}")`,);
+      b.$line(`SKR_TYPE_INFO(${record.name}, "${record.ml_configs.guid}")`,);
     });
     _gen_enums.forEach((enum_) => {
-      b.$line(`SKR_RTTR_TYPE(${enum_.name}, "${enum_.ml_configs.guid}")`,);
+      b.$line(`SKR_TYPE_INFO_ENUM(${enum_.name}, "${enum_.ml_configs.guid}")`,);
     });
     b.$line(``)
     b.$line(`// forward export functions for friend`)
@@ -218,6 +218,38 @@ class _Gen {
     b.$line(`// static register functions`);
     b.$line(`namespace skr {`);
     {
+      // enum type info
+      _gen_enums.forEach((enum_) => {
+        const _gen_enum_value_json = enum_.values.filter(enum_value => enum_value.ml_configs.rttr.enable);
+
+        // to string
+        b.$line(`skr::TypeInfoStringView TypeInfo<${enum_.name}>:: to_string(const ${enum_.name}& value){`);
+        b.$indent((_b) => {
+          b.$line(`switch (value) {`);
+          b.$indent((_b) => {
+            _gen_enum_value_json.forEach((enum_value) => {
+              b.$line(`case ${enum_.name}::${enum_value.short_name}: return u8"${enum_value.short_name}";`);
+            });
+            b.$line(`default: SKR_UNREACHABLE_CODE(); return u8"${enum_.name}::__INVALID_ENUMERATOR__";`);
+          });
+          b.$line(`}`);
+        });
+        b.$line(`}`);
+
+        // from string
+        b.$function(
+          `bool TypeInfo<${enum_.name}>::from_string(skr::TypeInfoStringView str, ${enum_.name}& value)`, (_b) => {
+            b.$line(`const auto hash = skr_hash64_of(str.data(), str.size(), 0);`);
+            b.$switch(`hash`, (_b) => {
+              _gen_enum_value_json.forEach((enum_value) => {
+                b.$line(`case skr::consteval_hash(u8"${enum_value.short_name}"): if(str == u8"${enum_value.short_name}") value = ${enum_value.name}; return true;`);
+              });
+              b.$line(`default: return false;`);
+            });
+          },
+        );
+      })
+
       // export records
       _gen_records.forEach((record, _header) => {
         const record_config = record.ml_configs.rttr as RecordConfig;

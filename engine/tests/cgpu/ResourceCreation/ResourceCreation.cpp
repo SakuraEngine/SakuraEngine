@@ -1,5 +1,5 @@
 #include "SkrGraphics/api.h"
-#include "SkrRT/config.h"
+#include "SkrRuntime/config.h"
 #include <SkrContainers/string.hpp>
 
 #include "spirv.h"
@@ -308,7 +308,6 @@ void ResourceCreation<backend>::test_all()
         // Create root signature
         SKR_DECLARE_ZERO(CGPUShaderEntryDescriptor, compute_shader_entry)
         compute_shader_entry.entry = u8"main";
-        compute_shader_entry.stage = CGPU_SHADER_STAGE_COMPUTE;
         compute_shader_entry.library = compute_shader;
         SKR_DECLARE_ZERO(CGPURootSignatureDescriptor, root_desc)
         root_desc.shaders = &compute_shader_entry;

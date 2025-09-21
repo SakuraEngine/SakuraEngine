@@ -1,11 +1,9 @@
 #pragma once
 #include "resources/mesh_resource.h"
-#include "SkrRT/sugoi/sugoi_meta.hpp"
+#include "SkrRuntime/sugoi/sugoi_meta.hpp"
 #include "SkrRenderer/primitive_draw.h"
 #include "SkrGraphics/api.h"
-#ifndef __meta__
-    #include "SkrRenderer/render_mesh.generated.h" // IWYU pragma: export
-#endif
+#include "SkrRenderer/render_mesh.generated.h" // IWYU pragma: export
 
 #ifdef __cplusplus
 namespace skr
@@ -19,16 +17,20 @@ struct RenderMesh
     };
     MeshResource* mesh_resource;
     skr::Vector<CGPUBufferId> buffers;
-    skr::Vector<uint32_t> buffer_ids;
+    skr::Vector<uint32_t> ibuffer_ids;
+    skr::Vector<uint32_t> vbuffer_ids;
     skr::Vector<skr_vertex_buffer_view_t> vertex_buffer_views;
     skr::Vector<skr_index_buffer_view_t> index_buffer_views;
     skr::Vector<PrimitiveCommand> primitive_commands;
     CGPUAccelerationStructureId blas = nullptr;
     std::atomic_bool need_build_blas = true;
+    uint64_t primitive_table_id_start = 0;
 };
 
-sreflect_managed_component(guid = "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c")
-MeshComponent
+struct [[secs_managed_component, sattr(
+    guid = "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c"
+    serde = @enable
+)]]MeshComponent
 {
     skr::AsyncResource<skr::MeshResource> mesh_resource;
 };

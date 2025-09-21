@@ -2,16 +2,15 @@
 #include "SkrRenderer/fwd_types.h"
 #include "SkrGraphics/flags.h"
 #include "SkrRTTR/enum_tools.hpp"
-#ifndef __meta__
-    #include "SkrRenderer/graphics/shader_hash.generated.h" // IWYU pragma: export
-#endif
+#include "SkrRenderer/graphics/shader_hash.generated.h" // IWYU pragma: export
 
-namespace skr {
-    
-sreflect_struct(
+namespace skr
+{
+
+struct [[sattr(
     guid = "5a54720c-34b2-444c-8e3a-5977c94136c3";
-    serde = @bin | @json;)
-StableShaderHash
+    serde = @enable
+)]] StableShaderHash
 {
     uint32_t valuea = 0;
     uint32_t valueb = 0;
@@ -39,10 +38,10 @@ StableShaderHash
 };
 static SKR_CONSTEXPR StableShaderHash kZeroStableShaderHash = StableShaderHash();
 
-sreflect_struct(
+struct [[sattr(
     guid = "0291f512-747e-4b64-ba5c-5fdc412220a3";
-    serde = @bin | @json;)
-PlatformShaderHash
+    serde = @enable
+)]] PlatformShaderHash
 {
     uint32_t flags;
     uint32_t encoded_digits[4];
@@ -60,10 +59,10 @@ PlatformShaderHash
 #endif
 };
 
-sreflect_struct(
+struct [[sattr(
     guid = "b0b69898-166f-49de-a675-7b04405b98b1";
-    serde = @bin | @json;)
-PlatformShaderIdentifier
+    serde = @enable
+)]] PlatformShaderIdentifier
 {
 #ifdef __cplusplus
     skr::EnumAsValue<ECGPUShaderBytecodeType> bytecode_type;

@@ -10,8 +10,8 @@ namespace SB
     using BS = BuildSystem;
     public partial class Engine : BuildSystem
     {
-        public static void SetEngineDirectory(string directory) => EngineDirectory = directory;
-        public static void SetProjectRoot(string projectRoot) => ProjectRoot = projectRoot;
+        public static string DefaultMode = "debug";
+        public static string DefaultToolchain = OperatingSystem.IsWindows() ? "clang-cl" : "clang";
 
         public static IToolchain Bootstrap(TargetCategory Categories)
         {
@@ -34,11 +34,8 @@ namespace SB
                         throw new Exception($"Drive letter {DriveLetter} from source location must be upper case! You might compiled SB in git bash environment, please recompile it in cmd.exe or powershell.exe!");
                 }
 
-                // create directories
-                BS.TempPath = Directory.CreateDirectory(Path.Combine(ProjectRoot, ".sb")).FullName;
-                BS.BuildPath = Directory.CreateDirectory(Path.Combine(ProjectRoot, ".build", Toolchain.Name)).FullName;
-                BS.PackageBuildPath = Directory.CreateDirectory(Path.Combine(ProjectRoot, ".pkgs/.build", Toolchain.Name)).FullName;
                 BS.LoadConfigurations();
+                BuildDirs.SetupToolchain(Toolchain);
 
                 Log.Verbose("Load Targets... ");
                 LoadTargets(Categories);
@@ -122,9 +119,9 @@ namespace SB
                 .AddDependency("Codgen.Codegen", DependencyModel.PerTarget);  // 依赖 CppSLCompiler 目标的链接步骤
         }
 
-        public static new void RunBuild(string? singleTargetName = null)
+        public static new int RunBuild(string? singleTargetName = null)
         {
-            BS.RunBuild(singleTargetName);
+            return BS.RunBuild(singleTargetName);
         }
 
         private static void LoadTargets(TargetCategory Categories)
@@ -136,15 +133,16 @@ namespace SB
                     .RTTI(false)
                     .Clang_CppFlags(Visibility.Public, "-Wno-unknown-warning-option")
                     .Clang_CppFlags(Visibility.Public, "-Wno-character-conversion")
-                    .LinkDirs(Visibility.Public, Target.GetBinaryPath());
+                    .LinkDirs(Visibility.Public, Target.GetBinaryDir());
                 if (BS.TargetOS == OSPlatform.Windows)
                 {
                     Target.RuntimeLibrary("MD")
                         .MSVC_LinkerArgs(Visibility.Public, "/NODEFAULTLIB:library");
                 }
+
                 if (Target.IsFromPackage)
                 {
-                    var BuildDirectory = Path.Combine(BS.BuildPath, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}");
+                    var BuildDirectory = Path.Combine(SB.BuildDirs.BuildDir, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}");
                     Target.LinkDirs(Visibility.Public, BuildDirectory)
                         .InstallArtifact();
                 }
@@ -211,15 +209,5 @@ namespace SB
                 ))
                 .CreateLogger();
         }
-
-        public static DependDatabase CodegenDepend = new DependDatabase(Engine.TempPath, "Engine.Codegen." + Engine.GlobalConfiguration);
-        public static DependDatabase MiscDepend = new DependDatabase(Engine.TempPath, "Engine.Misc");
-        public static DependDatabase ShaderCompileDepend = new DependDatabase(Engine.TempPath, "Engine.ShaderCompileDepends");
-
-        public static string EngineDirectory { get; private set; } = Directory.GetCurrentDirectory();
-        public static string ProjectRoot { get; private set; } = Directory.GetCurrentDirectory();
-        public static string ToolDirectory => Path.Combine(TempPath, "tools");
-        public static string DownloadDirectory => Path.Combine(TempPath, "downloads");
-        public static bool EnableDebugInfo = true;
     }
 }

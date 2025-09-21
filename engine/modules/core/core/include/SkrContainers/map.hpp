@@ -20,89 +20,73 @@ struct TypeSignatureTraits<::skr::Map<K, V>>
 };
 } // namespace skr
 
-// bin serde
-#include "SkrSerde/bin_serde.hpp"
+// serialize
+#include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
-template <typename K, typename V>
-struct BinSerde<skr::Map<K, V>>
+template <typename Map>
+struct SerializeSkrMapImpl
 {
-    inline static bool read(SBinaryReader* r, skr::Map<K, V>& v)
+    using KeyType = typename Map::MapKeyType;
+    using ValueType = typename Map::MapValueType;
+
+    inline static void read(ArchiveRead& r, Map& v)
     {
-        // read size
-        uint32_t size;
-        if (!bin_read(r, size)) return false;
+        SkrZoneScopedN("Serialize<Map>::read");
+
+        Archive::ArrayScope arr_scope{ r };
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // reserve
+        v.clear();
+        uint64_t arr_size;
+        SKR_FAST_CHECK(r.array_size<uint64_t>(arr_size), );
+        v.reserve(arr_size / 2);
 
         // read content
-        skr::Map<K, V> temp;
-        for (uint32_t i = 0; i < size; ++i)
+        for (uint64_t i = 0; i < arr_size; i += 2)
         {
-            K key;
-            V value;
-            if (!bin_read(r, key))
-                return false;
-            if (!bin_read(r, value))
-                return false;
-            temp.add(std::move(key), std::move(value));
-        }
+            KeyType key;
+            ValueType value;
 
-        // move to target
-        v = std::move(temp);
-        return true;
-    }
-    inline static bool write(SBinaryWriter* w, const skr::Map<K, V>& v)
-    {
-        // write size
-        uint32_t size = static_cast<uint32_t>(v.size());
-        if (!bin_write(w, size)) return false;
+            SKR_FAST_CHECK(r.value<KeyType>(key), );
+            SKR_FAST_CHECK(r.value<ValueType>(value), );
 
-        // write content
-        for (const auto& [key, value] : v)
-        {
-            if (!bin_write(w, key)) return false;
-            if (!bin_write(w, value)) return false;
-        }
-        return true;
-    }
-};
-} // namespace skr
-
-// json serde
-#include "SkrSerde/json_serde.hpp"
-namespace skr
-{
-template <typename K, typename V>
-struct JsonSerde<skr::Map<K, V>>
-{
-    inline static bool read(skr::archive::JsonReader* r, skr::Map<K, V>& v)
-    {
-        size_t count;
-        SKR_EXPECTED_CHECK(r->StartArray(count), false);
-        v.reserve(count / 2);
-        for (size_t i = 0; i < count; i += 2)
-        {
-            K key;
-            V value;
-
-            if (!json_read<K>(r, key))
-                return false;
-            if (!json_read<V>(r, value))
-                return false;
             v.add(std::move(key), std::move(value));
         }
-        SKR_EXPECTED_CHECK(r->EndArray(), false);
-        return true;
     }
-    inline static bool write(skr::archive::JsonWriter* w, const skr::Map<K, V>& v)
+    inline static void write(ArchiveWrite& w, const Map& v)
     {
-        SKR_EXPECTED_CHECK(w->StartArray(), false);
-        for (const auto& [key, value] : v)
+        SkrZoneScopedN("Serialize<Map>::write");
+
+        Archive::ArrayScope arr_scope{ w };
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // write count
+        SKR_FAST_CHECK(w.array_size<uint64_t>(uint64_t(v.size() * 2)), );
+
+        // write content
+        for (const auto& pair : v)
         {
-            if (!json_write<K>(w, key)) return false;
-            if (!json_write<V>(w, value)) return false;
+            SKR_FAST_CHECK(w.value<KeyType>(pair.key), );
+            SKR_FAST_CHECK(w.value<ValueType>(pair.value), );
         }
-        SKR_EXPECTED_CHECK(w->EndArray(), false);
-        return true;
     }
+};
+
+template <typename K, typename V, typename HashTraits, typename Allocator>
+struct Serialize<skr::Map<K, V, HashTraits, Allocator>>
+    : SerializeSkrMapImpl<skr::Map<K, V, HashTraits, Allocator>>
+{
+};
+template <typename K, typename V, uint64_t kCount, typename HashTraits>
+struct Serialize<skr::FixedMap<K, V, kCount, HashTraits>>
+    : SerializeSkrMapImpl<skr::FixedMap<K, V, kCount, HashTraits>>
+{
+};
+template <typename K, typename V, uint64_t kInlineCount, typename HashTraits, typename Allocator>
+struct Serialize<skr::InlineMap<K, V, kInlineCount, HashTraits, Allocator>>
+    : SerializeSkrMapImpl<skr::InlineMap<K, V, kInlineCount, HashTraits, Allocator>>
+{
 };
 } // namespace skr

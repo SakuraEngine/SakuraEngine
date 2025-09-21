@@ -8,20 +8,20 @@
 namespace skr::container
 {
 // 字符串操作的函数指针类型定义
-using StringAppendCStr = void (*)(void* pString, const char* content, size_t size);
+using StringAppendCStr  = void (*)(void* pString, const char* content, size_t size);
 using StringAppendU8Str = void (*)(void* pString, const skr_char8* content, size_t size);
-using StringAppendChar = void (*)(void* pString, skr_char8 ch);
-using StringAddChars = void (*)(void* pString, skr_char8 ch, size_t count);
-using StringAppendView = void (*)(void* pString, const void* view_data, size_t view_size);
+using StringAppendChar  = void (*)(void* pString, skr_char8 ch);
+using StringAddChars    = void (*)(void* pString, skr_char8 ch, size_t count);
+using StringAppendView  = void (*)(void* pString, const void* view_data, size_t view_size);
 
 struct StringFunctionTable
 {
-    void* string_ptr;               // 类型擦除的字符串指针
-    StringAppendCStr append_cstr;   // append(const char*, size_t)
+    void*             string_ptr;   // 类型擦除的字符串指针
+    StringAppendCStr  append_cstr;  // append(const char*, size_t)
     StringAppendU8Str append_u8str; // append(const skr_char8*, size_t)
-    StringAppendChar append_char;   // append(skr_char8)
-    StringAddChars add_chars;       // add(skr_char8, size_t)
-    StringAppendView append_view;   // append(ViewType)
+    StringAppendChar  append_char;  // append(skr_char8)
+    StringAddChars    add_chars;    // add(skr_char8, size_t)
+    StringAppendView  append_view;  // append(ViewType)
 };
 
 // 创建字符串的虚函数表
@@ -74,13 +74,13 @@ struct FormatToken
         Formatter,    // content inside {}
     };
 
-    Kind kind = Kind::Unknow;
+    Kind     kind = Kind::Unknow;
     ViewType view = {};
 };
 template <typename TSize>
 struct FormatTokenIter
 {
-    using ViewType = U8StringView<TSize>;
+    using ViewType  = U8StringView<TSize>;
     using TokenType = FormatToken<TSize>;
 
     inline FormatTokenIter(ViewType format_str)
@@ -165,8 +165,8 @@ private:
         }
         else
         {
-            auto search_str = _format_str.subview(_index);
-            auto found_left_brace = search_str.find(UTF8Seq{ u8'{' });
+            auto search_str        = _format_str.subview(_index);
+            auto found_left_brace  = search_str.find(UTF8Seq{ u8'{' });
             auto found_right_brace = search_str.find(UTF8Seq{ u8'}' });
             if (found_left_brace || found_right_brace)
             {
@@ -185,8 +185,8 @@ private:
     }
 
 private:
-    ViewType _format_str;
-    TSize _index;
+    ViewType  _format_str;
+    TSize     _index;
     TokenType _cur_token;
 };
 } // namespace skr::container
@@ -464,17 +464,17 @@ private:
     }
 
 public:
-    const void* arg;
+    const void*   arg;
     FormatterFunc formatter;
 };
 
 template <typename TString, typename... Args>
 inline void format_to(TString& out, typename TString::ViewType view, Args&&... args)
 {
-    using SizeType = typename TString::SizeType;
+    using SizeType  = typename TString::SizeType;
     using TokenIter = FormatTokenIter<SizeType>;
 
-    constexpr uint64_t arg_count = sizeof...(Args);
+    constexpr uint64_t                               arg_count = sizeof...(Args);
     std::array<ArgFormatterPack<TString>, arg_count> formatters{ { ArgFormatterPack<TString>{ std::forward<Args>(args) }... } };
 
     out.reserve(out.size() + view.size());
@@ -486,7 +486,7 @@ inline void format_to(TString& out, typename TString::ViewType view, Args&&... a
         Manual
     };
     IndexingMode indexing_mode = IndexingMode::Unknown;
-    uint64_t auto_index = 0;
+    uint64_t     auto_index    = 0;
     for (TokenIter iter{ view }; iter.has_next(); iter.move_next())
     {
         auto token = iter.ref();
@@ -500,7 +500,7 @@ inline void format_to(TString& out, typename TString::ViewType view, Args&&... a
             break;
         case FormatToken<SizeType>::Kind::Formatter: {
             auto [arg_idx, mid, spec] = token.view.subview(1, token.view.size() - 2).partition(UTF8Seq{ u8':' });
-            uint64_t cur_idx = auto_index;
+            uint64_t cur_idx          = auto_index;
             if (arg_idx.is_empty())
             {
                 SKR_VERIFY(indexing_mode != IndexingMode::Manual && "Manual index is not allowed mixing with automatic index!");

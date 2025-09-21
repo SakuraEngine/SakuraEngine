@@ -139,9 +139,9 @@ CGPUAccelerationStructureId cgpu_create_acceleration_structure_metal(CGPUDeviceI
     cgpu_assert(AS->mtlAS);
 
     CGPUBufferDescriptor scratchBufferDesc = {};
-    scratchBufferDesc.descriptors = CGPU_RESOURCE_TYPE_RW_BUFFER;
+    scratchBufferDesc.usages = CGPU_BUFFER_USAGE_SHADER_READWRITE;
     scratchBufferDesc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
-    scratchBufferDesc.flags = CGPU_BUFFER_FLAG_NO_DESCRIPTOR_VIEW_CREATION;
+    scratchBufferDesc.flags = CGPU_BUFFER_FLAG_NONE;
     scratchBufferDesc.size = accelSizes.buildScratchBufferSize;
     AS->scratch_buffer = cgpu_create_buffer(device, &scratchBufferDesc);
     return &AS->super;

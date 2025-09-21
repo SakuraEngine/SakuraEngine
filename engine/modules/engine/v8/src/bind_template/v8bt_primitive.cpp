@@ -103,9 +103,9 @@ v8::Local<v8::Value> V8BTPrimitive::to_v8(
     }
 }
 bool V8BTPrimitive::to_native(
-    void*                native_data,
+    void* native_data,
     v8::Local<v8::Value> v8_value,
-    bool                 is_init
+    bool is_init
 ) const
 {
     if (!is_init)
@@ -206,14 +206,15 @@ bool V8BTPrimitive::match_param(
     }
 }
 void V8BTPrimitive::push_param_native(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp,
     v8::Local<v8::Value> v8_value
 ) const
 {
-    struct V8StringViewStackProxy {
+    struct V8StringViewStackProxy
+    {
         Placeholder<v8::String::Utf8Value> v;
-        skr::StringView                    view;
+        skr::StringView view;
 
         static void* custom_mapping(void* obj)
         {
@@ -251,7 +252,7 @@ void V8BTPrimitive::push_param_native(
     }
 }
 void V8BTPrimitive::push_param_native_pure_out(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -266,7 +267,7 @@ void V8BTPrimitive::push_param_native_pure_out(
     _init_native(native_data);
 }
 v8::Local<v8::Value> V8BTPrimitive::read_return_native(
-    DynamicStack&         stack,
+    DynamicStack& stack,
     const V8BTDataReturn& return_bind_tp
 ) const
 {
@@ -280,7 +281,7 @@ v8::Local<v8::Value> V8BTPrimitive::read_return_native(
     return to_v8(native_data);
 }
 v8::Local<v8::Value> V8BTPrimitive::read_return_from_out_param(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -291,7 +292,7 @@ v8::Local<v8::Value> V8BTPrimitive::read_return_from_out_param(
 
 // invoke v8 api
 v8::Local<v8::Value> V8BTPrimitive::make_param_v8(
-    void*                native_data,
+    void* native_data,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -300,8 +301,8 @@ v8::Local<v8::Value> V8BTPrimitive::make_param_v8(
 
 // field api
 v8::Local<v8::Value> V8BTPrimitive::get_field(
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -310,8 +311,8 @@ v8::Local<v8::Value> V8BTPrimitive::get_field(
 }
 void V8BTPrimitive::set_field(
     v8::Local<v8::Value> v8_value,
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -326,7 +327,7 @@ v8::Local<v8::Value> V8BTPrimitive::get_static_field(
     return to_v8(field_addr);
 }
 void V8BTPrimitive::set_static_field(
-    v8::Local<v8::Value>       v8_value,
+    v8::Local<v8::Value> v8_value,
     const V8BTDataStaticField& field_bind_tp
 ) const
 {
@@ -338,37 +339,37 @@ void V8BTPrimitive::set_static_field(
 
 void V8BTPrimitive::solve_invoke_behaviour(
     const V8BTDataParam& param_bind_tp,
-    bool&                appare_in_return,
-    bool&                appare_in_param
+    bool& appare_in_return,
+    bool& appare_in_param
 ) const
 {
     switch (param_bind_tp.inout_flag)
     {
     case ERTTRParamFlag::Out:
-        appare_in_param  = false;
+        appare_in_param = false;
         appare_in_return = true;
         break;
     case ERTTRParamFlag::InOut:
-        appare_in_param  = true;
+        appare_in_param = true;
         appare_in_return = true;
         break;
     case ERTTRParamFlag::In:
     default:
-        appare_in_param  = true;
+        appare_in_param = true;
         appare_in_return = false;
         break;
     }
 }
 bool V8BTPrimitive::check_param(
     const V8BTDataParam& param_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     return _basic_type_check(param_bind_tp.modifiers, errors);
 }
 bool V8BTPrimitive::check_return(
     const V8BTDataReturn& return_bind_tp,
-    V8ErrorCache&         errors
+    V8ErrorCache& errors
 ) const
 {
     if (_type_id == type_id_of<void>())
@@ -394,7 +395,7 @@ bool V8BTPrimitive::check_return(
 }
 bool V8BTPrimitive::check_field(
     const V8BTDataField& field_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     if (field_bind_tp.modifiers.is_decayed_pointer())
@@ -415,7 +416,7 @@ bool V8BTPrimitive::check_field(
 }
 bool V8BTPrimitive::check_static_field(
     const V8BTDataStaticField& field_bind_tp,
-    V8ErrorCache&              errors
+    V8ErrorCache& errors
 ) const
 {
     if (field_bind_tp.modifiers.is_decayed_pointer())
@@ -436,13 +437,11 @@ bool V8BTPrimitive::check_static_field(
 }
 
 // v8 export
-bool V8BTPrimitive::has_v8_export_obj(
-) const
+bool V8BTPrimitive::has_v8_export_obj() const
 {
     return false;
 }
-v8::Local<v8::Value> V8BTPrimitive::get_v8_export_obj(
-) const
+v8::Local<v8::Value> V8BTPrimitive::get_v8_export_obj() const
 {
     SKR_UNREACHABLE_CODE();
     return {};
@@ -453,8 +452,7 @@ void V8BTPrimitive::dump_ts_def(
 {
     SKR_UNREACHABLE_CODE();
 }
-String V8BTPrimitive::get_ts_type_name(
-) const
+String V8BTPrimitive::get_ts_type_name() const
 {
     switch (_type_id.get_hash())
     {
@@ -480,8 +478,7 @@ String V8BTPrimitive::get_ts_type_name(
         return {};
     }
 }
-bool V8BTPrimitive::ts_is_nullable(
-) const
+bool V8BTPrimitive::ts_is_nullable() const
 {
     return false;
 }
@@ -517,7 +514,7 @@ void V8BTPrimitive::_init_native(
 }
 bool V8BTPrimitive::_basic_type_check(
     const V8BTDataModifier& modifiers,
-    V8ErrorCache&           errors
+    V8ErrorCache& errors
 ) const
 {
     if (modifiers.is_pointer)

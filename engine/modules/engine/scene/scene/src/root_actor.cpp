@@ -6,10 +6,6 @@ namespace skr
 {
 
 RootActor::~RootActor() SKR_NOEXCEPT {
-    for (auto& child : children)
-    {
-        child->DetachFromParent();
-    }
     if (root_world) {
         root_world->finalize();
     }
@@ -20,7 +16,7 @@ void RootActor::Initialize()
     RootActor::Initialize(skr::GUID::Create());
 }
 
-void RootActor::Initialize(skr_guid_t _guid)
+void RootActor::Initialize(GUID _guid)
 {
     attach_rule = EAttachRule::Default;
     rttr_type_guid = skr::type_id_of<RootActor>();

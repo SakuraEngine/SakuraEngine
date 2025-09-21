@@ -1,15 +1,14 @@
 #pragma once
 #include "SkrGui/framework/widget/widget.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/widget/stateful_widget.generated.h"
-#endif
+#include "SkrGui/framework/widget/stateful_widget.generated.h"
 
 // state
 namespace skr::gui
 {
-sreflect_struct(guid = "1e50e00c-6c0a-435c-817a-3970cf8b90cb")
-SKR_GUI_API State : virtual public skr::IObject {
+struct [[sattr(guid = "1e50e00c-6c0a-435c-817a-3970cf8b90cb"
+)]] SKR_GUI_API State : virtual public skr::IObject
+{
     SKR_GENERATE_BODY(State)
 
     virtual NotNull<Widget*> build(NotNull<IBuildContext*> context) SKR_NOEXCEPT = 0;
@@ -23,7 +22,7 @@ SKR_GUI_API State : virtual public skr::IObject {
 
 private:
     friend struct StatefulElement;
-    StatefulWidget*  _widget  = nullptr;
+    StatefulWidget* _widget = nullptr;
     StatefulElement* _element = nullptr;
 };
 } // namespace skr::gui
@@ -31,8 +30,9 @@ private:
 // stateful widget
 namespace skr::gui
 {
-sreflect_struct(guid = "bb7b41aa-b827-4bb2-b025-e9803938ec2e")
-SKR_GUI_API StatefulWidget : public Widget {
+struct [[sattr(guid = "bb7b41aa-b827-4bb2-b025-e9803938ec2e"
+)]] SKR_GUI_API StatefulWidget : public Widget
+{
     SKR_GENERATE_BODY(StatefulWidget)
 
     NotNull<Element*> create_element() SKR_NOEXCEPT override;

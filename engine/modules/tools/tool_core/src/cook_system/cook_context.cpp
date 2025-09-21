@@ -1,7 +1,7 @@
 #include "SkrProfile/profile.h"
 #include "SkrRTTR/type.hpp"
 #include "SkrTask/fib_task.hpp"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 #include "SkrToolCore/cook_system/importer.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/cook_system/cook_system.hpp"
@@ -11,7 +11,7 @@ namespace skd::asset
 struct CookContextImpl : public CookContext
 {
     Importer* GetImporter() const override;
-    skr_guid_t GetImporterType() const override;
+    skr::GUID GetImporterType() const override;
     uint32_t GetImporterVersion() const override;
     uint32_t GetCookerVersion() const override;
 
@@ -20,13 +20,13 @@ struct CookContextImpl : public CookContext
 
     URI AddSourceFile(const URI& path) override;
     URI AddSourceFileAndLoad(skr::io::IRAMService* ioService, const URI& path, skr::BlobId& destination) override;
-    skr::span<const URI> GetSourceFiles() const override;
+    skr::Span<const URI> GetSourceFiles() const override;
 
-    void AddRuntimeDependency(skr_guid_t resource) override;
-    void AddSoftRuntimeDependency(skr_guid_t resource) override;
-    uint32_t AddStaticDependency(skr_guid_t resource, bool install) override;
-    skr::span<const skr_guid_t> GetRuntimeDependencies() const override;
-    skr::span<const SResourceHandle> GetStaticDependencies() const override;
+    void AddRuntimeDependency(skr::GUID resource) override;
+    void AddSoftRuntimeDependency(skr::GUID resource) override;
+    uint32_t AddStaticDependency(skr::GUID resource, bool install) override;
+    skr::Span<const skr::GUID> GetRuntimeDependencies() const override;
+    skr::Span<const SResourceHandle> GetStaticDependencies() const override;
     const SResourceHandle& GetStaticDependency(uint32_t index) const override;
 
     const skr::task::event_t& GetCounter() override
@@ -122,7 +122,7 @@ Importer* CookContextImpl::GetImporter() const
     return metafile->GetImporter().get();
 }
 
-skr_guid_t CookContextImpl::GetImporterType() const
+skr::GUID CookContextImpl::GetImporterType() const
 {
     return metafile->GetImporter()->GetType();
 }
@@ -176,12 +176,12 @@ URI CookContextImpl::AddSourceFileAndLoad(skr::io::IRAMService* ioService, const
     return outPath;
 }
 
-skr::span<const URI> CookContextImpl::GetSourceFiles() const
+skr::Span<const URI> CookContextImpl::GetSourceFiles() const
 {
     return fileDependencies;
 }
 
-void CookContextImpl::AddRuntimeDependency(skr_guid_t resource)
+void CookContextImpl::AddRuntimeDependency(skr::GUID resource)
 {
     auto iter = std::find_if(runtimeDependencies.begin(), runtimeDependencies.end(), [&](const auto& dep) { return dep == resource; });
     if (iter == runtimeDependencies.end())
@@ -189,19 +189,19 @@ void CookContextImpl::AddRuntimeDependency(skr_guid_t resource)
     GetCookSystem()->EnsureCooked(resource); // try launch new cook task, non blocking
 }
 
-void CookContextImpl::AddSoftRuntimeDependency(skr_guid_t resource)
+void CookContextImpl::AddSoftRuntimeDependency(skr::GUID resource)
 {
     GetCookSystem()->EnsureCooked(resource); // try launch new cook task, non blocking
 }
 
-skr::span<const skr_guid_t> CookContextImpl::GetRuntimeDependencies() const
+skr::Span<const skr::GUID> CookContextImpl::GetRuntimeDependencies() const
 {
-    return skr::span<const skr_guid_t>(runtimeDependencies.data(), runtimeDependencies.size());
+    return skr::Span<const skr::GUID>(runtimeDependencies.data(), runtimeDependencies.size());
 }
 
-skr::span<const SResourceHandle> CookContextImpl::GetStaticDependencies() const
+skr::Span<const SResourceHandle> CookContextImpl::GetStaticDependencies() const
 {
-    return skr::span<const SResourceHandle>(staticDependencies.data(), staticDependencies.size());
+    return skr::Span<const SResourceHandle>(staticDependencies.data(), staticDependencies.size());
 }
 
 const SResourceHandle& CookContextImpl::GetStaticDependency(uint32_t index) const
@@ -209,7 +209,7 @@ const SResourceHandle& CookContextImpl::GetStaticDependency(uint32_t index) cons
     return staticDependencies[index];
 }
 
-uint32_t CookContextImpl::AddStaticDependency(skr_guid_t resource, bool install)
+uint32_t CookContextImpl::AddStaticDependency(skr::GUID resource, bool install)
 {
     auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto& dep) { return dep.get_serialized() == resource; });
     if (iter == staticDependencies.end())

@@ -43,6 +43,21 @@ CGPU_EXTERN_C void D3D12Util_SignalFence(CGPUQueue_D3D12* Q, ID3D12Fence* DxF, u
 CGPU_EXTERN_C void D3D12Util_InitializeShaderReflection(CGPUDevice_D3D12* device, CGPUShaderLibrary_D3D12* library, const struct CGPUShaderLibraryDescriptor* desc);
 CGPU_EXTERN_C void D3D12Util_FreeShaderReflection(CGPUShaderLibrary_D3D12* library);
 
+// Cmd Helpers
+inline static bool D3D12Util_ResetRootSignature(CGPUCommandBuffer_D3D12* pCmd, ECGPUPipelineType type, const CGPURootSignature_D3D12* pRootSignature)
+{
+    // Set root signature if the current one differs from pRootSignature
+    if (pCmd->pBoundRootSignature != pRootSignature)
+    {
+        pCmd->pBoundRootSignature = pRootSignature;
+        if (type == CGPU_PIPELINE_TYPE_GRAPHICS)
+            COM_CALL(SetGraphicsRootSignature, pCmd->pDxCmdList, pRootSignature->pDxRootSignature);
+        else
+            COM_CALL(SetComputeRootSignature, pCmd->pDxCmdList, pRootSignature->pDxRootSignature);
+    }
+    return true;
+}
+
 // Feature Select Helpers
 void D3D12Util_RecordAdapterDetail(struct CGPUAdapter_D3D12* D3D12Adapter);
 

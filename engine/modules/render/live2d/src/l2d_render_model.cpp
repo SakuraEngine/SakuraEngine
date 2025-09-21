@@ -1,7 +1,7 @@
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/log.h"
-#include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/io/vram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
+#include "SkrRuntime/io/vram_io.hpp"
 
 #include "SkrCore/memory/memory.h"
 #include "SkrBase/misc/debug.h" 

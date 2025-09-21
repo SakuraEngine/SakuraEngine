@@ -3,7 +3,7 @@
 #include <array> // msvc will complain std::array is uninstantiated if <array> is removed
 #include "CppSL/Constant.hpp"
 #include "CppSL/Decl.hpp"
-#include "CppSL/AST.hpp"
+#include "CppSL/CppSLAST.hpp"
 #include "CppSL/langs/HLSLGenerator.hpp"
 #include "CppSL/langs/MSLGenerator.hpp"
 
@@ -206,8 +206,7 @@ void mandelbrot(skr::CppSL::AST& AST)
 int main()
 {
     using namespace skr::CppSL;
-    ASTDatabase DB;
-    AST AST(DB);
+    AST AST;
 
     // some_test(AST);
     mandelbrot(AST);

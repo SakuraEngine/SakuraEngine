@@ -34,7 +34,7 @@ struct FunctionRef<R(Args...)>
 {
     using FuncType = R(Args...);
     using CallerType = R(void*, Args...);
-    using StackProxyCallerType = void(void* payload,span<const StackProxy> params, StackProxy return_value);
+    using StackProxyCallerType = void(void* payload,Span<const StackProxy> params, StackProxy return_value);
 
     template <typename T>
     [[noreturn]] static T unreachable_return()
@@ -90,12 +90,12 @@ struct FunctionRef<R(Args...)>
                 std::forward<Args>(args)...);
         };
     }
-    template <concepts::Invocable<span<const StackProxy>, StackProxy> Func>
+    template <concepts::Invocable<Span<const StackProxy>, StackProxy> Func>
     inline void bind_stack_proxy(Func&& f)
     {
         _kind = EFunctionRefKind::StackProxy;
         _payload = const_cast<void*>(reinterpret_cast<const void*>(std::addressof(f)));
-        _caller = (void*)+[](void* obj, span<const StackProxy> params, StackProxy return_value) {
+        _caller = (void*)+[](void* obj, Span<const StackProxy> params, StackProxy return_value) {
             std::invoke(
                 *reinterpret_cast<typename std::add_pointer_t<Func>>(obj),
                 params,

@@ -1,5 +1,5 @@
 #include "CppSL/Stmt.hpp"
-#include "CppSL/AST.hpp"
+#include "CppSL/CppSLAST.hpp"
 
 namespace skr::CppSL {
 
@@ -63,9 +63,9 @@ IfStmt::IfStmt(AST& ast, Stmt* cond, CompoundStmt* then_body, CompoundStmt* else
 ForStmt::ForStmt(AST& ast, Stmt* init, Stmt* cond, Stmt* inc, CompoundStmt* body)
     : Stmt(ast), _init(init), _cond(cond), _inc(inc), _body(body)
 {
-    add_child(init);
-    add_child(cond);
-    add_child(inc);
+    if (init) add_child(init);
+    if (cond) add_child(cond);
+    if (inc) add_child(inc);
     add_child(body);
 }
 

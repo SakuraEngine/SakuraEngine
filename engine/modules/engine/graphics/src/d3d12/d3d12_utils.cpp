@@ -69,7 +69,8 @@ UINT64 encode_color_for_pix(const float* color)
     return PIX_COLOR(
         static_cast<BYTE>(color[0] * 255.f),
         static_cast<BYTE>(color[1] * 255.f),
-        static_cast<BYTE>(color[2] * 255.f));
+        static_cast<BYTE>(color[2] * 255.f)
+    );
 }
 void cgpu_cmd_begin_event_d3d12(CGPUCommandBufferId cmd, const CGPUEventInfo* event)
 {
@@ -148,10 +149,8 @@ void D3D12Util_QueryAllAdapters(CGPUInstance_D3D12* instance, uint32_t* count, b
     // Use DXGI6 interface which lets us specify gpu preference so we dont need to use NVOptimus or AMDPowerExpress
     // exports
     for (UINT i = 0;
-        instance->pDXGIFactory->EnumAdapterByGpuPreference(i,
-            DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
-            IID_PPV_ARGS(&_adapter)) != DXGI_ERROR_NOT_FOUND;
-        i++)
+         instance->pDXGIFactory->EnumAdapterByGpuPreference(i, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&_adapter)) != DXGI_ERROR_NOT_FOUND;
+         i++)
     {
         SKR_DECLARE_ZERO(DXGI_ADAPTER_DESC3, desc)
         IDXGIAdapter4* adapter = nullptr;
@@ -353,7 +352,7 @@ void D3D12Util_CreateDMAAllocator(CGPUInstance_D3D12* I, CGPUAdapter_D3D12* A, C
         return cgpu_malloc_alignedN(size, alignment, kD3D12MAMemoryName);
     };
     allocationCallbacks.pFree = +[](void* ptr, void*) {
-        cgpu_free_alignedN(ptr, 1, kD3D12MAMemoryName); //TODO: Fix this
+        cgpu_free_alignedN(ptr, 1, kD3D12MAMemoryName); // TODO: Fix this
     };
     desc.pAllocationCallbacks = &allocationCallbacks;
     desc.Flags |= D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED;
@@ -486,19 +485,19 @@ inline static ECGPUShaderStage D3D12Util_GetShaderStageFromDesc(const D3D12_SHAD
         return CGPU_SHADER_STAGE_TESE;
     case D3D12_SHVER_COMPUTE_SHADER:
         return CGPU_SHADER_STAGE_COMPUTE;
+    case D3D12_SHVER_RAY_GENERATION_SHADER:
+        return CGPU_SHADER_STAGE_RAYTRACING;
+    case D3D12_SHVER_INTERSECTION_SHADER:
+        return CGPU_SHADER_STAGE_RAYTRACING;
+    case D3D12_SHVER_ANY_HIT_SHADER:
+        return CGPU_SHADER_STAGE_RAYTRACING;
+    case D3D12_SHVER_CLOSEST_HIT_SHADER:
+        return CGPU_SHADER_STAGE_RAYTRACING;
+    case D3D12_SHVER_MISS_SHADER:
+        return CGPU_SHADER_STAGE_RAYTRACING;
     /*
         case D3D12_SHVER_LIBRARY:
             return CGPU_SHADER_STAGE_LIBRARY;
-        case D3D12_SHVER_RAY_GENERATION_SHADER:
-            return CGPU_SHADER_STAGE_RAYGENERATION;
-        case D3D12_SHVER_INTERSECTION_SHADER:
-            return CGPU_SHADER_STAGE_INTERSECTION;
-        case D3D12_SHVER_ANY_HIT_SHADER:
-            return CGPU_SHADER_STAGE_ANY_HIT;
-        case D3D12_SHVER_CLOSEST_HIT_SHADER:
-            return CGPU_SHADER_STAGE_CLOSEST_HIT;
-        case D3D12_SHVER_MISS_SHADER:
-            return CGPU_SHADER_STAGE_MISS;
         case D3D12_SHVER_CALLABLE_SHADER:
             return CGPU_SHADER_STAGE_CALLABLE;
         case D3D12_SHVER_MESH_SHADER:
@@ -516,7 +515,22 @@ void reflectionRecordShaderResources(ID3D12ReflectionT* d3d12reflection, ECGPUSh
 {
     // Get the number of bound resources
     CGPUShaderReflection* Reflection = S->super.entry_reflections + entryIndex;
-    Reflection->entry_name = D3DShaderEntryName;
+    if constexpr (std::is_same_v<ID3D12ReflectionT, ID3D12FunctionReflection>)
+    {
+        ID3D12FunctionReflection* dx12FuncRefl = d3d12reflection;
+        const D3D12_FUNCTION_DESC& dx12FuncDesc = shaderDesc;
+        skr::String FullString = skr::String::FromRaw(dx12FuncDesc.Name + 2);
+        uint64_t SymbolEnd = FullString.find(u8"@@").index();
+        skr::StringView FunctionSymbol = FullString.subview(0, SymbolEnd);
+        auto newString = (char8_t*)cgpu_malloc(sizeof(char8_t) * (1 + FunctionSymbol.size()));
+        ::memcpy(newString, FunctionSymbol.data(), FunctionSymbol.size());
+        newString[FunctionSymbol.size()] = u8'\0';
+        Reflection->entry_name = newString;
+    }
+    else
+    {
+        Reflection->entry_name = D3DShaderEntryName;
+    }
     Reflection->shader_resources_count = shaderDesc.BoundResources;
     Reflection->shader_resources = (CGPUShaderResource*)cgpu_calloc(shaderDesc.BoundResources, sizeof(CGPUShaderResource));
 
@@ -613,7 +627,8 @@ inline static void D3D12Util_CollectShaderReflectionData(ID3D12ReflectionT* pRef
             pReflection->GetThreadGroupSize(
                 &Reflection->thread_group_sizes[0],
                 &Reflection->thread_group_sizes[1],
-                &Reflection->thread_group_sizes[2]);
+                &Reflection->thread_group_sizes[2]
+            );
         }
         else if constexpr (std::is_same_v<D3D12_SHADER_DESC_T, D3D12_FUNCTION_DESC>)
         {
@@ -685,6 +700,10 @@ void D3D12Util_FreeShaderReflection(CGPUShaderLibrary_D3D12* S)
         for (uint32_t i = 0; i < S->super.entrys_count; i++)
         {
             CGPUShaderReflection* reflection = S->super.entry_reflections + i;
+            if (reflection->entry_name != D3DShaderEntryName)
+            {
+                cgpu_free((void*)reflection->entry_name);
+            }
             if (reflection->vertex_inputs)
             {
                 for (uint32_t j = 0; j < reflection->vertex_inputs_count; j++)
@@ -735,16 +754,16 @@ typedef struct D3D12Util_DescriptorHeap
 void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice, const D3D12_DESCRIPTOR_HEAP_DESC* pDesc, struct D3D12Util_DescriptorHeap** ppDescHeap)
 {
     uint32_t numDescriptors = pDesc->NumDescriptors;
-    
+
     // Keep 32 aligned for easy remove
     numDescriptors = cgpu_round_up(numDescriptors, DESCRIPTOR_HEAP_BLOCK_SIZE);
-    
+
     const size_t sizeInBytes = (numDescriptors / DESCRIPTOR_HEAP_BLOCK_SIZE) * sizeof(uint32_t);
-    
+
     D3D12Util_DescriptorHeap* pHeap = (D3D12Util_DescriptorHeap*)cgpu_calloc(1, sizeof(*pHeap) + sizeInBytes);
     pHeap->pFlags = (uint32_t*)(pHeap + 1);
     pHeap->pDevice = pDevice;
-    
+
 #ifdef CGPU_THREAD_SAFETY
     pHeap->pMutex = (SMutex*)cgpu_calloc(1, sizeof(SMutex));
     skr_init_mutex(pHeap->pMutex);
@@ -752,9 +771,9 @@ void D3D12Util_CreateDescriptorHeap(ID3D12Device* pDevice, const D3D12_DESCRIPTO
 
     D3D12_DESCRIPTOR_HEAP_DESC desc = *pDesc;
     desc.NumDescriptors = numDescriptors;
-    
+
     CHECK_HRESULT(pDevice->CreateDescriptorHeap(&desc, IID_ARGS(&pHeap->pCurrentHeap)));
-    
+
     pHeap->mStartCpuHandle = pHeap->pCurrentHeap->GetCPUDescriptorHandleForHeapStart();
     cgpu_assert(pHeap->mStartCpuHandle.ptr);
     if (desc.Flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE)
@@ -779,7 +798,7 @@ void D3D12Util_FreeDescriptorHeap(D3D12Util_DescriptorHeap* pHeap)
 {
     if (pHeap == nullptr) return;
     SAFE_RELEASE(pHeap->pCurrentHeap);
-    
+
 #ifdef CGPU_THREAD_SAFETY
     if (pHeap->pMutex)
     {
@@ -798,14 +817,14 @@ static void D3D12Util_ReturnDescriptorHandlesUnlocked(D3D12Util_DescriptorHeap* 
     {
         return;
     }
-    
+
     for (uint32_t id = handle; id < handle + count; ++id)
     {
         const uint32_t i = id / DESCRIPTOR_HEAP_BLOCK_SIZE;
         const uint32_t mask = ~(1 << (id % DESCRIPTOR_HEAP_BLOCK_SIZE));
         pHeap->pFlags[i] &= mask;
     }
-    
+
     pHeap->mUsedDescriptors -= count;
 }
 
@@ -815,15 +834,15 @@ DxDescriptorId D3D12Util_ConsumeDescriptorHandles(D3D12Util_DescriptorHeap* pHea
     {
         return D3D12_DESCRIPTOR_ID_NONE;
     }
-    
+
 #ifdef CGPU_THREAD_SAFETY
     SMutexLock lock(*pHeap->pMutex);
 #endif
-    
+
     uint32_t result = UINT32_MAX;
     uint32_t firstResult = UINT32_MAX;
     uint32_t foundCount = 0;
-    
+
     // Scan for block with `descriptorCount` contiguous free descriptor handles
     for (uint32_t i = 0; i < pHeap->mNumDescriptors / DESCRIPTOR_HEAP_BLOCK_SIZE; ++i)
     {
@@ -836,24 +855,24 @@ DxDescriptorId D3D12Util_ConsumeDescriptorHandles(D3D12Util_DescriptorHeap* pHea
             firstResult = UINT32_MAX;
             continue;
         }
-        
+
         for (int32_t j = 0, mask = 1; j < DESCRIPTOR_HEAP_BLOCK_SIZE; ++j, mask <<= 1)
         {
             if (!(flag & mask))
             {
                 pHeap->pFlags[i] |= mask;
                 result = i * DESCRIPTOR_HEAP_BLOCK_SIZE + j;
-                
+
                 cgpu_assert(result != UINT32_MAX && "Out of descriptors");
-                
+
                 if (UINT32_MAX == firstResult)
                 {
                     firstResult = result;
                 }
-                
+
                 ++foundCount;
                 ++pHeap->mUsedDescriptors;
-                
+
                 if (foundCount == descriptorCount)
                 {
                     return firstResult;
@@ -869,7 +888,7 @@ DxDescriptorId D3D12Util_ConsumeDescriptorHandles(D3D12Util_DescriptorHeap* pHea
             }
         }
     }
-    
+
     cgpu_assert(result != UINT32_MAX && "Out of descriptors");
     return firstResult;
 }
@@ -904,44 +923,31 @@ size_t D3D12Util_GetDescriptorSize(const struct D3D12Util_DescriptorHeap* pHeap)
 void D3D12Util_ConsumeSRV(CGPUDevice_D3D12* D, ID3D12Resource* pResource, const D3D12_SHADER_RESOURCE_VIEW_DESC* pSrvDesc, DxDescriptorId* pId)
 {
     *pId = D3D12Util_ConsumeDescriptorHandles(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
-    D->pDxDevice->CreateShaderResourceView(pResource, pSrvDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], *pId));
+    D->pDxDevice->CreateShaderResourceView(pResource, pSrvDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], *pId));
 }
 
 void D3D12Util_ConsumeUAV(CGPUDevice_D3D12* D, ID3D12Resource* pResource, ID3D12Resource* pCounterResource, const D3D12_UNORDERED_ACCESS_VIEW_DESC* pSrvDesc, DxDescriptorId* pId)
 {
     *pId = D3D12Util_ConsumeDescriptorHandles(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
-    D->pDxDevice->CreateUnorderedAccessView(pResource, pCounterResource, pSrvDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], *pId));
+    D->pDxDevice->CreateUnorderedAccessView(pResource, pCounterResource, pSrvDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], *pId));
 }
 
-void D3D12Util_ConsumeCBV(CGPUDevice_D3D12* D,
-    const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc,
-    DxDescriptorId* pId)
+void D3D12Util_ConsumeCBV(CGPUDevice_D3D12* D, const D3D12_CONSTANT_BUFFER_VIEW_DESC* pSrvDesc, DxDescriptorId* pId)
 {
     *pId = D3D12Util_ConsumeDescriptorHandles(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], 1);
-    D->pDxDevice->CreateConstantBufferView(pSrvDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], *pId));
+    D->pDxDevice->CreateConstantBufferView(pSrvDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], *pId));
 }
 
-void D3D12Util_ConsumeRTV(CGPUDevice_D3D12* D,
-    ID3D12Resource* pResource,
-    const D3D12_RENDER_TARGET_VIEW_DESC* pRtvDesc,
-    DxDescriptorId* pId)
+void D3D12Util_ConsumeRTV(CGPUDevice_D3D12* D, ID3D12Resource* pResource, const D3D12_RENDER_TARGET_VIEW_DESC* pRtvDesc, DxDescriptorId* pId)
 {
     *pId = D3D12Util_ConsumeDescriptorHandles(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_RTV], 1);
-    D->pDxDevice->CreateRenderTargetView(pResource, pRtvDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_RTV], *pId));
+    D->pDxDevice->CreateRenderTargetView(pResource, pRtvDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_RTV], *pId));
 }
 
-void D3D12Util_ConsumeDSV(CGPUDevice_D3D12* D,
-    ID3D12Resource* pResource,
-    const D3D12_DEPTH_STENCIL_VIEW_DESC* pDsvDesc,
-    DxDescriptorId* pId)
+void D3D12Util_ConsumeDSV(CGPUDevice_D3D12* D, ID3D12Resource* pResource, const D3D12_DEPTH_STENCIL_VIEW_DESC* pDsvDesc, DxDescriptorId* pId)
 {
     *pId = D3D12Util_ConsumeDescriptorHandles(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_DSV], 1);
-    D->pDxDevice->CreateDepthStencilView(pResource, pDsvDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_DSV], *pId));
+    D->pDxDevice->CreateDepthStencilView(pResource, pDsvDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_DSV], *pId));
 }
 
 void D3D12Util_CreateCBVForBufferView(DxDescriptorId ID, const CGPUBufferViewDescriptor* desc)
@@ -952,8 +958,7 @@ void D3D12Util_CreateCBVForBufferView(DxDescriptorId ID, const CGPUBufferViewDes
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
     cbvDesc.BufferLocation = buffer_res->mDxGpuAddress + desc->offset;
     cbvDesc.SizeInBytes = cgpu_round_up((uint32_t)desc->size, 256);
-    D->pDxDevice->CreateConstantBufferView(&cbvDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
+    D->pDxDevice->CreateConstantBufferView(&cbvDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
 }
 
 void D3D12Util_CreateSRVForBufferView(DxDescriptorId ID, ECGPUViewUsage view_usage, const CGPUBufferViewDescriptor* desc)
@@ -983,6 +988,7 @@ void D3D12Util_CreateSRVForBufferView(DxDescriptorId ID, ECGPUViewUsage view_usa
         ElementStride = FormatUtil_BitSizeOfBlock(desc->texel.format) / 8u;
         Format = DXGIUtil_TranslatePixelFormat(desc->texel.format, false);
         Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+        cgpu_assert(Format != DXGI_FORMAT_UNKNOWN);
     }
 
     const auto FirstElement = BufferOffset / ElementStride;
@@ -1004,8 +1010,7 @@ void D3D12Util_CreateSRVForBufferView(DxDescriptorId ID, ECGPUViewUsage view_usa
     else
         srvDesc.Buffer.StructureByteStride = 0;
 
-    D->pDxDevice->CreateShaderResourceView(B->pDxResource, &srvDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
+    D->pDxDevice->CreateShaderResourceView(B->pDxResource, &srvDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
 }
 
 void D3D12Util_CreateUAVForBufferView(DxDescriptorId ID, ECGPUViewUsage view_usage, const CGPUBufferViewDescriptor* desc)
@@ -1055,8 +1060,7 @@ void D3D12Util_CreateUAVForBufferView(DxDescriptorId ID, ECGPUViewUsage view_usa
     else
         uavDesc.Buffer.StructureByteStride = 0;
 
-    D->pDxDevice->CreateUnorderedAccessView(B->pDxResource, CGPU_NULLPTR, &uavDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
+    D->pDxDevice->CreateUnorderedAccessView(B->pDxResource, CGPU_NULLPTR, &uavDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
 }
 
 void D3D12Util_CreateSRVForTextureView(DxDescriptorId ID, const CGPUTextureViewDescriptor* desc)
@@ -1135,8 +1139,7 @@ void D3D12Util_CreateSRVForTextureView(DxDescriptorId ID, const CGPUTextureViewD
         break;
     }
 
-    D->pDxDevice->CreateShaderResourceView(T->pDxResource, &srvDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
+    D->pDxDevice->CreateShaderResourceView(T->pDxResource, &srvDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
 }
 
 void D3D12Util_CreateUAVForTextureView(DxDescriptorId ID, const CGPUTextureViewDescriptor* desc)
@@ -1187,8 +1190,7 @@ void D3D12Util_CreateUAVForTextureView(DxDescriptorId ID, const CGPUTextureViewD
         break;
     }
 
-    D->pDxDevice->CreateUnorderedAccessView(T->pDxResource, CGPU_NULLPTR, &uavDesc, 
-        D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
+    D->pDxDevice->CreateUnorderedAccessView(T->pDxResource, CGPU_NULLPTR, &uavDesc, D3D12Util_DescriptorIdToCpuHandle(D->pCPUDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV], ID));
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE D3D12Util_DescriptorIdToCpuHandle(D3D12Util_DescriptorHeap* pHeap, DxDescriptorId index)

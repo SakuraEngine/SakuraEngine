@@ -9,14 +9,7 @@ namespace skr
 
 SkelMeshActor::~SkelMeshActor() SKR_NOEXCEPT
 {
-    for (auto& child : children)
-    {
-        child->DetachFromParent();
-    }
-    if (_parent)
-    {
-        DetachFromParent();
-    }
+
 }
 
 void SkelMeshActor::Initialize()
@@ -24,7 +17,7 @@ void SkelMeshActor::Initialize()
     Initialize(skr::GUID::Create());
 }
 
-void SkelMeshActor::Initialize(skr_guid_t _guid)
+void SkelMeshActor::Initialize(GUID _guid)
 {
     attach_rule = EAttachRule::Default;
     guid = _guid;

@@ -142,7 +142,7 @@ SceneRenderSystem::Context const* SceneRenderSystem::get_context() const SKR_NOE
     return &impl->context;
 }
 
-skr::span<skr_primitive_draw_t> SceneRenderSystem::get_drawcalls() const SKR_NOEXCEPT
+skr::Span<skr_primitive_draw_t> SceneRenderSystem::get_drawcalls() const SKR_NOEXCEPT
 {
     return impl->drawcalls;
 }

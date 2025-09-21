@@ -19,7 +19,7 @@ namespace SB
         {
             // Get all copy file lists for this target
             var CopyFileList = Target.FileList<CopyFileList>();
-            var targetBuildPath = BuildSystem.BuildPath;
+            var targetBuildPath = BuildDirs.BuildDir;
             var destinationBase = Path.Combine(targetBuildPath, CopyFileList.Destination ?? "");
             
             // Ensure destination directory exists
@@ -40,7 +40,7 @@ namespace SB
                 }
                 
                 // Use dependency system to track changes
-                Engine.MiscDepend.OnChanged(Target.Name, sourceFile, Name, (depend) =>
+                EngineDepends.Misc.OnChanged(Target.Name, sourceFile, Name, (depend) =>
                 {
                     Log.Verbose("Copying file {SourceFile} to {DestinationFile}", sourceFile, destinationFile);
                     File.Copy(sourceFile, destinationFile, overwrite: true);

@@ -381,8 +381,11 @@ cgpu_compute_encoder_bind_pipeline(compute_encoder, compute_pipeline);
 // 绑定资源
 cgpu_compute_encoder_bind_descriptor_set(compute_encoder, compute_desc_set);
 
+// 绑定线程组大小
+cgpu_compute_encoder_set_threadgroup_size(compute_encoder, 8, 8, 1);
+
 // 分发计算
-cgpu_compute_encoder_dispatch(compute_encoder, (width + 7) / 8, (height + 7) / 8, 1);
+cgpu_compute_encoder_dispatch(compute_encoder, width, height, 1);
 
 cgpu_cmd_end_compute_pass(cmd, compute_encoder);
 ```

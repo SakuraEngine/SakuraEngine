@@ -1,7 +1,6 @@
 #include "SkrToolCore/cook_system/cook_system.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
-#include "SkrSerde/json_serde.hpp"
 
 namespace skd::asset
 {
@@ -17,10 +16,10 @@ void* ShaderOptionImporter::Import(skr::io::IRAMService* ioService, CookContext*
         return nullptr;
     }
     '*/
-    skr::String jString(skr::StringView((const char8_t*)ioBuffer->get_data(), ioBuffer->get_size()));
-    skr::archive::JsonReader jsonVal(jString.view());
+
+    auto reader = skr::ArReadJson::ReadBuffer(ioBuffer->get_data(), ioBuffer->get_size());
     auto collection = SkrNew<ShaderOptionsResource>();
-    skr::json_read(&jsonVal, *collection);
+    reader.value(*collection);
     return collection;
 }
 
@@ -37,7 +36,7 @@ bool ShaderOptionsCooker::Cook(CookContext* ctx)
 
     //-----import resource object
     auto options = ctx->Import<ShaderOptionsResource>();
-    if (!options) 
+    if (!options)
         return false;
     SKR_DEFER({ ctx->Destroy(options); });
 

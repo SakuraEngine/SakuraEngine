@@ -1,15 +1,15 @@
 #include <type_traits>
-#include "SkrRT/sugoi/sugoi.h"
-#include "SkrRT/sugoi/array.hpp"
-#include "SkrRT/sugoi/type_registry.hpp"
+#include "SkrRuntime/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/array.hpp"
+#include "SkrRuntime/sugoi/type_registry.hpp"
 #ifdef SUGOI_RESOURCE_SUPPORT
-#include "SkrRT/resource/resource_handle.h"
+#include "SkrRuntime/resource/resource_handle.h"
 #endif
 
 #include "./mask.hpp"
-#include "SkrRT/sugoi/chunk.hpp"
+#include "SkrRuntime/sugoi/chunk.hpp"
 #include "./chunk_view.hpp"
-#include "SkrRT/sugoi/archetype.hpp"
+#include "SkrRuntime/sugoi/archetype.hpp"
 #include "./impl/storage.hpp"
 
 namespace sugoi
@@ -26,9 +26,6 @@ bool is_array_small(sugoi_array_comp_t* ptr)
 {
     return ptr->BeginX < ((char*)(ptr + 1) + sugoi::kSmallBinSize);
 }
-
-#define for_buffer(i, array, size) \
-    for (char* i = (char*)array->BeginX; i != array->EndX; i += size)
 
 static void construct_impl(sugoi_chunk_view_t view, sugoi_chunk_t::RSlice& slice, type_index_t type, EIndex offset, uint32_t size, uint32_t align, uint32_t elemSize, uint32_t maskValue, void (*constructor)(sugoi_type_index_t type, sugoi_chunk_t* chunk, EIndex index, char* data))
 {

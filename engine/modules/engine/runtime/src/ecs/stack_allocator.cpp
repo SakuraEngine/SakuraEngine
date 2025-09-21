@@ -1,4 +1,4 @@
-#include "SkrRT/ecs/stack_allocator.hpp"
+#include "SkrRuntime/ecs/stack_allocator.hpp"
 #include "SkrContainersDef/stack_allocation.hpp"
 #include "SkrOS/thread.h"
 #include "SkrCore/log.hpp"

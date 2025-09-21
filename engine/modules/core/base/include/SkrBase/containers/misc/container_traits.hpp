@@ -6,7 +6,8 @@
 namespace skr::container
 {
 template <typename T>
-struct ContainerTraits {
+struct ContainerTraits
+{
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = false; // size()
     constexpr static bool is_iterable      = false; // begin(), end()
@@ -16,7 +17,8 @@ struct ContainerTraits {
 };
 
 template <typename T>
-struct ContainerTraits<std::initializer_list<T>> {
+struct ContainerTraits<std::initializer_list<T>>
+{
     constexpr static bool is_linear_memory = true;  // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()
@@ -33,7 +35,8 @@ struct ContainerTraits<std::initializer_list<T>> {
 };
 
 template <typename T, size_t kSize>
-struct ContainerTraits<std::array<T, kSize>> {
+struct ContainerTraits<std::array<T, kSize>>
+{
     constexpr static bool is_linear_memory = true;  // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()

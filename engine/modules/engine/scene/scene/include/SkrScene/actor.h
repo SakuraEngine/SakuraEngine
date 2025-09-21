@@ -1,34 +1,34 @@
 #pragma once
 #include "SkrBase/types/impl/guid.hpp"
-#include "SkrContainersDef/string.hpp"
+#include "SkrContainers/string.hpp"
 #include "SkrCore/memory/rc.hpp"
-#include "SkrContainersDef/vector.hpp"
-#include "SkrRT/ecs/component.hpp"
-#include "SkrRT/ecs/world.hpp"
+#include "SkrContainers/vector.hpp"
+#include "SkrRuntime/ecs/component.hpp"
+#include "SkrRuntime/ecs/world.hpp"
 #include "SkrScene/scene.h"
-
-#if !defined(__meta__)
-    #include "SkrScene/actor.generated.h"
-#endif
+#include "SkrScene/actor.generated.h"
 
 namespace skr
 {
 struct RootActor;
 
-sreflect_enum_class(
-    guid = "a1ebd9b1-900c-44f4-b381-0dd48014718d" serde = @json)
-EAttachRule{
+enum class [[sattr(
+    guid = "a1ebd9b1-900c-44f4-b381-0dd48014718d" 
+    serde = @enable
+)]] EAttachRule
+{
     Default = 0,
     KeepWorldTransform = 0x01
 };
 
-sreflect_struct(
+struct [[sattr(
     guid = "4cb20865-0d27-43ee-90b9-7b43ac4c067c";
     rttr = @enable;
-    serde = @bin | @json)
-SKR_SCENE_API Actor
+    serde = @enable
+)]] SKR_SCENE_API Actor
 {
     friend class ActorManager;
+
 public:
     SKR_GENERATE_BODY()
     SKR_RC_IMPL();
@@ -36,7 +36,7 @@ public:
     Actor() SKR_NOEXCEPT {}
     virtual ~Actor() SKR_NOEXCEPT;
     static RCWeak<RootActor> GetRoot();
-    void BindWorld(skr::ecs::ECSWorld * world) { this->world = world; }
+    void BindWorld(skr::ecs::ECSWorld* world) { this->world = world; }
     void CreateEntity();
     skr::ecs::Entity GetEntity() const;
     void AttachTo(RCWeak<Actor> parent, EAttachRule rule = EAttachRule::Default);
@@ -66,14 +66,13 @@ public:
         RunF f;
     };
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::UPtr<Spawner> spawner;
 
     virtual void Initialize();                // Init Blank
     virtual void Initialize(skr_guid_t guid); // Init with GUID
 
 protected:
-    friend JsonSerde<Actor>;
     skr::String display_name; // for editor, profiler, and runtime dump
     skr::GUID guid;
     skr::GUID rttr_type_guid;
@@ -81,13 +80,13 @@ protected:
     EAttachRule attach_rule = EAttachRule::Default;
     bool bIsInitialized = false;
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::InlineVector<skr::ecs::Entity, 1> scene_entities;
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::Vector<skr::RC<Actor>> children;
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::RC<Actor> _parent = nullptr;
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::ecs::ECSWorld* world = nullptr; // Pointer to the ECS world for actor management
 
     skr::SerializeConstVector<skr_guid_t> children_serialized;
@@ -118,16 +117,16 @@ public:
 };
 
 // Actor that Carry ECS World Instance, and ActorRootComponent
-sreflect_struct(
+struct [[sattr(
     guid = "01990a69-0bbf-7483-bbbf-36ab1580e83a";
-    rttr = @enable)
-SKR_SCENE_API RootActor : public Actor
+    rttr = @enable
+)]] SKR_SCENE_API RootActor : public Actor
 {
 public:
     RootActor() {}
     ~RootActor() SKR_NOEXCEPT override;
     skr::ecs::ECSWorld* GetWorld() const { return root_world.get(); }
-    void bind_scheduler(skr::task::scheduler_t & scheduler) { root_world->bind_scheduler(scheduler); }
+    void bind_scheduler(skr::task::scheduler_t& scheduler) { root_world->bind_scheduler(scheduler); }
 
     skr::UPtr<skr::ecs::ECSWorld> root_world = nullptr;
     void Initialize() override;
@@ -135,10 +134,10 @@ public:
     void InitWorld();
 };
 
-sreflect_struct(
+struct [[sattr(
     guid = "01987a21-a2b4-7488-924d-17639e937f87";
-    rttr = @enable;)
-SKR_SCENE_API MeshActor : public Actor
+    rttr = @enable;
+)]] SKR_SCENE_API MeshActor : public Actor
 {
 public:
     MeshActor() SKR_NOEXCEPT {}
@@ -147,10 +146,10 @@ public:
     void Initialize(skr_guid_t guid) override;
 };
 
-sreflect_struct(
+struct [[sattr(
     guid = "01987a21-e796-76b6-89c4-fb550edf5610";
-    rttr = @enable;)
-SKR_SCENE_API SkelMeshActor : public MeshActor
+    rttr = @enable;
+)]] SKR_SCENE_API SkelMeshActor : public MeshActor
 {
 public:
     SkelMeshActor() SKR_NOEXCEPT {}

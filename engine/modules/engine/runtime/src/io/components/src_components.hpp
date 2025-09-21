@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGraphics/dstorage.h"
-#include "SkrRT/io/io.h"
+#include "SkrRuntime/io/io.h"
 #include "SkrCore/platform/vfs.h"
 #include "../components/component.hpp"
 
@@ -10,7 +10,7 @@ namespace io {
 template <>
 struct CID<struct PathSrcComponent> 
 {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct PathSrcComponent : public IORequestComponent
 {
@@ -28,7 +28,7 @@ private:
 template <>
 struct CID<struct MemorySrcComponent> 
 {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct MemorySrcComponent final : public IORequestComponent
 {
@@ -47,7 +47,7 @@ struct MemorySrcComponent final : public IORequestComponent
 template <>
 struct CID<struct FileComponent> 
 {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct FileComponent : public IORequestComponent
 {
@@ -59,19 +59,19 @@ struct FileComponent : public IORequestComponent
     SkrDStorageFileHandle dfile = nullptr;
 };
 
-constexpr skr_guid_t CID<struct PathSrcComponent>::Get()
+constexpr GUID CID<struct PathSrcComponent>::Get()
 {
     using namespace skr::literals;
     return u8"6bf19e92-7180-42d5-9bb7-19cae4e8716d"_guid;
 } 
 
-constexpr skr_guid_t CID<struct MemorySrcComponent>::Get()
+constexpr GUID CID<struct MemorySrcComponent>::Get()
 {
     using namespace skr::literals;
     return u8"3fd925a5-8f53-427c-aa8b-c30c385d4cec"_guid;
 } 
 
-constexpr skr_guid_t CID<struct FileComponent>::Get()
+constexpr GUID CID<struct FileComponent>::Get()
 {
     using namespace skr::literals;
     return u8"d91c35e3-30a6-4909-afaa-d0bd37bd7c2f"_guid;

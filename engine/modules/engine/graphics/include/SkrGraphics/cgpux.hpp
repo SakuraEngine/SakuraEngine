@@ -29,7 +29,7 @@ protected:
 
 struct CGPUXBindTableLocation
 {
-    const uint32_t tbl_idx = 0;
+    const uint32_t logicalSetIdx = 0;
     const uint32_t binding = 0;
     const CGPUViewUsages view_usage = 0;
     const ECGPUResourceType type = CGPU_RESOURCE_TYPE2_NONE;
@@ -66,8 +66,7 @@ protected:
     // count of flattened name hashes
     uint32_t names_count = 0;
     // all sets
-    uint32_t sets_count = 0;
-    CGPUDescriptorSetId* sets = nullptr;
+    skr::FlatHashMap<uint32_t, CGPUDescriptorSetId> sets;
 };
 
 struct CGPUXMergedBindTable
@@ -89,9 +88,9 @@ protected:
 
     CGPURootSignatureId root_signature = nullptr;
     uint32_t sets_count = 0;
-    CGPUDescriptorSetId* copied = nullptr;
-    CGPUDescriptorSetId* merged = nullptr;
-    CGPUDescriptorSetId* result = nullptr;
+    skr::FlatHashMap<uint32_t, CGPUDescriptorSetId> copied;
+    skr::FlatHashMap<uint32_t, CGPUDescriptorSetId> merged;
+    skr::FlatHashMap<uint32_t, CGPUDescriptorSetId> result;
 };
 
 namespace cgpux

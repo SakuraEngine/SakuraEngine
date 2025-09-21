@@ -3,6 +3,7 @@
 
 namespace skr
 {
-using ::skr::container::Nullopt;
-using ::skr::container::Optional;
+using Nullopt [[sfinal_alias]] = ::skr::container::Nullopt;
+template <typename T>
+using Optional [[sfinal_alias]] = ::skr::container::Optional<T>;
 }; // namespace skr

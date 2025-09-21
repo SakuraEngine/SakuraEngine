@@ -1,22 +1,17 @@
 #pragma once
-#include "SkrBase/config.h"
+
+// final using alias
+#ifdef __meta__
+    #define sfinal_alias clang::annotate("__final_name__")
+#else
+    #define sfinal_alias
+#endif
 
 // basic meta
-// #define __meta__
 #ifdef __meta__
-    #define sattr(...) [[clang::annotate(SKR_MAKE_STRING(__VA_ARGS__))]]
-    #define sreflect_struct(...) struct [[clang::annotate("__reflect__")]] sattr(__VA_ARGS__)
-    #define sreflect_interface(...) struct [[clang::annotate("__reflect__")]] sattr(__VA_ARGS__)
-    #define sreflect_enum(...) enum [[clang::annotate("__reflect__")]] sattr(__VA_ARGS__)
-    #define sreflect_enum_class(...) enum class [[clang::annotate("__reflect__")]] sattr(__VA_ARGS__)
-    #define sreflect_function(...) [[clang::annotate("__reflect__")]] sattr(__VA_ARGS__)
+    #define sattr(...) clang::annotate("__reflect__"), clang::annotate(SKR_MAKE_STRING(__VA_ARGS__))
 #else
     #define sattr(...)
-    #define sreflect_struct(...) struct
-    #define sreflect_interface(...) struct
-    #define sreflect_enum(...) enum
-    #define sreflect_enum_class(...) enum class
-    #define sreflect_function(...)
 #endif
 
 // generate body

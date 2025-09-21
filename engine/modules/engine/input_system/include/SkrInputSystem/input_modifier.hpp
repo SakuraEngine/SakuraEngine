@@ -25,7 +25,7 @@ struct SKR_INPUT_SYSTEM_API InputModifierShuffle : public InputModifier {
 
 struct SKR_INPUT_SYSTEM_API InputModifierScale : public InputModifier {
     InputValueStorage modify_raw(const InputValueStorage& raw) SKR_NOEXCEPT final;
-    skr_float4_t      scale = { 1.f, 1.f, 1.f, 1.f };
+    float4      scale = { 1.f, 1.f, 1.f, 1.f };
 };
 
 } // namespace input

@@ -29,7 +29,8 @@ template <typename TSize, bool kConst>
 using UTF16RangeInv = container::CursorRange<UTF16Cursor<TSize, kConst>, true>;
 
 template <typename TSize, bool kConst>
-struct UTF8Cursor {
+struct UTF8Cursor
+{
     using DataType = std::conditional_t<kConst, const skr_char8, skr_char8>;
     using SizeType = TSize;
     using RefType  = UTF8Seq; // TODO. UTF8SeqRef
@@ -147,7 +148,8 @@ private:
 };
 
 template <typename TSize, bool kConst>
-struct UTF16Cursor {
+struct UTF16Cursor
+{
     using DataType = std::conditional_t<kConst, const skr_char16, skr_char16>;
     using SizeType = TSize;
     using RefType  = UTF16Seq; // TODO. UTF16SeqRef

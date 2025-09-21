@@ -32,7 +32,6 @@ public:
     inline uint32_t get_array_count() const { return handle.array_count; }
     inline uint32_t get_mip_base() const { return handle.mip_base; }
     inline uint32_t get_mip_count() const { return handle.mip_count; }
-    inline ECGPUTextureDimension get_dimension() const { return handle.dim; }
 
     TextureReadEdge(const skr::StringView name, TextureSRVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_SHADER_RESOURCE);
 protected:
@@ -52,6 +51,10 @@ public:
     inline const char8_t* get_name() const { return name.c_str(); }
     TextureNode* get_texture_node() final;
     PassNode* get_pass_node() final;
+
+    inline uint32_t get_array_base() const { return handle.array_base; }
+    inline uint32_t get_array_count() const { return handle.array_count; }
+    inline uint32_t get_mip_level() const { return handle.mip_level; }
 
     TextureReadWriteEdge(const skr::StringView name, TextureUAVHandle handle, ECGPUResourceState state = CGPU_RESOURCE_STATE_UNORDERED_ACCESS);
 protected:

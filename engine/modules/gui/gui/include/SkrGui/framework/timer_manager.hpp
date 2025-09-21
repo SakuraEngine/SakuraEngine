@@ -1,21 +1,21 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrContainers/sparse_vector.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/timer_manager.generated.h"
-#endif
+#include "SkrGui/framework/timer_manager.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "f172b80f-a4b5-461c-9ac8-501e4dc732a4")
-TimerSignalData {
-    float    time_stamp;
+struct [[sattr(guid = "f172b80f-a4b5-461c-9ac8-501e4dc732a4")]]
+TimerSignalData
+{
+    float time_stamp;
     uint64_t repeat_count;
 };
 using TimerSignalCallback = Function<bool(TimerSignalData data)>;
 
-sreflect_struct(guid = "063a265c-67a0-4ec1-bb26-c6a0c890c105")
-Timer {
+struct [[sattr(guid = "063a265c-67a0-4ec1-bb26-c6a0c890c105")]]
+Timer
+{
 
     inline static Timer OneShot(float time, TimerSignalCallback callback)
     {
@@ -69,23 +69,25 @@ Timer {
 
 using TimerHandle = uint64_t;
 
-sreflect_struct(guid = "59ef6a71-e392-40b0-98d2-c7adf1b1a2e5")
-SKR_GUI_API TimerManager {
+struct [[sattr(guid = "59ef6a71-e392-40b0-98d2-c7adf1b1a2e5"
+)]] SKR_GUI_API TimerManager
+{
     // update
     void update(float time_stamp);
 
     // add/remove
     TimerHandle add(Timer timer);
-    void        remove(TimerHandle handle);
+    void remove(TimerHandle handle);
 
 private:
-    struct TimerData {
-        Timer    timer;
-        float    initial_time_stamp;
-        float    last_signal_time_stamp;
+    struct TimerData
+    {
+        Timer timer;
+        float initial_time_stamp;
+        float last_signal_time_stamp;
         uint64_t signal_count;
     };
-    float                   _cur_time_stamp = 0;
+    float _cur_time_stamp = 0;
     SparseVector<TimerData> _timers;
 };
 } // namespace skr::gui

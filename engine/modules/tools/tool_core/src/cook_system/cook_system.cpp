@@ -7,8 +7,7 @@
 #include "SkrCore/module/module.hpp"
 #include "SkrCore/async/thread_job.hpp"
 #include "SkrCore/platform/vfs.h"
-#include "SkrSerde/json_serde.hpp"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 #include "SkrToolCore/cook_system/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrContainers/hashmap.hpp"
@@ -40,7 +39,7 @@ struct CookSystemImpl : public skd::asset::CookSystem
     bool SaveAssetMeta(SProject* project, skr::RC<AssetMetaFile> asset) override;
     skr::RC<AssetMetaFile> GetAssetMetaFile(AssetID guid) const override;
 
-    void ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::span<skr::RC<AssetMetaFile>>)> f) override;
+    void ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::Span<skr::RC<AssetMetaFile>>)> f) override;
 
     void RegisterCooker(bool isDefault, skr::GUID cooker, skr::GUID type, Cooker* instance) override;
     void UnregisterCooker(skr::GUID type) override;
@@ -80,18 +79,15 @@ void RegisterCookerToSystem(CookSystem* system, bool isDefault, skr::GUID cooker
 
 AssetMetadata::AssetMetadata()
 {
-
 }
 
 AssetMetadata::~AssetMetadata()
 {
-
 }
 
 AssetMetaFile::AssetMetaFile(const URI& _uri)
     : uri(_uri)
 {
-
 }
 
 AssetMetaFile::AssetMetaFile(const URI& _uri, skr::GUID _guid, skr::GUID _type, skr::GUID _cooker)
@@ -143,102 +139,111 @@ skr::task::event_t CookSystemImpl::AddCookTask(AssetID asset)
         if (existed_task)
             return existed_task;
     }
-    skr::task::event_t counter;
-    cookContext->SetCounter(counter);
+    skr::task::event_t event;
+    cookContext->SetCounter(event);
     auto fiberName = skr::format(u8"Fiber{}", assetfile->guid);
     mainCounter.add(1);
-    skr::task::schedule([cookContext, ioService = GetIOService()]() {
-        auto system = static_cast<CookSystemImpl*>(GetCookSystem());
-        const auto metaAsset = cookContext->GetAssetMetaFile();
-        auto cooker = system->GetCooker(metaAsset.get());
-        SKR_ASSERT(cooker);
-
-        SkrZoneScopedN("CookingTask");
-        {
-            const auto rtti_type = skr::get_type_from_guid(metaAsset->resource_type);
-            const auto cookerTypeName = rtti_type ? rtti_type->name().c_str_raw() : (const char*)u8"UnknownResource";
-            const auto assetName = skr::format(u8"Asset: {}", metaAsset->guid);
-            const auto assetType = skr::format(u8"TypeGuid: {}", metaAsset->resource_type);
-            const auto scopeName = skr::format(u8"Cook.[{}]", (const skr_char8*)cookerTypeName);
-            const auto assetURI = skr::format(u8"Asset: {}", metaAsset->uri.c_str());
-            ZoneName(scopeName.c_str_raw(), scopeName.size());
-            SkrMessage(assetName.c_str_raw(), assetName.size());
-            SkrMessage(assetType.c_str_raw(), assetType.size());
-            SkrMessage(assetURI.c_str_raw(), assetURI.size());
-        }
-
-        SKR_DEFER({
+    skr::task::schedule(
+        [cookContext, ioService = GetIOService()]() {
             auto system = static_cast<CookSystemImpl*>(GetCookSystem());
-            auto asset = cookContext->GetAssetMetaFile()->guid;
-            system->cooking.erase_if(asset, [](const auto& ctx_kv) { CookContext::Destroy(ctx_kv.second); return true; });
-            system->mainCounter.decrement();
-        });
+            const auto metaAsset = cookContext->GetAssetMetaFile();
+            auto cooker = system->GetCooker(metaAsset.get());
+            SKR_ASSERT(cooker);
 
-        // setup cook context
-        cookContext->SetIOService(ioService);
-        cookContext->SetCookerVersion(cooker->Version());
-        // SKR_ASSERT(iter != system->cookers.end()); // TODO: error handling
-        SKR_LOG_INFO(u8"[CookTask] resource %s cook started!", metaAsset->uri.c_str());
-        if (cooker->Cook(cookContext))
-        {
-            // write resource header
+            SkrZoneScopedN("CookingTask");
             {
-                SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating resource metas.", metaAsset->uri.c_str());
-                skr::Vector<uint8_t> buffer;
-                skr::archive::BinVectorWriter writer{ &buffer };
-                SBinaryWriter archive(writer);
-                cookContext->WriteHeader(archive, cooker);
-
-                auto resource_vfs = metaAsset->project->GetResourceVFS();
-                auto relative_path = skr::format(u8"{}.rh", metaAsset->guid);
-                auto file = skr_vfs_fopen(resource_vfs, relative_path.u8_str(), SKR_FM_WRITE_BINARY, SKR_FILE_CREATION_ALWAYS_NEW);
-                if (!file)
-                {
-                    SKR_LOG_ERROR(u8"[CookTask] failed to write header file for resource %s!", metaAsset->uri.c_str());
-                    return;
-                }
-                SKR_DEFER({ skr_vfs_fclose(file); });
-                skr_vfs_fwrite(file, buffer.data(), 0, buffer.size());
+                const auto rtti_type = skr::get_type_from_guid(metaAsset->resource_type);
+                const auto cookerTypeName = rtti_type ? rtti_type->name().c_str_raw() : (const char*)u8"UnknownResource";
+                const auto assetName = skr::format(u8"Asset: {}", metaAsset->guid);
+                const auto assetType = skr::format(u8"TypeGuid: {}", metaAsset->resource_type);
+                const auto scopeName = skr::format(u8"Cook.[{}]", (const skr_char8*)cookerTypeName);
+                const auto assetURI = skr::format(u8"Asset: {}", metaAsset->uri.c_str());
+                ZoneName(scopeName.c_str_raw(), scopeName.size());
+                SkrMessage(assetName.c_str_raw(), assetName.size());
+                SkrMessage(assetType.c_str_raw(), assetType.size());
+                SkrMessage(assetURI.c_str_raw(), assetURI.size());
             }
-            // write resource dependencies
+
+            SKR_DEFER({
+                auto system = static_cast<CookSystemImpl*>(GetCookSystem());
+                auto asset = cookContext->GetAssetMetaFile()->guid;
+                // system->cooking.erase_if(asset, [](const auto& ctx_kv) { CookContext::Destroy(ctx_kv.second); return true; });
+                system->mainCounter.decrement();
+            });
+
+            // setup cook context
+            cookContext->SetIOService(ioService);
+            cookContext->SetCookerVersion(cooker->Version());
+            // SKR_ASSERT(iter != system->cookers.end()); // TODO: error handling
+            SKR_LOG_INFO(u8"[CookTask] resource %s cook started!", metaAsset->uri.c_str());
+            if (cooker->Cook(cookContext))
             {
-                SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating dependencies.", metaAsset->uri.c_str());
-                // write dependencies
-                skr::archive::JsonWriter writer(2);
-                writer.StartObject();
-                writer.Key(u8"importerVersion");
-                writer.UInt64(cookContext->GetImporterVersion());
-                writer.Key(u8"cookerVersion");
-                writer.UInt64(cookContext->GetCookerVersion());
-                writer.Key(u8"files");
-                writer.StartArray();
-                for (auto& source_path : cookContext->GetSourceFiles())
+                // write resource header
                 {
-                    skr::json_write(&writer, source_path);
-                }
-                writer.EndArray();
-                writer.Key(u8"dependencies");
-                writer.StartArray();
-                for (auto& dep : cookContext->GetStaticDependencies())
-                    skr::json_write<SResourceHandle>(&writer, dep);
-                writer.EndArray();
-                writer.EndObject();
+                    SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating resource metas.", metaAsset->uri.c_str());
+                    skr::ArWriteBin writer;
+                    cookContext->WriteHeader(writer, cooker);
 
-                auto dependency_vfs = metaAsset->project->GetDependencyVFS();
-                auto relative_path = skr::format(u8"{}.d", metaAsset->guid);
-                auto file = skr_vfs_fopen(dependency_vfs, relative_path.u8_str(), SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
-                if (!file)
-                {
-                    SKR_LOG_ERROR(u8"[CookTask] failed to write dependency file for resource %s!", metaAsset->uri.c_str());
-                    return;
+                    auto resource_vfs = metaAsset->project->GetResourceVFS();
+                    auto relative_path = skr::format(u8"{}.rh", metaAsset->guid);
+                    auto file = skr_vfs_fopen(resource_vfs, relative_path.u8_str(), SKR_FM_WRITE_BINARY, SKR_FILE_CREATION_ALWAYS_NEW);
+                    if (!file)
+                    {
+                        SKR_LOG_ERROR(u8"[CookTask] failed to write header file for resource %s!", metaAsset->uri.c_str());
+                        return;
+                    }
+                    SKR_DEFER({ skr_vfs_fclose(file); });
+                    skr_vfs_fwrite(file, writer.buffer().data(), 0, writer.buffer().size());
                 }
-                SKR_DEFER({ skr_vfs_fclose(file); });
-                auto jString = writer.Write();
-                skr_vfs_fwrite(file, jString.c_str_raw(), 0, jString.length_buffer());
+                // write resource dependencies
+                {
+                    SKR_LOG_INFO(u8"[CookTask] resource %s cook finished! updating dependencies.", metaAsset->uri.c_str());
+
+                    auto writer = skr::ArWriteJson::Create();
+                    {
+                        skr::Archive::ObjectScope scope(writer);
+                        SKR_FAST_CHECK(scope.is_success(), );
+                        SKR_FAST_CHECK(writer.key_value(u8"importerVersion", cookContext->GetImporterVersion()), );
+                        SKR_FAST_CHECK(writer.key_value(u8"cookerVersion", cookContext->GetCookerVersion()), );
+                        SKR_FAST_CHECK(writer.key(u8"files"), );
+                        {
+                            skr::Archive::ArrayScope array_scope(writer);
+                            SKR_FAST_CHECK(array_scope.is_success(), );
+                            for (auto& source_path : cookContext->GetSourceFiles())
+                            {
+                                SKR_FAST_CHECK(writer.value(source_path), );
+                            }
+                        }
+                        SKR_FAST_CHECK(writer.key(u8"dependencies"), );
+                        {
+                            skr::Archive::ArrayScope array_scope(writer);
+                            SKR_FAST_CHECK(array_scope.is_success(), );
+                            for (auto& dep : cookContext->GetStaticDependencies())
+                            {
+                                SKR_FAST_CHECK(writer.value(dep), );
+                            }
+                        }
+                    }
+
+                    auto dependency_vfs = metaAsset->project->GetDependencyVFS();
+                    auto relative_path = skr::format(u8"{}.d", metaAsset->guid);
+                    auto file = skr_vfs_fopen(dependency_vfs, relative_path.u8_str(), SKR_FM_WRITE, SKR_FILE_CREATION_ALWAYS_NEW);
+                    if (!file)
+                    {
+                        SKR_LOG_ERROR(u8"[CookTask] failed to write dependency file for resource %s!", metaAsset->uri.c_str());
+                        return;
+                    }
+                    SKR_DEFER({ skr_vfs_fclose(file); });
+                    skr::String jString;
+                    writer.write_to_string(jString);
+                    skr_vfs_fwrite(file, jString.c_str_raw(), 0, jString.length_buffer());
+                }
             }
-        }
-    }, &counter, fiberName.c_str_raw());
-    return counter;
+        },
+        &event,
+        fiberName.c_str_raw()
+    );
+    return event;
 }
 
 void CookSystemImpl::RegisterCooker(bool isDefault, skr::GUID cooker, skr::GUID type, Cooker* instance)
@@ -261,7 +266,7 @@ void CookSystemImpl::UnregisterCooker(skr::GUID guid)
 
 Cooker* CookSystemImpl::GetCooker(AssetMetaFile* info) const
 {
-    if (info->cooker == skr::GUID{})
+    if (info->cooker.is_zero())
     {
         auto it = defaultCookers.find(info->resource_type);
         if (it != defaultCookers.end())
@@ -306,10 +311,17 @@ skr::RC<AssetMetaFile> CookSystemImpl::LoadAssetMeta(SProject* project, const UR
     skr::String meta_content;
     if (project->LoadAssetMeta(uri.string(), meta_content))
     {
-        // Create record with proper constructor
-        skr::archive::JsonReader reader(meta_content.view());
+        // read meta file
+        auto reader = skr::ArReadJson::ReadBuffer(meta_content.data(), meta_content.size());
+        if (reader.is_failed())
+        {
+            SKR_LOG_ERROR(u8"[CookSystemImpl::LoadAssetMeta] failed to parse metafile: %s", uri.c_str());
+            return nullptr;
+        }
+
+        /// parse meta file
         auto metafile = skr::RC<AssetMetaFile>::New(uri);
-        skr::json_read(&reader, *metafile);
+        reader.value(*metafile);
         metafile->project = project;
         metafile->SetContent(std::move(meta_content));
         assets.insert(std::make_pair(metafile->guid, metafile));
@@ -324,15 +336,17 @@ bool CookSystemImpl::ImportAssetMeta(SProject* project, skr::RC<AssetMetaFile> a
     asset->importer = importer;
     asset->metadata = meta;
     asset->project = project;
-    return assets.insert({asset->GetGUID(), asset}).second;
+    return assets.insert({ asset->GetGUID(), asset }).second;
 }
 
-bool CookSystemImpl::SaveAssetMeta(SProject* project, skr::RC<AssetMetaFile> asset) 
+bool CookSystemImpl::SaveAssetMeta(SProject* project, skr::RC<AssetMetaFile> asset)
 {
     const auto uri = asset->GetURI();
-    skr::archive::JsonWriter writer(4);
-    skr::json_write(&writer, *asset);
-    auto content = writer.Write();
+
+    auto writer = skr::ArWriteJson::Create();
+    writer.value(*asset);
+    skr::String content;
+    writer.write_to_string(content);
     return project->SaveAssetMeta(uri, content);
 }
 
@@ -344,7 +358,7 @@ skr::RC<AssetMetaFile> CookSystemImpl::GetAssetMetaFile(AssetID asset) const
     return nullptr;
 }
 
-void CookSystemImpl::ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::span<skr::RC<AssetMetaFile>>)> f)
+void CookSystemImpl::ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::Span<skr::RC<AssetMetaFile>>)> f)
 {
     ParallelFor(assets.begin(), assets.end(), batch, [f, batch](auto begin, auto end) {
         skr::Vector<skr::RC<AssetMetaFile>> records;

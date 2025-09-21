@@ -1,5 +1,5 @@
 #pragma once
-#include "CppSL/AST.hpp"
+#include "CppSL/CppSLAST.hpp"
 #include "CppSL/SourceBuilder.hpp"
 #include <unordered_map>
 
@@ -33,11 +33,13 @@ public:
     virtual void GenerateStmtAttributes(SourceBuilderNew& sb, const skr::CppSL::Stmt* stmt);
     virtual void GenerateFunctionAttributes(SourceBuilderNew& sb, const FunctionDecl* func);
     virtual void GenerateFunctionSignaturePostfix(SourceBuilderNew& sb, const FunctionDecl* func);
-    virtual void GenerateKernelWrapper(SourceBuilderNew& sb, const skr::CppSL::FunctionDecl* funcDecl);
     virtual bool SupportConstructor() const = 0;
     
+    virtual void BeforeGenerateCallArgs(SourceBuilderNew& sb, const skr::CppSL::CallExpr* call);
+    virtual void BeforeGenerateParamters(SourceBuilderNew& sb, const skr::CppSL::FunctionDecl* funcDecl);
     virtual void BeforeGenerateGlobalVariables(SourceBuilderNew& sb, const AST& ast);
     virtual void BeforeGenerateFunctionImplementations(SourceBuilderNew& sb, const AST& ast);
+    virtual bool HLSL_RemoveEmptyResourceInit(const ConstructorDecl::MemberInit* init) const { return false; }
 
 protected:
     template <typename T>
@@ -60,7 +62,7 @@ protected:
     void visit(SourceBuilderNew& sb, const skr::CppSL::VarDecl* varDecl);
     void visit_decl(SourceBuilderNew& sb, const skr::CppSL::Decl* decl);
 
-private:
+protected:
     void generate_array_helpers(SourceBuilderNew& sb, const AST& ast);
     void generate_namespace_declarations(SourceBuilderNew& sb, const AST& ast);
     enum class ForwardDeclareType
@@ -76,5 +78,15 @@ private:
     // Assign translated types/functions/variables to their namespaces
     // SPV backend of DXC has a stupid bug: if CBV<T>, T is inside a namespace and owns a method, it will cause ICE.
     bool kUseNamespace = false;
+
+    void GenerateSRTs(SourceBuilderNew& sb, const AST& ast);
+    struct BindingVal 
+    { 
+        uint32_t binding; 
+        uint32_t space; 
+        bool is_push; 
+        bool is_bindless; 
+    };
+    std::unordered_map<const skr::CppSL::VarDecl*, BindingVal> binding_table_;
 };
 } // namespace skr::CppSL

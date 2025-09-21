@@ -145,7 +145,7 @@ public:
 struct live2d_render_view_t {
     Csm::CubismMatrix44   device_to_screen;
     Csm::CubismViewMatrix view_matrix;
-    skr_float4_t          clear_color;
+    skr::float4          clear_color;
 };
 
 const ECGPUFormat live2d_depth_format = CGPU_FORMAT_D32_SFLOAT;

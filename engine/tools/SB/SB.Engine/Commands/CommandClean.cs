@@ -18,19 +18,19 @@ public class CleanCommand : CommandBase
         {
             bool all = Database == "all";
             if (all || Database == "targets")
-                BuildSystem.CppCompileDepends(false).ClearDatabase();
+                BuildDepends.Solve(false).ClearDatabase();
             if (all || Database == "packages")
-                BuildSystem.CppCompileDepends(true).ClearDatabase();
+                BuildDepends.Solve(true).ClearDatabase();
             if (all || Database == "shaders")
-                Engine.ShaderCompileDepend.ClearDatabase();
+                EngineDepends.ShaderCompile.ClearDatabase();
             if (all || Database == "misc")
-                Engine.MiscDepend.ClearDatabase();
+                EngineDepends.Misc.ClearDatabase();
             if (all || Database == "codegen")
-                Engine.CodegenDepend.ClearDatabase();
+                EngineDepends.Codegen.ClearDatabase();
             if (Database == "sdks")
             {
-                Install.DownloadDepend.ClearDatabase();
-                Install.SDKDepend.ClearDatabase();
+                InstallDepends.Download.ClearDatabase();
+                InstallDepends.SDK.ClearDatabase();
             }
         }
         catch (Exception ex)

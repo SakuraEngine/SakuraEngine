@@ -9,7 +9,8 @@
 namespace skr::container
 {
 template <typename Memory>
-struct RingBuffer : protected Memory {
+struct RingBuffer : protected Memory
+{
     // from memory
     using DataType           = typename Memory::DataType;
     using SizeType           = typename Memory::SizeType;
@@ -56,6 +57,7 @@ struct RingBuffer : protected Memory {
     void clear();
     void release(SizeType reserve_capacity = 0);
     void reserve(SizeType expect_capacity);
+    void grow_to(SizeType expect_capacity);
     void shrink();
     void resize(SizeType expect_size, const DataType& new_value);
     void resize_unsafe(SizeType expect_size);
@@ -416,14 +418,19 @@ inline void RingBuffer<Memory>::reserve(SizeType expect_capacity)
 {
     if (expect_capacity > capacity())
     {
-        if (expect_capacity != capacity())
-        {
-            _realloc(expect_capacity);
-        }
+        _realloc(expect_capacity);
     }
     else
     {
         _free();
+    }
+}
+template <typename Memory>
+inline void RingBuffer<Memory>::grow_to(SizeType expect_capacity)
+{
+    if (expect_capacity > capacity())
+    {
+        Memory::grow_memory_to(expect_capacity);
     }
 }
 template <typename Memory>
@@ -821,7 +828,8 @@ SKR_INLINE const RingBuffer<Memory>& RingBuffer<Memory>::readonly() const
 namespace skr::container
 {
 template <typename Memory>
-struct ContainerTraits<RingBuffer<Memory>> {
+struct ContainerTraits<RingBuffer<Memory>>
+{
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()

@@ -14,10 +14,14 @@ public static class LibDeflate
 
                 Target.TargetType(TargetType.Static)
                     .CVersion("11")
-                    .SIMD(SIMDArchitecture.AVX)
                     .OptimizationLevel(OptimizationLevel.Fastest)
                     .IncludeDirs(Visibility.Public, "./1.24.0/libdeflate")
                     .AddCFiles("./1.24.0/**.c");
+
+                if (Engine.TargetArch == Architecture.ARM64)
+                    Target.SIMD(SIMDArchitecture.Neon);
+                else
+                    Target.SIMD(SIMDArchitecture.AVX);
             });
     }
 }

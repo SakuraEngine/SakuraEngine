@@ -47,10 +47,10 @@ void V8Context::exit()
 // build export
 void V8Context::build_export(FunctionRef<void(V8VirtualModule&)> build_func)
 {
-    auto               isolate = _isolate->v8_isolate();
+    auto isolate = _isolate->v8_isolate();
     v8::Isolate::Scope isolate_scope(isolate);
-    v8::HandleScope    handle_scope(isolate);
-    auto               context = _context.Get(isolate);
+    v8::HandleScope handle_scope(isolate);
+    auto context = _context.Get(isolate);
     v8::Context::Scope context_scope(context);
 
     // build module
@@ -86,9 +86,9 @@ V8Value V8Context::get_global(StringView name)
     using namespace ::v8;
 
     // scopes
-    auto           isolate = _isolate->v8_isolate();
+    auto isolate = _isolate->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
     Local<Context> context = _context.Get(isolate);
     Context::Scope context_scope(context);
 
@@ -116,9 +116,9 @@ bool V8Context::set_global_value(StringView name, const V8Value& value)
     using namespace ::v8;
 
     // scopes
-    auto           isolate = _isolate->v8_isolate();
+    auto isolate = _isolate->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
     Local<Context> context = _context.Get(isolate);
     Context::Scope context_scope(context);
 
@@ -135,9 +135,9 @@ V8Value V8Context::exec(StringView script, bool as_module)
 {
     using namespace ::v8;
 
-    auto           isolate = _isolate->v8_isolate();
+    auto isolate = _isolate->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
     Local<Context> context = _context.Get(isolate);
     Context::Scope context_scope(context);
 
@@ -191,9 +191,9 @@ V8Value V8Context::exec_file(StringView file_path, bool as_module)
 {
     using namespace ::v8;
 
-    auto           isolate = _isolate->v8_isolate();
+    auto isolate = _isolate->v8_isolate();
     Isolate::Scope isolate_scope(isolate);
-    HandleScope    handle_scope(isolate);
+    HandleScope handle_scope(isolate);
     Local<Context> context = _context.Get(isolate);
     Context::Scope context_scope(context);
 
@@ -204,7 +204,7 @@ V8Value V8Context::exec_file(StringView file_path, bool as_module)
         return {};
     }
     auto normalized_path = _isolate->vfs->path_normalize(file_path);
-    auto script_content  = _isolate->vfs->load_script(normalized_path);
+    auto script_content = _isolate->vfs->load_script(normalized_path);
     if (!script_content)
     {
         SKR_LOG_FMT_ERROR(u8"failed to load script from file: {}", normalized_path.c_str());
@@ -275,11 +275,11 @@ void V8Context::_init(V8Isolate* isolate, String name)
     using namespace ::v8;
 
     _isolate = isolate;
-    _name    = name;
+    _name = name;
     _virtual_module.set_isolate(_isolate);
 
     Isolate::Scope isolate_scope(_isolate->v8_isolate());
-    HandleScope    handle_scope(_isolate->v8_isolate());
+    HandleScope handle_scope(_isolate->v8_isolate());
 
     // create context
     auto new_context = Context::New(_isolate->v8_isolate());
@@ -296,14 +296,14 @@ void V8Context::_shutdown()
 
 // exec helpers
 v8::MaybeLocal<v8::Script> V8Context::_compile_script(
-    v8::Isolate*           isolate,
+    v8::Isolate* isolate,
     v8::Local<v8::Context> context,
-    StringView             script,
-    StringView             path
+    StringView script,
+    StringView path
 )
 {
     v8::Local<v8::String> source = V8Bind::to_v8(script, false);
-    v8::ScriptOrigin      origin(
+    v8::ScriptOrigin origin(
         isolate,
         V8Bind::to_v8(path),
         0,
@@ -323,8 +323,8 @@ v8::MaybeLocal<v8::Script> V8Context::_compile_script(
 }
 v8::MaybeLocal<v8::Module> V8Context::_compile_module(
     v8::Isolate* isolate,
-    StringView   script,
-    StringView   path
+    StringView script,
+    StringView path
 )
 {
     v8::ScriptOrigin origin(
@@ -351,10 +351,10 @@ v8::MaybeLocal<v8::Module> V8Context::_compile_module(
     );
 }
 V8Value V8Context::_exec_script(
-    v8::Isolate*           isolate,
+    v8::Isolate* isolate,
     v8::Local<v8::Context> context,
-    v8::Local<v8::Script>  script,
-    bool                   dump_exception
+    v8::Local<v8::Script> script,
+    bool dump_exception
 )
 {
     using namespace ::v8;
@@ -392,10 +392,10 @@ V8Value V8Context::_exec_script(
     }
 }
 V8Value V8Context::_exec_module(
-    v8::Isolate*           isolate,
+    v8::Isolate* isolate,
     v8::Local<v8::Context> context,
-    v8::Local<v8::Module>  module,
-    bool                   dump_exception
+    v8::Local<v8::Module> module,
+    bool dump_exception
 )
 {
     using namespace ::v8;
@@ -465,13 +465,13 @@ V8Value V8Context::_exec_module(
 
 // callback
 v8::MaybeLocal<v8::Module> V8Context::_resolve_module(
-    v8::Local<v8::Context>    context,
-    v8::Local<v8::String>     specifier,
+    v8::Local<v8::Context> context,
+    v8::Local<v8::String> specifier,
     v8::Local<v8::FixedArray> import_assertions,
-    v8::Local<v8::Module>     referrer
+    v8::Local<v8::Module> referrer
 )
 {
-    auto isolate     = v8::Isolate::GetCurrent();
+    auto isolate = v8::Isolate::GetCurrent();
     auto skr_isolate = reinterpret_cast<V8Isolate*>(isolate->GetData(0));
     auto skr_context = reinterpret_cast<V8Context*>(context->GetAlignedPointerFromEmbedderData(0));
 
@@ -588,7 +588,7 @@ v8::MaybeLocal<v8::Module> V8Context::_resolve_module(
         }
 
         // normalize path and find cache
-        auto normalized_path    = skr_isolate->vfs->path_normalize(module_name);
+        auto normalized_path = skr_isolate->vfs->path_normalize(module_name);
         auto find_module_result = skr_context->_path_to_module.find(normalized_path);
         if (find_module_result)
         { // found in cache

@@ -39,7 +39,7 @@ namespace SB.Core
 
             var InputFiles = Driver.Arguments["Inputs"] as ArgumentList<string>;
             var OutputFile = Driver.Arguments["Output"] as string;
-            bool Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
+            bool Changed = BuildDepends.Solve(Target).OnChanged(Target.Name, OutputFile!, Emitter.Name, (Depend depend) =>
             {
                 var StringLength = LinkerArgsList.Sum(x => x.Length);
                 string Arguments = "";
@@ -47,7 +47,7 @@ namespace SB.Core
                 if (StringLength > 30000)
                 {
                     var Content = String.Join("\n", LinkerArgsList);
-                    ResponseFile = Path.Combine(BuildSystem.BuildPath, $"{Guid.CreateVersion7()}.txt");
+                    ResponseFile = Path.Combine(BuildDirs.BuildDir, $"{Guid.CreateVersion7()}.txt");
                     File.WriteAllText(ResponseFile, Content);
 
                     Arguments = $"{TargetTypeArg} @{ResponseFile}";

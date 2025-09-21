@@ -16,11 +16,11 @@ using namespace skr::literals;
 const char* kLogMemoryName = "sakura::log";
 skr::logging::LogLevel LogConstants::gLogLevel = skr::logging::LogLevel::kTrace;
 skr::logging::LogFlushBehavior LogConstants::gFlushBehavior = skr::logging::LogFlushBehavior::kAuto;
-const skr_guid_t LogConstants::kDefaultPatternId = u8"c236a30a-c91e-4b26-be7c-c7337adae428"_guid;
-const skr_guid_t LogConstants::kDefaultConsolePatternId = u8"e3b22b5d-95ea-462d-93bf-b8b91e7b991b"_guid;
-const skr_guid_t LogConstants::kDefaultConsoleSinkId = u8"11b910c7-de4b-4bba-9dee-5853f35b0c10"_guid;
-const skr_guid_t LogConstants::kDefaultFilePatternId = u8"75871d37-ba78-4a75-bb7a-455f08bc8a2e"_guid;
-const skr_guid_t LogConstants::kDefaultFileSinkId = u8"289d0408-dec8-4ceb-ae32-55d4793df983"_guid;
+const GUID LogConstants::kDefaultPatternId = u8"c236a30a-c91e-4b26-be7c-c7337adae428"_guid;
+const GUID LogConstants::kDefaultConsolePatternId = u8"e3b22b5d-95ea-462d-93bf-b8b91e7b991b"_guid;
+const GUID LogConstants::kDefaultConsoleSinkId = u8"11b910c7-de4b-4bba-9dee-5853f35b0c10"_guid;
+const GUID LogConstants::kDefaultFilePatternId = u8"75871d37-ba78-4a75-bb7a-455f08bc8a2e"_guid;
+const GUID LogConstants::kDefaultFileSinkId = u8"289d0408-dec8-4ceb-ae32-55d4793df983"_guid;
 
 LogEvent::LogEvent(Logger* logger, LogLevel level, const LogSourceData& src_data) SKR_NOEXCEPT
     : level(level), timestamp(LogManagerImpl::gLogManager->tscns_.rdtsc()), 

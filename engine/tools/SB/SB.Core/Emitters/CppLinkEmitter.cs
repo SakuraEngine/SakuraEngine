@@ -24,7 +24,7 @@ namespace SB
             sw.Start();
 
             var LinkedFileName = GetLinkedFileName(Target);
-            var DependFile = Path.Combine(Target.GetStorePath(BS.DepsStore), BS.GetUniqueTempFileName(LinkedFileName, Target.Name + this.Name, "task.deps.json"));
+            var DependFile = Path.Combine(Target.GetBuildSrcDepsDir(), BS.GetUniqueTempFileName(LinkedFileName, Target.Name + this.Name, "task.deps.json"));
             var Inputs = new ArgumentList<string>();
             // Add obj files
             var SourceFiles = Target.FileList<CppFileList>().Files.ToList();
@@ -111,7 +111,7 @@ namespace SB
         {
             var OutputType = Target.GetTargetType();
             var Extension = GetPlatformLinkedFileExtension(OutputType);
-            var OutputFile = Path.Combine(Target.GetBinaryPath(), $"{Target.Name}{Extension}");
+            var OutputFile = Path.Combine(Target.GetBinaryDir(), $"{Target.Name}{Extension}");
             return OutputFile;
         }
 
@@ -121,7 +121,7 @@ namespace SB
             var Extension = GetPlatformStubFileExtension(OutputType);
             if (Extension.Length == 0)
                 return null;
-            var OutputFile = Path.Combine(Target.GetBinaryPath(), $"{Target.Name}{Extension}");
+            var OutputFile = Path.Combine(Target.GetBinaryDir(), $"{Target.Name}{Extension}");
             return OutputFile;
         }
 

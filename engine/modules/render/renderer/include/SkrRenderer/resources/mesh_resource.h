@@ -4,15 +4,16 @@
 #include "SkrCore/blob.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/vector.hpp"
-#include "SkrRenderer/fwd_types.h"
-#include "SkrRT/resource/resource_factory.h"
-#ifndef __meta__
-    #include "SkrRenderer/resources/mesh_resource.generated.h" // IWYU pragma: export
-#endif
+#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRenderer/graphics/gpu_table.hpp"
+#include "SkrRenderer/resources/mesh_resource.generated.h" // IWYU pragma: export
 namespace skr
 {
-sreflect_enum_class(guid = "01f05eb7-6d5d-46d8-945e-ce1259d22c8f" serde = @bin | @json)
-EVertexAttribute : uint32_t{
+enum class [[sattr(
+    guid = "01f05eb7-6d5d-46d8-945e-ce1259d22c8f"
+    serde = @enable
+)]] EVertexAttribute : uint32_t
+{
     NONE,
     POSITION,
     NORMAL,
@@ -26,7 +27,7 @@ EVertexAttribute : uint32_t{
     MAX_ENUM_BIT = UINT32_MAX,
 };
 
-sreflect_struct(guid = "3f01f94e-bd88-44a0-95e8-94ff74d18fca" serde = @bin)
+struct [[sattr(guid = "3f01f94e-bd88-44a0-95e8-94ff74d18fca" serde = @enable)]]
 VertexBufferEntry
 {
     EVertexAttribute attribute;
@@ -37,7 +38,7 @@ VertexBufferEntry
     uint32_t offset;
 };
 
-sreflect_struct(guid = "6ac5f946-dd65-4710-8725-ab4273fe13e6" serde = @bin)
+struct [[sattr(guid = "6ac5f946-dd65-4710-8725-ab4273fe13e6" serde = @enable)]]
 IndexBufferEntry
 {
     uint32_t buffer_index;
@@ -47,18 +48,18 @@ IndexBufferEntry
     uint32_t stride;
 };
 
-sreflect_struct(guid = "03104e51-c998-410b-9d3c-d76535933440" serde = @bin)
+struct [[sattr(guid = "03104e51-c998-410b-9d3c-d76535933440" serde = @enable)]]
 MeshBuffer
 {
     uint32_t index;
     uint64_t byte_length;
     bool used_with_index;
     bool used_with_vertex;
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::RC<skr::IBlob> blob = nullptr;
 };
 
-sreflect_struct(guid = "cd2d43a7-1e0e-4951-bf87-7d693fd26227" serde = @bin)
+struct [[sattr(guid = "cd2d43a7-1e0e-4951-bf87-7d693fd26227" serde = @enable)]]
 MeshPrimitive
 {
     VertexLayoutId vertex_layout;
@@ -68,7 +69,7 @@ MeshPrimitive
     uint32_t vertex_count;
 };
 
-sreflect_struct(guid = "d3b04ea5-415d-44d5-995a-5c77c64fe1de" serde = @bin)
+struct [[sattr(guid = "d3b04ea5-415d-44d5-995a-5c77c64fe1de" serde = @enable)]]
 MeshSection
 {
     int32_t parent_index;
@@ -78,7 +79,7 @@ MeshSection
     skr::Vector<uint32_t> primitive_indices;
 };
 
-sreflect_struct(guid = "3b8ca511-33d1-4db4-b805-00eea6a8d5e1" serde = @bin)
+struct [[sattr(guid = "3b8ca511-33d1-4db4-b805-00eea6a8d5e1" serde = @enable)]]
 MeshResource
 {
     SKR_RENDERER_API ~MeshResource() SKR_NOEXCEPT;
@@ -93,7 +94,7 @@ MeshResource
     bool install_to_vram SKR_IF_CPP(= true);
     bool install_to_ram SKR_IF_CPP(= true); // TODO: configure this in asset
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     RenderMesh* render_mesh SKR_IF_CPP(= nullptr);
 };
 
@@ -108,9 +109,12 @@ struct SKR_RENDERER_API MeshFactory : public ResourceFactory
         skr_io_ram_service_t* ram_service = nullptr;
         skr_io_vram_service_t* vram_service = nullptr;
         SRenderDeviceId render_device = nullptr;
+        skr::RC<gpu::TableManager> table_manager = nullptr;
     };
-    
+
     virtual CGPUDescriptorBufferId descriptor_buffer() = 0;
+    virtual skr::RC<gpu::TableInstance> primitive_table() = 0;
+    virtual skr::render_graph::BufferHandle UpdateGPUTable(skr::render_graph::RenderGraph* graph) = 0;
 
     float AsyncSerdeLoadFactor() override { return 2.5f; }
     [[nodiscard]] static MeshFactory* Create(const Root& root);

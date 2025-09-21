@@ -1,17 +1,18 @@
 #include "SkrToolCore/cook_system/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "dxt_utils.hpp"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 #include "SkrProfile/profile.h"
 
 namespace skd::asset
 {
 struct RawTextureData
 {
-    RawTextureData(skr::ImageDecoderId decoder, skr::io::IRAMService* ioService, skr::BlobId blob)
+    RawTextureData(skr::ImageDecoderId decoder, skr::io::IRAMService* ioService, skr::BlobId blob, uint32_t mip_count)
         : decoder(decoder)
         , ioService(ioService)
         , blob(blob)
+        , mip_count(mip_count)
     {
         decoder->initialize(blob->get_data(), blob->get_size());
     }
@@ -25,6 +26,7 @@ struct RawTextureData
         }
     }
 
+    uint32_t mip_count = 1;
     skr::ImageDecoderId decoder = nullptr;
     skr::io::IRAMService* ioService = nullptr;
     skr::BlobId blob = nullptr;
@@ -46,7 +48,7 @@ void* TextureImporter::Import(skr::io::IRAMService* ioService, CookContext* cont
         EImageCoderFormat format = skr_image_coder_detect_format((const uint8_t*)uncompressed_data, uncompressed_size);
         if (auto decoder = skr::IImageDecoder::Create(format))
         {
-            return SkrNew<RawTextureData>(decoder, ioService, blob);
+            return SkrNew<RawTextureData>(decoder, ioService, blob, mip_count);
         }
         else
         {
@@ -110,7 +112,7 @@ bool TextureCooker::Cook(CookContext* ctx)
     // write texture resource
     TextureResource resource;
     resource.format = compressed_format;
-    resource.mips_count = 1;
+    resource.mips_count = uncompressed->mip_count;
     resource.data_size = compressed_data.size();
     resource.height = decoder->get_height();
     resource.width = decoder->get_width();

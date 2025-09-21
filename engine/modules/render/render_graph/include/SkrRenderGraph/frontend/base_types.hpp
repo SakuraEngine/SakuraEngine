@@ -252,7 +252,7 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         friend class TextureReadEdge;
         ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
         ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
-        ShaderReadHandle dimension(ECGPUTextureDimension dim) const;
+        ShaderReadHandle read_cube(uint32_t base, uint32_t count) const;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
         ShaderReadHandle(const HandleStorage _this,
@@ -264,7 +264,6 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         uint32_t mip_count = 1;
         uint32_t array_base = 0;
         uint32_t array_count = 1;
-        ECGPUTextureDimension dim = CGPU_TEXTURE_DIMENSION_2D;
     };
 
     struct SKR_RENDER_GRAPH_API ShaderWriteHandle {
@@ -273,6 +272,7 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         friend class TextureRenderEdge;
         ShaderWriteHandle write_mip(uint32_t mip_level) const;
         ShaderWriteHandle write_array(uint32_t base, uint32_t count) const;
+        ShaderWriteHandle write_cube(uint32_t base, uint32_t count) const;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
 
         ShaderWriteHandle(const HandleStorage _this);            
@@ -303,10 +303,16 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
         friend class RenderGraph;
         friend class TextureReadWriteEdge;
         inline operator ObjectHandle<EObjectType::Texture>() const { return ObjectHandle<EObjectType::Texture>(_this); }
-
+        ShaderReadWriteHandle readwrite_mip(uint32_t mip) const;
+        ShaderReadWriteHandle readwrite_array(uint32_t base, uint32_t count) const;
+        ShaderReadWriteHandle readwrite_cube(uint32_t base, uint32_t count) const;
         ShaderReadWriteHandle(const HandleStorage _this);
+
     protected:
         HandleStorage _this = kInvalidHandle;
+        uint32_t mip_level = 0;
+        uint32_t array_base = 0;
+        uint32_t array_count = 1;
     };
 
     inline operator HandleStorage() const { return handle; }
@@ -314,12 +320,17 @@ struct SKR_RENDER_GRAPH_API ObjectHandle<EObjectType::Texture> {
     inline operator ShaderReadHandle() const { return ShaderReadHandle(handle); }
     ShaderReadHandle read_mip(uint32_t base, uint32_t count) const;
     ShaderReadHandle read_array(uint32_t base, uint32_t count) const;
+    ShaderReadHandle read_cube(uint32_t base, uint32_t count) const;
     // write
     inline operator ShaderWriteHandle() const { return ShaderWriteHandle(handle); }
     ShaderWriteHandle write_mip(uint32_t mip_level) const;
     ShaderWriteHandle write_array(uint32_t base, uint32_t count) const;
+    ShaderWriteHandle write_cube(uint32_t base, uint32_t count) const;
     // readwrite
     inline operator ShaderReadWriteHandle() const { return ShaderReadWriteHandle(handle); }
+    ShaderReadWriteHandle readwrite_mip(uint32_t mip) const;
+    ShaderReadWriteHandle readwrite_array(uint32_t base, uint32_t count) const;
+    ShaderReadWriteHandle readwrite_cube(uint32_t base, uint32_t count) const;
     // ds
     inline operator DepthStencilHandle() const { return DepthStencilHandle(handle); }
     DepthStencilHandle clear_depth(float depth) const;
@@ -351,6 +362,7 @@ private:
 }; // ObjectHandle<EObjectType::Texture>
 using PassHandle = ObjectHandle<EObjectType::Pass>;
 using TextureHandle = ObjectHandle<EObjectType::Texture>;
+using BufferHandle = ObjectHandle<EObjectType::Buffer>;
 using TextureSRVHandle = TextureHandle::ShaderReadHandle;
 using TextureRTVHandle = TextureHandle::ShaderWriteHandle;
 using TextureDSVHandle = TextureHandle::DepthStencilHandle;
@@ -425,9 +437,9 @@ struct SKR_RENDER_GRAPH_API PassContext {
     PassNode* pass = nullptr;
     skr::render_graph::RenderGraphBackend* graph = nullptr;
     CGPUCommandBufferId cmd;
-    skr::span<std::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
-    skr::span<std::pair<TextureHandle, CGPUTextureId>> resolved_textures;
-    skr::span<std::pair<AccelerationStructureHandle, CGPUAccelerationStructureId>> resolved_acceleration_structures;
+    skr::Span<std::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
+    skr::Span<std::pair<TextureHandle, CGPUTextureId>> resolved_textures;
+    skr::Span<std::pair<AccelerationStructureHandle, CGPUAccelerationStructureId>> resolved_acceleration_structures;
 
     CGPUBufferId resolve(BufferHandle buffer_handle) const;
     CGPUTextureId resolve(TextureHandle tex_handle) const;

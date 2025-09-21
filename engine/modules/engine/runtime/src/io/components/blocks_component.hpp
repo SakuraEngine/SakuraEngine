@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/io/io.h"
+#include "SkrRuntime/io/io.h"
 #include "../components/component.hpp"
 
 namespace skr {
@@ -8,13 +8,13 @@ namespace io {
 template <>
 struct CID<struct BlocksComponent> 
 {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct BlocksComponent : public IORequestComponent
 {
     BlocksComponent(IIORequest* const request) SKR_NOEXCEPT;
     
-    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
+    skr::Span<skr_io_block_t> get_blocks() SKR_NOEXCEPT 
     { 
         return {blocks.data(), blocks.size()};
     }
@@ -32,13 +32,13 @@ struct BlocksComponent : public IORequestComponent
 template <>
 struct CID<struct CompressedBlocksComponent> 
 {
-    static constexpr skr_guid_t Get();
+    static constexpr GUID Get();
 };
 struct CompressedBlocksComponent : public IORequestComponent
 {
     CompressedBlocksComponent(IIORequest* const request) SKR_NOEXCEPT;
     
-    skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
+    skr::Span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT 
     { 
         SKR_UNIMPLEMENTED_FUNCTION();
         return {}; 
@@ -55,13 +55,13 @@ struct CompressedBlocksComponent : public IORequestComponent
     }
 };
 
-constexpr skr_guid_t CID<struct BlocksComponent>::Get()
+constexpr GUID CID<struct BlocksComponent>::Get()
 {
     using namespace skr::literals;
     return u8"5c630f52-ec5b-4e6d-8d52-6e7933bd588d"_guid;
 } 
 
-constexpr skr_guid_t CID<struct CompressedBlocksComponent>::Get()
+constexpr GUID CID<struct CompressedBlocksComponent>::Get()
 {
     using namespace skr::literals;
     return u8"c4554100-4810-4372-817a-2c72eebcb377"_guid;

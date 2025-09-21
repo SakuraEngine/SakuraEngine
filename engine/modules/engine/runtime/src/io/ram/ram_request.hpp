@@ -10,7 +10,7 @@ namespace io {
 template <>
 struct CID<struct RAMIOStatusComponent> 
 {
-    static constexpr skr_guid_t Get() { return CID<IOStatusComponent>::Get(); } 
+    static constexpr GUID Get() { return CID<IOStatusComponent>::Get(); } 
 };
 struct RAMIOStatusComponent final : public IOStatusComponent
 {

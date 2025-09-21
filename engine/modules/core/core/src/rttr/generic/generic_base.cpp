@@ -1,5 +1,5 @@
 #include <SkrRTTR/generic/generic_base.hpp>
-#include <SkrRTTR/rttr_traits.hpp>
+#include <SkrBase/type_info.hpp>
 
 namespace skr
 {

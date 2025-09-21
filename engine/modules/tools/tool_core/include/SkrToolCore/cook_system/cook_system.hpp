@@ -4,7 +4,8 @@
 #include "SkrCore/platform/vfs.h"
 #include "SkrContainersDef/function_ref.hpp"
 #include "SkrContainers/vector.hpp"
-#include "SkrRT/resource/resource_header.hpp"
+#include "SkrCore/serialize/binary_archive.hpp"
+#include "SkrRuntime/resource/resource_header.hpp"
 #include "SkrToolCore/cook_system/importer.hpp"
 #include "SkrToolCore/cook_system/cooker.hpp"
 #include "SkrToolCore/cook_system/asset_meta.hpp"
@@ -34,14 +35,14 @@ public:
 
     virtual URI AddSourceFile(const URI& path) = 0;
     virtual URI AddSourceFileAndLoad(skr::io::IRAMService* ioService, const URI& path, skr::BlobId& destination) = 0;
-    virtual skr::span<const URI> GetSourceFiles() const = 0;
+    virtual skr::Span<const URI> GetSourceFiles() const = 0;
 
     virtual void AddRuntimeDependency(ResourceID resource) = 0;
     virtual void AddSoftRuntimeDependency(ResourceID resource) = 0;
     virtual uint32_t AddStaticDependency(ResourceID resource, bool install) = 0;
 
-    virtual skr::span<const ResourceID> GetRuntimeDependencies() const = 0;
-    virtual skr::span<const SResourceHandle> GetStaticDependencies() const = 0;
+    virtual skr::Span<const ResourceID> GetRuntimeDependencies() const = 0;
+    virtual skr::Span<const SResourceHandle> GetStaticDependencies() const = 0;
     virtual const SResourceHandle& GetStaticDependency(uint32_t index) const = 0;
 
     virtual const skr::task::event_t& GetCounter() = 0;
@@ -62,52 +63,47 @@ public:
         //------save resource to disk
         auto resource_vfs = record->GetProject()->GetResourceVFS();
         auto filename = skr::format(u8"{}.bin", record->GetGUID());
-        auto file = skr_vfs_fopen(resource_vfs, filename.u8_str(),
-                                  SKR_FM_WRITE_BINARY, SKR_FILE_CREATION_ALWAYS_NEW);
+        auto file = skr_vfs_fopen(resource_vfs, filename.u8_str(), SKR_FM_WRITE_BINARY, SKR_FILE_CREATION_ALWAYS_NEW);
         if (!file)
         {
-            SKR_LOG_FMT_ERROR(u8"[ConfigCooker::Cook] failed to write cooked file for resource {}! path: {}",
-                record->GetGUID(),
-                record->GetURI().string());
+            SKR_LOG_FMT_ERROR(u8"[ConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", record->GetGUID(), record->GetURI().string());
             return false;
         }
         SKR_DEFER({ skr_vfs_fclose(file); });
         //------write resource object
-        skr::Vector<uint8_t> buffer;
-        skr::archive::BinVectorWriter writer{ &buffer };
-        SBinaryWriter archive(writer);
-        if (!skr::bin_write(&archive, resource))
+        skr::ArWriteBin writer;
+        writer.value(resource);
+        if (writer.is_failed()) [[unlikely]]
         {
-            SKR_LOG_FMT_ERROR(u8"[ConfigCooker::Cook] failed to serialize resource {}! path: {}",
+            SKR_LOG_FMT_ERROR(
+                u8"[ConfigCooker::Cook] failed to serialize resource {}! path: {}",
                 record->GetGUID(),
-                record->GetURI().string());
+                record->GetURI().string()
+            );
             return false;
         }
-        auto write_size = skr_vfs_fwrite(file, buffer.data(), 0, buffer.size());
-        if (write_size != buffer.size())
+        auto write_size = skr_vfs_fwrite(file, writer.buffer().data(), 0, writer.buffer().size());
+        if (write_size != writer.buffer().size())
         {
-            SKR_LOG_FMT_ERROR(u8"[ConfigCooker::Cook] failed to write cooked file for resource {}! path: {}",
-                record->GetGUID(),
-                record->GetURI().string());
+            SKR_LOG_FMT_ERROR(u8"[ConfigCooker::Cook] failed to write cooked file for resource {}! path: {}", record->GetGUID(), record->GetURI().string());
             return false;
         }
         return true;
     }
 
-    bool SaveExtra(skr::span<const uint8_t> data, const char8_t* filename)
+    bool SaveExtra(skr::Span<const uint8_t> data, const char8_t* filename)
     {
         auto record = GetAssetMetaFile();
         //------save extra file to disk
         auto resource_vfs = record->GetProject()->GetResourceVFS();
-        auto file = skr_vfs_fopen(resource_vfs, filename,
-                                  SKR_FM_WRITE_BINARY, SKR_FILE_CREATION_ALWAYS_NEW);
+        auto file = skr_vfs_fopen(resource_vfs, filename, SKR_FM_WRITE_BINARY, SKR_FILE_CREATION_ALWAYS_NEW);
         if (!file)
         {
             SKR_LOG_FMT_ERROR(u8"[CookContext::SaveExtra] failed to create file: {}", filename);
             return false;
         }
         SKR_DEFER({ skr_vfs_fclose(file); });
-        
+
         //------write data
         if (skr_vfs_fwrite(file, data.data(), 0, data.size()) != data.size())
         {
@@ -128,8 +124,7 @@ protected:
     virtual void* _Import() = 0;
     virtual void _Destroy(void*) = 0;
 
-    template <class S>
-    void WriteHeader(S& s, Cooker* cooker)
+    void WriteHeader(skr::ArchiveWrite& w, Cooker* cooker)
     {
         auto record = GetAssetMetaFile();
         SResourceHeader header;
@@ -138,7 +133,7 @@ protected:
         header.version = cooker->Version();
         const auto runtime_deps = GetRuntimeDependencies();
         header.dependencies.append(runtime_deps.data(), runtime_deps.size());
-        skr::bin_write(&s, header);
+        w.value(header);
     }
 };
 
@@ -160,7 +155,7 @@ public:
     virtual bool SaveAssetMeta(SProject* project, skr::RC<AssetMetaFile> asset) = 0;
     virtual skr::RC<AssetMetaFile> GetAssetMetaFile(AssetID asset) const = 0;
 
-    virtual void ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::span<skr::RC<AssetMetaFile>>)> f) = 0;
+    virtual void ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(skr::Span<skr::RC<AssetMetaFile>>)> f) = 0;
 
     virtual void RegisterCooker(bool isDefault, skr::GUID cooker, skr::GUID type, Cooker* instance) = 0;
     virtual void UnregisterCooker(skr::GUID type) = 0;

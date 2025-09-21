@@ -72,9 +72,9 @@ v8::Local<v8::Value> V8BTObject::to_v8(
     return bind_proxy->v8_object.Get(Isolate::GetCurrent());
 }
 bool V8BTObject::to_native(
-    void*                native_data,
+    void* native_data,
     v8::Local<v8::Value> v8_value,
-    bool                 is_init
+    bool is_init
 ) const
 {
     using namespace ::v8;
@@ -83,7 +83,7 @@ bool V8BTObject::to_native(
     auto context = isolate->GetCurrentContext();
 
     // get bind proxy
-    auto  v8_object  = v8_value->ToObject(context).ToLocalChecked();
+    auto v8_object = v8_value->ToObject(context).ToLocalChecked();
     auto* bind_proxy = get_bind_proxy<V8BPObject>(v8_object);
 
     // check bind proxy
@@ -129,7 +129,7 @@ bool V8BTObject::match_param(
     return base_on;
 }
 void V8BTObject::push_param_native(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp,
     v8::Local<v8::Value> v8_value
 ) const
@@ -143,14 +143,14 @@ void V8BTObject::push_param_native(
     to_native(native_data, v8_value, false);
 }
 void V8BTObject::push_param_native_pure_out(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
     SKR_UNREACHABLE_CODE();
 }
 v8::Local<v8::Value> V8BTObject::read_return_native(
-    DynamicStack&         stack,
+    DynamicStack& stack,
     const V8BTDataReturn& return_bind_tp
 ) const
 {
@@ -159,7 +159,7 @@ v8::Local<v8::Value> V8BTObject::read_return_native(
     return to_v8(native_data);
 }
 v8::Local<v8::Value> V8BTObject::read_return_from_out_param(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -169,7 +169,7 @@ v8::Local<v8::Value> V8BTObject::read_return_from_out_param(
 
 // invoke v8 api
 v8::Local<v8::Value> V8BTObject::make_param_v8(
-    void*                native_data,
+    void* native_data,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -178,8 +178,8 @@ v8::Local<v8::Value> V8BTObject::make_param_v8(
 
 // field api
 v8::Local<v8::Value> V8BTObject::get_field(
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -188,8 +188,8 @@ v8::Local<v8::Value> V8BTObject::get_field(
 }
 void V8BTObject::set_field(
     v8::Local<v8::Value> v8_value,
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -204,7 +204,7 @@ v8::Local<v8::Value> V8BTObject::get_static_field(
     return to_v8(field_address);
 }
 void V8BTObject::set_static_field(
-    v8::Local<v8::Value>       v8_value,
+    v8::Local<v8::Value> v8_value,
     const V8BTDataStaticField& field_bind_tp
 ) const
 {
@@ -215,16 +215,16 @@ void V8BTObject::set_static_field(
 // check api
 void V8BTObject::solve_invoke_behaviour(
     const V8BTDataParam& param_bind_tp,
-    bool&                appare_in_return,
-    bool&                appare_in_param
+    bool& appare_in_return,
+    bool& appare_in_param
 ) const
 {
-    appare_in_param  = true;
+    appare_in_param = true;
     appare_in_return = false;
 }
 bool V8BTObject::check_param(
     const V8BTDataParam& param_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     switch (param_bind_tp.inout_flag)
@@ -242,34 +242,32 @@ bool V8BTObject::check_param(
 }
 bool V8BTObject::check_return(
     const V8BTDataReturn& return_bind_tp,
-    V8ErrorCache&         errors
+    V8ErrorCache& errors
 ) const
 {
     return _basic_type_check(return_bind_tp.modifiers, errors);
 }
 bool V8BTObject::check_field(
     const V8BTDataField& field_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     return _basic_type_check(field_bind_tp.modifiers, errors);
 }
 bool V8BTObject::check_static_field(
     const V8BTDataStaticField& field_bind_tp,
-    V8ErrorCache&              errors
+    V8ErrorCache& errors
 ) const
 {
     return _basic_type_check(field_bind_tp.modifiers, errors);
 }
 
 // v8 export
-bool V8BTObject::has_v8_export_obj(
-) const
+bool V8BTObject::has_v8_export_obj() const
 {
     return true;
 }
-v8::Local<v8::Value> V8BTObject::get_v8_export_obj(
-) const
+v8::Local<v8::Value> V8BTObject::get_v8_export_obj() const
 {
     using namespace ::v8;
 
@@ -312,13 +310,11 @@ void V8BTObject::dump_ts_def(
     });
     builder.$line(u8"}}");
 }
-String V8BTObject::get_ts_type_name(
-) const
+String V8BTObject::get_ts_type_name() const
 {
     return _rttr_type->name();
 }
-bool V8BTObject::ts_is_nullable(
-) const
+bool V8BTObject::ts_is_nullable() const
 {
     return true;
 }
@@ -339,8 +335,8 @@ V8BPObject* V8BTObject::_new_bind_proxy(void* address, v8::Local<v8::Object> sel
 {
     using namespace ::v8;
 
-    auto*       isolate = Isolate::GetCurrent();
-    auto        context = isolate->GetCurrentContext();
+    auto* isolate = Isolate::GetCurrent();
+    auto context = isolate->GetCurrentContext();
     HandleScope handle_scope(isolate);
 
     // get scriptble object
@@ -355,18 +351,18 @@ V8BPObject* V8BTObject::_new_bind_proxy(void* address, v8::Local<v8::Object> sel
 
     // make object
     Local<ObjectTemplate> instance_template = _v8_template.Get(isolate)->InstanceTemplate();
-    Local<Object>         object =
+    Local<Object> object =
         self.IsEmpty() ?
-                    instance_template->NewInstance(context).ToLocalChecked() :
-                    self;
+        instance_template->NewInstance(context).ToLocalChecked() :
+        self;
 
     // make bind proxy
     V8BPObject* bind_proxy = this->isolate()->create_bind_proxy<V8BPObject>();
-    bind_proxy->rttr_type  = _rttr_type;
-    bind_proxy->isolate    = this->isolate();
-    bind_proxy->bind_tp    = this;
-    bind_proxy->address    = address;
-    bind_proxy->object     = scriptble_object;
+    bind_proxy->rttr_type = _rttr_type;
+    bind_proxy->isolate = this->isolate();
+    bind_proxy->bind_tp = this;
+    bind_proxy->address = address;
+    bind_proxy->object = scriptble_object;
     bind_proxy->v8_object.Reset(isolate, object);
 
     // setup gc callback
@@ -426,7 +422,7 @@ void V8BTObject::_call_ctor(const ::v8::FunctionCallbackInfo<::v8::Value>& info)
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get user data

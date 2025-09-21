@@ -27,7 +27,7 @@ enum class EConsoleStyle : uint16_t
 };
 
 struct SKR_CORE_API LogConsoleSink : public LogSink {
-    LogConsoleSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
+    LogConsoleSink(GUID pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogConsoleSink() SKR_NOEXCEPT;
 
     virtual void set_style(LogLevel level, EConsoleStyle style) SKR_NOEXCEPT;
@@ -48,19 +48,19 @@ protected:
 };
 
 struct SKR_CORE_API LogANSIOutputSink : public LogConsoleSink {
-    LogANSIOutputSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
+    LogANSIOutputSink(GUID pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogANSIOutputSink() SKR_NOEXCEPT;
 };
 
 struct SKR_CORE_API LogConsoleWindowSink : public LogConsoleSink {
-    LogConsoleWindowSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
+    LogConsoleWindowSink(GUID pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogConsoleWindowSink() SKR_NOEXCEPT;
     void         sink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT override;
     virtual void flush() SKR_NOEXCEPT override;
 };
 
 struct SKR_CORE_API LogDebugOutputSink : public LogConsoleSink {
-    LogDebugOutputSink(skr_guid_t pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
+    LogDebugOutputSink(GUID pattern = LogConstants::kDefaultConsolePatternId) SKR_NOEXCEPT;
     virtual ~LogDebugOutputSink() SKR_NOEXCEPT;
     void         sink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT override;
     virtual void flush() SKR_NOEXCEPT override;

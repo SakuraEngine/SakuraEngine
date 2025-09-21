@@ -12,7 +12,8 @@ static constexpr GUID kKVPairGenericId = u8"bcce8d48-15c1-4b52-9c38-5fe7f934d63e
 namespace skr::container
 {
 template <typename K, typename V>
-struct KVPair {
+struct KVPair
+{
     K key   = {};
     V value = {};
 
@@ -55,7 +56,8 @@ struct KVPair {
 namespace skr
 {
 template <typename K, typename V>
-struct Swap<::skr::container::KVPair<K, V>> {
+struct Swap<::skr::container::KVPair<K, V>>
+{
     static void call(::skr::container::KVPair<K, V>& a, ::skr::container::KVPair<K, V>& b)
     {
         Swap<K>::call(a.key, b.key);
@@ -68,7 +70,8 @@ struct Swap<::skr::container::KVPair<K, V>> {
 namespace skr::memory
 {
 template <typename K, typename V>
-struct MemoryTraits<::skr::container::KVPair<K, V>, ::skr::container::KVPair<K, V>> {
+struct MemoryTraits<::skr::container::KVPair<K, V>, ::skr::container::KVPair<K, V>>
+{
     static constexpr bool use_ctor        = MemoryTraits<K>::use_ctor || MemoryTraits<V>::use_ctor;
     static constexpr bool use_dtor        = MemoryTraits<K>::use_dtor || MemoryTraits<V>::use_dtor;
     static constexpr bool use_copy        = MemoryTraits<K>::use_copy || MemoryTraits<V>::use_copy;

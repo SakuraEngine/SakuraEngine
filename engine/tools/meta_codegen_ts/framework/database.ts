@@ -602,7 +602,7 @@ export class Header {
     const reg_meta_path = /(.*?)\.(.*?)\.meta/g;
     return this.meta_path_relative.replace(
       reg_meta_path,
-      `$1.${suffix}.$2`,
+      `$1.${suffix}.generated.$2`,
     );
   }
 

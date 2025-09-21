@@ -11,8 +11,8 @@ namespace skr
 namespace logging
 {
 
-using LogPatternMap = skr::ParallelFlatHashMap<skr_guid_t, skr::UPtr<LogPattern>, skr::Hash<skr_guid_t>>;
-using LogSinkMap    = skr::ParallelFlatHashMap<skr_guid_t, skr::UPtr<LogSink>, skr::Hash<skr_guid_t>>;
+using LogPatternMap = skr::ParallelFlatHashMap<GUID, skr::UPtr<LogPattern>, skr::Hash<GUID>>;
+using LogSinkMap    = skr::ParallelFlatHashMap<GUID, skr::UPtr<LogSink>, skr::Hash<GUID>>;
 
 struct SKR_CORE_API LogManagerImpl : public LogManager 
 {
@@ -23,19 +23,19 @@ public:
     void FinalizeAsyncWorker() SKR_NOEXCEPT override;
     void FlushAllSinks() SKR_NOEXCEPT override;
 
-    skr_guid_t RegisterPattern(const char8_t* pattern) override;;
-    bool RegisterPattern(skr_guid_t guid, const char8_t* pattern) override;
+    GUID RegisterPattern(const char8_t* pattern) override;;
+    bool RegisterPattern(GUID guid, const char8_t* pattern) override;
 
 public:
     void Initialize() SKR_NOEXCEPT;
     LogWorker* TryGetWorker() SKR_NOEXCEPT;
     Logger*    GetDefaultLogger() SKR_NOEXCEPT;
 
-    LogPattern* QueryPattern(skr_guid_t guid);
+    LogPattern* QueryPattern(GUID guid);
 
-    skr_guid_t RegisterSink(skr::UPtr<LogSink> sink) override;
-    bool       RegisterSink(skr_guid_t guid, skr::UPtr<LogSink> sink) override;
-    LogSink*   QuerySink(skr_guid_t guid) override;
+    GUID RegisterSink(skr::UPtr<LogSink> sink) override;
+    bool       RegisterSink(GUID guid, skr::UPtr<LogSink> sink) override;
+    LogSink*   QuerySink(GUID guid) override;
 
     void PatternAndSink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT;
     bool ShouldBacktrace(const LogEvent& event) SKR_NOEXCEPT;

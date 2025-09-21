@@ -5,7 +5,8 @@
 
 namespace skr
 {
-struct V8VirtualModuleNode {
+struct V8VirtualModuleNode
+{
     enum class EKind
     {
         Namespace,
@@ -35,10 +36,10 @@ struct V8VirtualModuleNode {
     }
 
     // getter
-    inline String          name() const { return _name; }
-    inline EKind           kind() const { return _kind; }
-    inline bool            is_namespace() const { return _kind == EKind::Namespace; }
-    inline bool            is_bind_tp() const { return _kind == EKind::BindTp; }
+    inline String name() const { return _name; }
+    inline EKind kind() const { return _kind; }
+    inline bool is_namespace() const { return _kind == EKind::Namespace; }
+    inline bool is_bind_tp() const { return _kind == EKind::BindTp; }
     inline V8BindTemplate* bind_tp() const
     {
         SKR_ASSERT(is_bind_tp());
@@ -83,7 +84,7 @@ struct V8VirtualModuleNode {
 
     // export
     v8::Local<v8::Value> export_v8(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context
     )
     {
@@ -101,9 +102,9 @@ struct V8VirtualModuleNode {
         }
     }
     void export_ns_to(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context,
-        v8::Local<v8::Object>  target
+        v8::Local<v8::Object> target
     )
     {
         SKR_ASSERT(is_namespace());
@@ -120,9 +121,9 @@ struct V8VirtualModuleNode {
         }
     }
     void erase_export(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context,
-        v8::Local<v8::Object>  target
+        v8::Local<v8::Object> target
     )
     {
         SKR_ASSERT(is_namespace());
@@ -139,18 +140,19 @@ struct V8VirtualModuleNode {
     }
 
 private:
-    String                            _name     = {};
-    EKind                             _kind     = {};
-    V8BindTemplate*                   _bind_tp  = nullptr;
+    String _name = {};
+    EKind _kind = {};
+    V8BindTemplate* _bind_tp = nullptr;
     Map<String, V8VirtualModuleNode*> _children = {};
 };
 
-struct SKR_V8_API V8VirtualModule {
+struct SKR_V8_API V8VirtualModule
+{
     // getter & setter
     inline const V8VirtualModuleNode& root_node() const { return _root_node; }
-    inline bool                       is_empty() const { return _root_node.children().is_empty(); }
-    inline V8Isolate*                 isolate() const { return _isolate; }
-    inline void                       set_isolate(V8Isolate* isolate) { _isolate = isolate; }
+    inline bool is_empty() const { return _root_node.children().is_empty(); }
+    inline V8Isolate* isolate() const { return _isolate; }
+    inline void set_isolate(V8Isolate* isolate) { _isolate = isolate; }
 
     // mapping
     inline String bind_tp_to_ns(const V8BindTemplate* bind_tp) const
@@ -178,24 +180,24 @@ struct SKR_V8_API V8VirtualModule {
 
     // export
     v8::Local<v8::Value> export_v8(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context
     )
     {
         return _root_node.export_v8(isolate, context);
     }
     void export_v8_to(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context,
-        v8::Local<v8::Object>  target
+        v8::Local<v8::Object> target
     )
     {
         _root_node.export_ns_to(isolate, context, target);
     }
     void erase_export(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context,
-        v8::Local<v8::Object>  target
+        v8::Local<v8::Object> target
     )
     {
         _root_node.erase_export(isolate, context, target);
@@ -236,8 +238,8 @@ private:
     }
 
 private:
-    V8Isolate*                   _isolate       = nullptr;
-    V8VirtualModuleNode          _root_node     = { u8"Root" };
+    V8Isolate* _isolate = nullptr;
+    V8VirtualModuleNode _root_node = { u8"Root" };
     Map<String, V8BindTemplate*> _ns_to_bind_tp = {};
     Map<V8BindTemplate*, String> _bind_tp_to_ns = {};
 };

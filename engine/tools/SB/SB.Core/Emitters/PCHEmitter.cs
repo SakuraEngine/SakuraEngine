@@ -29,7 +29,7 @@ namespace SB
                     CreatePCH.Headers.AddRange(GlobMatcher.GetResultsInFullPath(Target.Directory));
                 }
 
-                Changed |= BS.CppCompileDepends(Target).OnChanged(Target.Name, PCHFile, "PCHEmitter.CreatePCH", (Depend depend) =>
+                Changed |= BuildDepends.Solve(Target).OnChanged(Target.Name, PCHFile, "PCHEmitter.CreatePCH", (Depend depend) =>
                 {
                     var PCHIncludes = String.Join("\n", CreatePCH.Headers.Select(H => $"#include \"{H}\""));
                     var PCHFileContent = $"""
@@ -48,7 +48,7 @@ namespace SB
                     depend.ExternalFiles.Add(PCHFile);
                 }, CreatePCH.Headers, null);
 
-                var SourceDependencies = Path.Combine(Target.GetStorePath(BuildSystem.DepsStore), BuildSystem.GetUniqueTempFileName(PCHFile, Target.Name + this.Name, "source.deps.json"));
+                var SourceDependencies = Path.Combine(Target.GetBuildSrcDepsDir(), BuildSystem.GetUniqueTempFileName(PCHFile, Target.Name + this.Name, "source.deps.json"));
                 var PCHArguments = Target.Arguments;
                 if (Mode == PCHMode.Shared)
                 {
@@ -86,8 +86,8 @@ namespace SB
         // 2025/3/24
         // under clang-cl, these two files must locate in the same directory
         // because the compiler has bugs for windows path
-        internal static string GetPCHFile(Target Target, PCHMode Mode) => Path.Combine(Target.GetStorePath(BS.GeneratedSourceStore), $"{Mode}PCH.h");
-        internal static string GetPCHASTFile(Target Target, PCHMode Mode) => Path.Combine(Target.GetStorePath(BS.GeneratedSourceStore), $"{Mode}PCH.pch");
+        internal static string GetPCHFile(Target Target, PCHMode Mode) => Path.Combine(Target.GetBuildGenDir(), $"{Mode}PCH.h");
+        internal static string GetPCHASTFile(Target Target, PCHMode Mode) => Path.Combine(Target.GetBuildGenDir(), $"{Mode}PCH.pch");
         internal static bool ProvideSharedPCH(Target Target) => Target.GetAttribute<CreateSharedPCHAttribute>() is not null;
         private IToolchain Toolchain;
     }

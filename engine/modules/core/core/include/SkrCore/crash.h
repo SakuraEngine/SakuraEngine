@@ -109,7 +109,7 @@ protected:
     void(__cdecl* prevSigILL)(int);  // Previous SIGILL handler
     void(__cdecl* prevSigSEGV)(int); // Previous illegal storage access handler
 
-    skr_guid_t guid;
+    skr::GUID guid;
 
     skr::Vector<CallbackWrapper> callbacks;
     SMutex                       callbacks_lock;

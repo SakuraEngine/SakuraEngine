@@ -1,4 +1,4 @@
-#include "CppSL/AST.hpp"
+#include "CppSL/CppSLAST.hpp"
 #include "CppSL/Decl.hpp"
 #include <format>
 
@@ -242,6 +242,12 @@ ByteBufferTypeDecl::ByteBufferTypeDecl(AST& ast, BufferFlags flags)
 
 }
 
+TexelBufferTypeDecl::TexelBufferTypeDecl(AST& ast, const TypeDecl* element, BufferFlags flags)
+    : BufferTypeDecl(ast, std::format(L"{}TexelBuffer<{}>", has_flag(flags, BufferFlags::ReadWrite) ? L"RW" : L"", element->name()), flags), _element(element)
+{
+
+}
+
 StructuredBufferTypeDecl::StructuredBufferTypeDecl(AST& ast, const TypeDecl* element, BufferFlags flags)
     : BufferTypeDecl(ast, std::format(L"{}StructuredBuffer<{}>", has_flag(flags, BufferFlags::ReadWrite) ? L"RW" : L"", element->name()), flags), _element(element)
 {
@@ -254,16 +260,28 @@ TextureTypeDecl::TextureTypeDecl(AST& ast, const String& name, const TypeDecl* e
 
 }
 
+Texture1DTypeDecl::Texture1DTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags)
+    : TextureTypeDecl(ast, std::format(L"{}Texture1D<{}>", has_flag(flags, TextureFlags::ReadWrite) ? L"RW" : L"", element->name()), element, flags)
+{
+
+}
+
 Texture2DTypeDecl::Texture2DTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags)
     : TextureTypeDecl(ast, std::format(L"{}Texture2D<{}>", has_flag(flags, TextureFlags::ReadWrite) ? L"RW" : L"", element->name()), element, flags)
 {
 
 }
 
+Texture1DArrayTypeDecl::Texture1DArrayTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags)
+    : TextureTypeDecl(ast, std::format(L"{}Texture1DArray<{}>", has_flag(flags, TextureFlags::ReadWrite) ? L"RW" : L"", element->name()), element, flags)
+{   
+    _is_array = true;
+}
+
 Texture2DArrayTypeDecl::Texture2DArrayTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags)
     : TextureTypeDecl(ast, std::format(L"{}Texture2DArray<{}>", has_flag(flags, TextureFlags::ReadWrite) ? L"RW" : L"", element->name()), element, flags)
 {
-
+    _is_array = true;
 }
 
 Texture3DTypeDecl::Texture3DTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags)
@@ -275,7 +293,7 @@ Texture3DTypeDecl::Texture3DTypeDecl(AST& ast, const TypeDecl* element, TextureF
 Texture3DArrayTypeDecl::Texture3DArrayTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags)
     : TextureTypeDecl(ast, std::format(L"{}Texture3DArray<{}>", has_flag(flags, TextureFlags::ReadWrite) ? L"RW" : L"", element->name()), element, flags)
 {
-
+    _is_array = true;
 }
 
 TextureCubeTypeDecl::TextureCubeTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags)

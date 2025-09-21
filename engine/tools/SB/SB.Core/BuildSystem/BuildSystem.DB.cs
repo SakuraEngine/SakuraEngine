@@ -26,7 +26,7 @@ namespace SB
 
         public static PooledDbContextFactory<TargetDbContext> Factory = new(
             new DbContextOptionsBuilder<TargetDbContext>()
-                .UseSqlite($"Data Source={Path.Join(BS.TempPath, "targets.db")}")
+                .UseSqlite($"Data Source={Path.Join(BuildDirs.TempDir, "targets.db")}")
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                 .Options
         );

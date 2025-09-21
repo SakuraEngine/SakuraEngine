@@ -17,7 +17,8 @@ public static class Marl
                     .TargetType(TargetType.Objects)
                     .Depend(Visibility.Public, "SkrCore")
                     .IncludeDirs(Visibility.Public, "include")
-                    .AddCppFiles("src/build.*.cpp");
+                    .AddCppFiles("src/build.*.cpp")
+                    .Clang_CXFlags(Visibility.Private, "-Wno-deprecated-declarations");
 
                 if (BuildSystem.TargetOS != OSPlatform.Windows)
                 {

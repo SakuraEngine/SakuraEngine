@@ -14,7 +14,7 @@ public class GraphCommand : CommandBase
     public string ColorScheme { get; set; } = "type";
 
     [Cli.Option(Name = "output", ShortName = 'o', Help = "Output directory for graph files", IsRequired = false)]
-    public string OutputDirectory { get; set; } = ".sb/graphs";
+    public string OutputDirectory { get; set; } = Path.Combine(BuildDirs.TempDir, "graphs");
 
     [Cli.Option(Name = "external", ShortName = 'e', Help = "Include external dependencies", IsRequired = false)]
     public bool IncludeExternalDeps { get; set; } = false;

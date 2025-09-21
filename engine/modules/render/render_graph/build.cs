@@ -9,7 +9,7 @@ public static class SkrRenderGraph
     {
         Engine.Module("SkrRenderGraph")
             .EnableUnityBuild()
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .IncludeDirs(Visibility.Public, "include")
             .AddCppFiles("src/*.cpp", "src/frontend/*.cpp")
             .AddCppFiles(new CFamilyFileOptions { UnityGroup = "backend" }, "src/backend/*.cpp")

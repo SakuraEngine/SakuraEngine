@@ -13,7 +13,7 @@ namespace SB
             Stopwatch sw = new();
             sw.Start();
 
-            var GenSourcePath = Target.GetStorePath(BuildSystem.GeneratedSourceStore);
+            var GenSourcePath = Target.GetBuildGenDir();
             var GenFileName = Path.Combine(GenSourcePath, "module.configure.cpp");
             Target.AddCppFiles(GenFileName);
             var ModuleDependencies = Target.Dependencies.Where((Dependency) => BuildSystem.GetTarget(Dependency)!.GetAttribute<ModuleAttribute>() is not null);
@@ -21,7 +21,7 @@ namespace SB
             DepArgs.Add(Target.Name);
             DepArgs.Add(Target.GetTargetType()?.ToString() ?? "none");
             DepArgs.Add(GenFileName);
-            bool Changed = Engine.CodegenDepend.OnChanged(Target.Name, "GeneratedModuleInfo", Name, (Depend depend) =>
+            bool Changed = EngineDepends.Codegen.OnChanged(Target.Name, "GeneratedModuleInfo", Name, (Depend depend) =>
             {
                 string DependenciesArray = "[" + String.Join(",", ModuleDependencies.Select(D => FormatDependency(D))) + "]";
                 string JSON = $$"""

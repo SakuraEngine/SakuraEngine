@@ -7,19 +7,22 @@ namespace skr
 {
 
 template <typename T>
-struct ExpectedValue {
+struct ExpectedValue
+{
     using type                    = T;
     static constexpr auto is_void = false;
 };
 
 template <>
-struct ExpectedValue<void> {
+struct ExpectedValue<void>
+{
     using type                    = bool;
     static constexpr auto is_void = true;
 };
 
 template <typename E, typename T = void>
-struct SKR_STATIC_API Expected {
+struct SKR_STATIC_API Expected
+{
 public:
     using ValueType = typename ExpectedValue<T>::type;
     static_assert(!std::is_same_v<E, T>, "E and T cannot be the same type");
@@ -100,23 +103,23 @@ inline Expected<E, T>::Expected(ValueType&& value) SKR_NOEXCEPT requires(!Expect
 
 template <typename E, typename T>
 inline Expected<E, T>::Expected(const E& error) SKR_NOEXCEPT
-    : _error(error),
-      _hasValue(false),
-      _unhandled(true)
+    : _error(error)
+    , _hasValue(false)
+    , _unhandled(true)
 {
 }
 
 template <typename E, typename T>
 inline Expected<E, T>::Expected(E&& error) SKR_NOEXCEPT
-    : _error(std::move(error)),
-      _hasValue(false),
-      _unhandled(true)
+    : _error(std::move(error))
+    , _hasValue(false)
+    , _unhandled(true)
 {
 }
 template <typename E, typename T>
 inline Expected<E, T>::Expected(Expected&& other) SKR_NOEXCEPT
-    : _hasValue(other._hasValue),
-      _unhandled(other._unhandled)
+    : _hasValue(other._hasValue)
+    , _unhandled(other._unhandled)
 {
     other._unhandled = false;
     if (_hasValue)
@@ -292,7 +295,7 @@ Optional<E> Expected<E, T>::take_error()
 } // namespace skr
 
 #define SKR_EXPECTED_ENSURE(__EXPR) \
-    if (auto zz_expected = (__EXPR); !zz_expected.has_value()) return zz_expected;
+    if (auto zz_expected = (__EXPR); !zz_expected.has_value()) [[unlikely]] return zz_expected;
 
 #define SKR_EXPECTED_CHECK(__EXPR, __RET) \
-    if (!(__EXPR).has_value()) return __RET;
+    if (!(__EXPR).has_value()) [[unlikely]] return __RET;

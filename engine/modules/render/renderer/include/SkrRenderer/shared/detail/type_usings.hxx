@@ -3,8 +3,7 @@
 #include <std/types/matrix.hxx>
 #include <std/resources/buffer.hxx>
 
-#define sreflect_struct(...) struct 
-#define sreflect_managed_component(...) struct 
+#define sattr(...)
 
 namespace skr
 {
@@ -28,7 +27,7 @@ using uint32_t = uint;
 using uint64_t = uint64;
 using AddressType = uint32_t;
 
-template <class T, size_t N>
+template <class T, uint64_t N>
 using gpu_array = Array<T, N>;
 
 } // namespace skr::gpu

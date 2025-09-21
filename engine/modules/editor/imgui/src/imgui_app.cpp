@@ -541,7 +541,7 @@ inline static Vector<uint8_t> _read_shader_bytes(
     Vector<uint8_t> result;
 
     // combine path
-    skr::Path shader_path{u8"../resources/shaders/"};
+    skr::Path shader_path{u8"./../resources/shaders/"};
     shader_path /= virtual_path.c_str();
     skr::String ext;
     switch (backend)
@@ -606,10 +606,8 @@ void ImGuiApp::create_pipeline()
 
     // fill desc
     ppl_shaders[0].library = vs_lib;
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = SKR_UTF8("vs");
     ppl_shaders[1].library = fs_lib;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = SKR_UTF8("fs");
 
     // load static sampler
@@ -817,7 +815,7 @@ void ImGuiApp::add_render_pass(
                 .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
                 .with_flags(CGPU_BUFFER_FLAG_PERSISTENT_MAP_BIT)
                 .prefer_on_device()
-                .as_uniform_buffer();
+                .as_constant_buffer();
         });
 
     // import textures
@@ -829,9 +827,7 @@ void ImGuiApp::add_render_pass(
             font_texture = render_graph->create_texture(
                 [=](rg::RenderGraph& g, rg::TextureBuilder& builder) {
                     SkrZoneScopedN("ConstructTextureHandle");
-
                     auto tex_data = (ImGuiRendererBackendRGTextureData*)tex->BackendUserData;
-
                     String name = skr::format(u8"imgui_font-{}", tex->UniqueID);
                     builder.set_name((const char8_t*)name.c_str())
                         .import(tex_data->texture, CGPU_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);

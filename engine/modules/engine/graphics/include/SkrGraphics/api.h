@@ -49,10 +49,12 @@ DEFINE_CGPU_OBJECT(CGPURenderPassEncoder)
 DEFINE_CGPU_OBJECT(CGPUComputePassEncoder)
 DEFINE_CGPU_OBJECT(CGPURenderPipeline)
 DEFINE_CGPU_OBJECT(CGPUComputePipeline)
+DEFINE_CGPU_OBJECT(CGPURayPipeline)
 DEFINE_CGPU_OBJECT(CGPUShaderReflection)
 DEFINE_CGPU_OBJECT(CGPUPipelineReflection)
 DEFINE_CGPU_OBJECT(CGPUAccelerationStructure)
 
+typedef struct CGPUDispatchRaysDescriptor CGPUDispatchRaysDescriptor;
 typedef struct SkrDStorageQueueDescriptor CGPUDStorageQueueDescriptor;
 typedef struct SkrDStorageFileInfo CGPUDStorageFileInfo;
 
@@ -230,6 +232,16 @@ typedef CGPUMemoryPoolId (*CGPUProcCreateMemoryPool)(CGPUDeviceId, const struct 
 CGPU_API void cgpu_free_memory_pool(CGPUMemoryPoolId pool);
 typedef void (*CGPUProcFreeMemoryPool)(CGPUMemoryPoolId pool);
 
+// Ray Pipeline
+CGPU_API CGPURayPipelineId cgpu_create_ray_pipeline(CGPUDeviceId device, const struct CGPURayPipelineDescriptor* desc);
+typedef CGPURayPipelineId (*CGPUProcCreateRayPipeline)(CGPUDeviceId device, const struct CGPURayPipelineDescriptor* desc);
+CGPU_API void cgpu_compute_encoder_dispatch_rays(CGPUComputePassEncoderId encoder, const struct CGPUDispatchRaysDescriptor* desc);
+typedef void (*CGPUProcComputeEncoderDispatchRays)(CGPUComputePassEncoderId encoder, const struct CGPUDispatchRaysDescriptor* desc);
+CGPU_API void cgpu_compute_encoder_bind_ray_pipeline(CGPUComputePassEncoderId encoder, CGPURayPipelineId pipeline);
+typedef void (*CGPUProcComputeEncoderBindRayPipeline)(CGPUComputePassEncoderId encoder, CGPURayPipelineId pipeline);
+CGPU_API void cgpu_free_ray_pipeline(CGPURayPipelineId pipeline);
+typedef void (*CGPUProcFreeRayPipeline)(CGPURayPipelineId pipeline);
+
 // Descriptor Set/Buffer
 CGPU_API CGPUDescriptorSetId cgpu_create_descriptor_set(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
 typedef CGPUDescriptorSetId (*CGPUProcCreateDescriptorSet)(CGPUDeviceId device, const struct CGPUDescriptorSetDescriptor* desc);
@@ -370,6 +382,8 @@ CGPU_API void cgpu_compute_encoder_bind_descriptor_buffer(CGPUComputePassEncoder
 typedef void (*CGPUProcComputeEncoderBindDescriptorBuffer)(CGPUComputePassEncoderId encoder, CGPUDescriptorBufferId args, const char8_t* set_name);
 CGPU_API void cgpu_compute_encoder_bind_pipeline(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
 typedef void (*CGPUProcComputeEncoderBindPipeline)(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
+CGPU_API void cgpu_compute_encoder_set_threadgroup_size(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
+typedef void (*CGPUProcComputeEncoderSetThreadgroupSize)(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 CGPU_API void cgpu_compute_encoder_dispatch(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 typedef void (*CGPUProcComputeEncoderDispatch)(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 CGPU_API void cgpu_cmd_end_compute_pass(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
@@ -598,6 +612,12 @@ typedef struct CGPUProcTable {
     const CGPUProcCreateQueryPool create_query_pool;
     const CGPUProcFreeQueryPool free_query_pool;
 
+    // Ray Pipeline
+    const CGPUProcCreateRayPipeline create_ray_pipeline;
+    const CGPUProcComputeEncoderDispatchRays dispatch_rays;
+    const CGPUProcComputeEncoderBindRayPipeline bind_ray_pipeline;
+    const CGPUProcFreeRayPipeline free_ray_pipeline;
+
     const CGPUProcCreateDescriptorSet create_descriptor_set;
     const CGPUProcUpdateDescriptorSet update_descriptor_set;
     const CGPUProcFreeDescriptorSet free_descriptor_set;
@@ -678,6 +698,7 @@ typedef struct CGPUProcTable {
     const CGPUProcComputeEncoderBindDescriptorBuffer compute_encoder_bind_descriptor_buffer;
     const CGPUProcComputeEncoderPushConstants compute_encoder_push_constants;
     const CGPUProcComputeEncoderBindPipeline compute_encoder_bind_pipeline;
+    const CGPUProcComputeEncoderSetThreadgroupSize compute_encoder_set_threadgroup_size;
     const CGPUProcComputeEncoderDispatch compute_encoder_dispatch;
     const CGPUProcCmdEndComputePass cmd_end_compute_pass;
 
@@ -1188,8 +1209,8 @@ typedef struct CGPUBufferBarrier {
     ECGPUQueueType queue_type;
     uint8_t queue_acquire;
     uint8_t queue_release;
-    uint8_t d3d12_begin_only;
-    uint8_t d3d12_end_only;
+    uint8_t begin_only;
+    uint8_t end_only;
 } CGPUBufferBarrier;
 
 typedef struct CGPUTextureBarrier {
@@ -1204,8 +1225,8 @@ typedef struct CGPUTextureBarrier {
     /// Following values are ignored if subresource_barrier is false
     uint8_t mip_level;
     uint16_t array_layer;
-    uint8_t d3d12_begin_only;
-    uint8_t d3d12_end_only;
+    uint8_t begin_only;
+    uint8_t end_only;
 } CGPUTextureBarrier;
 
 typedef struct CGPUResourceBarrierDescriptor {
@@ -1234,11 +1255,6 @@ typedef struct CGPUCommandBufferDescriptor {
 typedef struct CGPUShaderEntryDescriptor {
     CGPUShaderLibraryId library;
     const char8_t* entry;
-    ECGPUShaderStage stage;
-    // ++ constant_specialization
-    const CGPUConstantSpecialization* constants;
-    uint32_t num_constants;
-    // -- constant_specialization
 } CGPUShaderEntryDescriptor;
 
 typedef struct CGPUSwapChainDescriptor {
@@ -1327,6 +1343,29 @@ typedef struct CGPUDescriptorSetDescriptor {
     CGPURootSignatureId root_signature;
     uint32_t set_index;
 } CGPUDescriptorSetDescriptor;
+
+typedef struct CGPURayPipelineHitGroup {
+    const char8_t* name;
+    CGPUShaderEntryDescriptor closest;
+    CGPUShaderEntryDescriptor anyhit;
+    CGPUShaderEntryDescriptor intersection;
+} CGPURayPipelineHitGroup;
+
+typedef struct CGPURayPipelineDescriptor {
+    const char8_t* name;
+    CGPUShaderEntryDescriptor raygen;
+    CGPUShaderEntryDescriptor miss;
+    const CGPURayPipelineHitGroup* hit_groups;
+    uint32_t hit_groups_count;
+    uint32_t max_payload_size;
+    uint32_t max_attribute_size;
+    uint32_t max_recursion_depth;
+    const CGPUSamplerId* static_samplers;
+    const char8_t* const* static_sampler_names;
+    uint32_t static_sampler_count;
+    const char8_t* const* push_constant_names;
+    uint32_t push_constant_count;
+} CGPURayPipelineDescriptor;
 
 typedef struct CGPUComputePipelineDescriptor {
     CGPURootSignatureId root_signature;
@@ -1469,6 +1508,7 @@ typedef struct CGPURootSignature {
     uint32_t push_constant_count;
     CGPUShaderResource* static_samplers;
     uint32_t static_sampler_count;
+    CGPUShaderStages shader_stages;
     ECGPUPipelineType pipeline_type;
     CGPURootSignaturePoolId pool;
     CGPURootSignatureId pool_sig;
@@ -1476,7 +1516,7 @@ typedef struct CGPURootSignature {
 
 typedef struct CGPUDescriptorBuffer {
     CGPUDeviceId device;
-    const uint32_t size;
+    uint32_t size;
 } CGPUDescriptorBuffer;
 
 typedef struct CGPUDescriptorSet {
@@ -1609,8 +1649,6 @@ typedef struct CGPUTextureDescriptor {
     ECGPUResourceState start_state;
     /// Usages
     CGPUTextureUsages usages;
-    /// Memory Aliasing
-    uint32_t is_restrict_dedicated;
     /// Memory pool to allocate from (optional)
     CGPUMemoryPoolId memory_pool;
 } CGPUTextureDescriptor;
@@ -1670,7 +1708,7 @@ typedef struct CGPUTextureInfo {
     uint64_t height;
     uint64_t depth;
     uint32_t mip_levels;
-    uint32_t array_size_minus_one;
+    uint32_t array_size;
     uint64_t size_in_bytes;
     ECGPUFormat format;
     ECGPUSampleCount sample_count;
@@ -1679,8 +1717,6 @@ typedef struct CGPUTextureInfo {
     uint32_t node_index;
     uint8_t owns_image;
     uint8_t is_cube;
-    uint8_t is_allocation_dedicated;
-    uint8_t is_restrict_dedicated;
     uint8_t is_aliasing;
     uint8_t is_tiled;
     uint8_t is_imported;
@@ -1751,6 +1787,18 @@ typedef struct CGPUDescriptorBufferElement {
 } CGPUDescriptorBufferElement;
 
 #pragma endregion DESCRIPTORS
+
+typedef struct CGPURayPipeline {
+    CGPUDeviceId device;
+    CGPURootSignatureId root_signature;
+} CGPURayPipeline;
+
+typedef struct CGPUDispatchRaysDescriptor {
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+    CGPURayPipelineId pipeline;
+} CGPUDispatchRaysDescriptor;
 
 #define CGPU_SINGLE_GPU_NODE_COUNT 1
 #define CGPU_SINGLE_GPU_NODE_MASK 1

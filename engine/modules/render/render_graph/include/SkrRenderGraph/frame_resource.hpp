@@ -20,14 +20,14 @@ public:
     FrameResource& operator=(FrameResource&&) = default;
     
     // 获取当前帧的资源
-    T& get(RenderGraph* graph) SKR_NOEXCEPT
+    T& get(const RenderGraph* graph) SKR_NOEXCEPT
     {
         const uint64_t frame_index = graph->get_frame_index();
         const uint32_t index = static_cast<uint32_t>(frame_index % max_frames_in_flight());
         return resources[index];
     }
     
-    const T& get(RenderGraph* graph) const SKR_NOEXCEPT
+    const T& get(const RenderGraph* graph) const SKR_NOEXCEPT
     {
         const uint64_t frame_index = graph->get_frame_index();
         const uint32_t index = static_cast<uint32_t>(frame_index % max_frames_in_flight());
@@ -35,14 +35,14 @@ public:
     }
     
     // 获取指定帧偏移的资源 (0 = 当前帧, 1 = 上一帧, etc.)
-    T& get_frame_offset(RenderGraph* graph, uint32_t frame_offset) SKR_NOEXCEPT
+    T& get_frame_offset(const RenderGraph* graph, uint32_t frame_offset) SKR_NOEXCEPT
     {
         const uint64_t frame_index = graph->get_frame_index();
         const uint32_t index = static_cast<uint32_t>((frame_index + max_frames_in_flight() - frame_offset) % max_frames_in_flight());
         return resources[index];
     }
     
-    const T& get_frame_offset(RenderGraph* graph, uint32_t frame_offset) const SKR_NOEXCEPT
+    const T& get_frame_offset(const RenderGraph* graph, uint32_t frame_offset) const SKR_NOEXCEPT
     {
         const uint64_t frame_index = graph->get_frame_index();
         const uint32_t index = static_cast<uint32_t>((frame_index + max_frames_in_flight() - frame_offset) % max_frames_in_flight());

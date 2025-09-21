@@ -40,10 +40,13 @@ concept StlStyleIterator = requires(It t) {
 
 // Cursor -> Range
 template <typename TCursor, bool kInverse>
-struct CursorRange {
-    struct EndType {
+struct CursorRange
+{
+    struct EndType
+    {
     };
-    struct Adaptor {
+    struct Adaptor
+    {
         TCursor cursor;
 
         // compare
@@ -98,7 +101,8 @@ private:
 
 // Cursor -> Iter
 template <typename TCursor, bool kInverse>
-struct CursorIter : protected TCursor {
+struct CursorIter : protected TCursor
+{
     // ctor & copy & move & assign & move assign
     inline CursorIter(TCursor&& rhs)
         : TCursor(std::move(rhs))
@@ -159,7 +163,8 @@ struct CursorIter : protected TCursor {
 
 // Cursor -> Stl style iter
 template <typename TCursor, bool kInverse>
-struct CursorIterStl : protected TCursor {
+struct CursorIterStl : protected TCursor
+{
     // ctor & copy & move & assign & move assign
     inline CursorIterStl(TCursor&& rhs)
         : TCursor(std::move(rhs))

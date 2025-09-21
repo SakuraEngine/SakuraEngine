@@ -626,9 +626,6 @@ public class CommandParser
     /// <returns>被成功 Invoke 的 Command</returns>
     public Command? Invoke(IEnumerable<string> args)
     {
-        // skip program name
-        args = args.Skip(1);
-
         // parse args
         ParseContext ctx = new ParseContext()
         {

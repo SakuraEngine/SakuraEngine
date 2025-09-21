@@ -10,7 +10,8 @@ namespace logging
 {
 
 struct Logger;
-struct LogWorker : public AsyncService {
+struct LogWorker : public AsyncService
+{
     LogWorker(const ServiceThreadDesc& desc) SKR_NOEXCEPT;
     ~LogWorker() SKR_NOEXCEPT;
 
@@ -37,9 +38,9 @@ protected:
     void patternAndSink(const LogElement& e) SKR_NOEXCEPT;
 
     friend struct Logger;
-    skr::SP<LogQueue>    queue_;
+    skr::SP<LogQueue> queue_ = nullptr;
     skr::Vector<Logger*> loggers_;
-    LogFormatter         formatter_;
+    LogFormatter formatter_;
 };
 
 static const ServiceThreadDesc kLoggerWorkerThreadDesc = {

@@ -1,14 +1,13 @@
 #pragma once
 #include "SkrGui/system/input/gesture/pointer_gesture_recognizer.hpp"
-#ifndef __meta__
-    #include "SkrGui/system/input/gesture/click_gesture_recognizer.generated.h"
-#endif
+#include "SkrGui/system/input/gesture/click_gesture_recognizer.generated.h"
 
 namespace skr::gui
 {
 
-sreflect_struct(guid = "58887860-92da-4f41-a09b-3e91604e4ae0")
-SKR_GUI_API ClickGestureRecognizer : public PointerGestureRecognizer {
+struct [[sattr(guid = "58887860-92da-4f41-a09b-3e91604e4ae0"
+)]] SKR_GUI_API ClickGestureRecognizer : public PointerGestureRecognizer
+{
     SKR_GENERATE_BODY(ClickGestureRecognizer)
     using Super = PointerGestureRecognizer;
     using Super::Super;
@@ -33,17 +32,17 @@ private:
 public:
     // TODO. click 没有事件，但是是否应该传入一个 context 来存储 modifier key 的情况
     Function<void(PointerDownEvent*)> on_click_down = {};
-    Function<void(PointerUpEvent*)>   on_click_up   = {};
-    Function<void()>                  on_click      = {};
-    Function<void()>                  on_cancel     = {};
+    Function<void(PointerUpEvent*)> on_click_up = {};
+    Function<void()> on_click = {};
+    Function<void()> on_cancel = {};
 
 private:
     // recorded state
     // TODO. use smart ptr
-    Optional<PointerDownEvent> _down_event           = {};
-    Optional<PointerUpEvent>   _up_event             = {};
-    bool                       _has_preview_up_event = false;
-    bool                       _won_arena            = false;
+    Optional<PointerDownEvent> _down_event = {};
+    Optional<PointerUpEvent> _up_event = {};
+    bool _has_preview_up_event = false;
+    bool _won_arena = false;
 };
 
 } // namespace skr::gui

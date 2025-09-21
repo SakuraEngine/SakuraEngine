@@ -154,8 +154,8 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
         // make projection
         auto               pb_cursor    = _projections.size();
         auto&              projection   = _projections.add_default().ref();
-        const skr_float2_t zero_point   = { window_size.width * 0.5f, window_size.height * 0.5f };
-        const skr_float2_t eye_position = { zero_point.x, zero_point.y };
+        const float2 zero_point   = { window_size.width * 0.5f, window_size.height * 0.5f };
+        const float2 eye_position = { zero_point.x, zero_point.y };
         rtm::matrix3x4f    view         = rtm::matrix_cast(rtm::view_look_to(
             rtm::vector_set(eye_position.x, eye_position.y, -1.f, 0.0f),
             rtm::vector_set(0.f, 0.f, 1.f, 0.0f),
@@ -307,11 +307,11 @@ void SkrRenderWindow::_upload_draw_data()
                 rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
                 skr_float4x4_t*  rdata_dst      = (skr_float4x4_t*)(projection_dst + projections_count);
 
-                const skr::span<PaintVertex>     render_vertices    = _vertices;
-                const skr::span<PaintIndex>      render_indices     = _indices;
-                const skr::span<rtm::matrix4x4f> render_transforms  = _transforms;
-                const skr::span<rtm::matrix4x4f> render_projections = _projections;
-                const skr::span<skr_float4x4_t>  render_data        = _render_data;
+                const skr::Span<PaintVertex>     render_vertices    = _vertices;
+                const skr::Span<PaintIndex>      render_indices     = _indices;
+                const skr::Span<rtm::matrix4x4f> render_transforms  = _transforms;
+                const skr::Span<rtm::matrix4x4f> render_projections = _projections;
+                const skr::Span<skr_float4x4_t>  render_data        = _render_data;
 
                 memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(PaintVertex));
                 memcpy(idx_dst, render_indices.data(), indices_count * sizeof(PaintIndex));
@@ -357,7 +357,7 @@ void SkrRenderWindow::_declare_render_resources()
                     .format(back_desc->format)
                     .sample_count(sample_count)
                     .allow_render_target();
-                if (back_desc->width > 2048) builder.allocate_dedicated();
+                if (back_desc->width > 2048) builder.heap_dedicated();
             }
         );
         (void)msaaTarget;
@@ -380,7 +380,7 @@ void SkrRenderWindow::_declare_render_resources()
                 .format(CGPU_FORMAT_D32_SFLOAT)
                 .sample_count(sample_count)
                 .allow_depth_stencil();
-            if (texInfo->width > 2048) builder.allocate_dedicated();
+            if (texInfo->width > 2048) builder.heap_dedicated();
         }
     );
 }

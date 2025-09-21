@@ -21,17 +21,9 @@ public:
     void GenerateFunctionAttributes(SourceBuilderNew& sb, const FunctionDecl* func) override;
     void GenerateFunctionSignaturePostfix(SourceBuilderNew& sb, const FunctionDecl* func) override;
     bool SupportConstructor() const override;
+    bool HLSL_RemoveEmptyResourceInit(const ConstructorDecl::MemberInit* init) const override;
     
 private:
-    void GenerateSRTs(const AST& ast);
     void GenerateArrayHelpers(SourceBuilderNew& sb, const AST& ast);
-    struct BindingVal 
-    { 
-        uint32_t binding; 
-        uint32_t space; 
-        bool is_push; 
-        bool is_bindless; 
-    };
-    std::unordered_map<const skr::CppSL::VarDecl*, BindingVal> binding_table_;
 };
 } // namespace skr::CppSL::HLSL

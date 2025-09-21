@@ -133,7 +133,7 @@ CGPUSwapChainId cgpu_create_swapchain_metal(CGPUDeviceId device, const CGPUSwapC
         info->width = desc->width;
         info->height = desc->height;
         info->depth = 1;
-        info->array_size_minus_one = 0;
+        info->array_size = 1;
         info->mip_levels = 1;
         info->sample_count = CGPU_SAMPLE_COUNT_1;
         info->format = desc->format;
@@ -141,8 +141,6 @@ CGPUSwapChainId cgpu_create_swapchain_metal(CGPUDeviceId device, const CGPUSwapC
         info->node_index = CGPU_SINGLE_GPU_NODE_INDEX;
         info->owns_image = true;
         info->is_cube = false;
-        info->is_allocation_dedicated = false;
-        info->is_restrict_dedicated = false;
         info->is_aliasing = false;
         info->is_tiled = false;
         info->is_imported = false;
