@@ -1,6 +1,6 @@
 #include "cpp_style.hpp"
 #include "SkrCore/log.h"
-#include "SkrRT/ecs/world.hpp"
+#include "SkrRuntime/ecs/world.hpp"
 #include <chrono>
 
 class MaskComponentTest 

@@ -26,25 +26,25 @@ public:
     SKR_RENDER_GRAPH_API const bool after(const PassNode* other) const;
     SKR_RENDER_GRAPH_API const PassHandle get_handle() const;
 
-    SKR_RENDER_GRAPH_API skr::span<TextureReadEdge*> tex_read_edges();
-    SKR_RENDER_GRAPH_API skr::span<TextureRenderEdge*> tex_write_edges();
-    SKR_RENDER_GRAPH_API skr::span<TextureReadWriteEdge*> tex_readwrite_edges();
+    SKR_RENDER_GRAPH_API skr::Span<TextureReadEdge*> tex_read_edges();
+    SKR_RENDER_GRAPH_API skr::Span<TextureRenderEdge*> tex_write_edges();
+    SKR_RENDER_GRAPH_API skr::Span<TextureReadWriteEdge*> tex_readwrite_edges();
     SKR_RENDER_GRAPH_API void foreach_textures(skr::stl_function<void(TextureNode*, TextureEdge*)>);
     inline uint32_t textures_count() const
     {
         return (uint32_t)(in_texture_edges.size() + out_texture_edges.size() + inout_texture_edges.size());
     }
 
-    SKR_RENDER_GRAPH_API skr::span<BufferReadEdge*> buf_read_edges();
-    SKR_RENDER_GRAPH_API skr::span<BufferReadWriteEdge*> buf_readwrite_edges();
-    SKR_RENDER_GRAPH_API skr::span<PipelineBufferEdge*> buf_ppl_edges();
+    SKR_RENDER_GRAPH_API skr::Span<BufferReadEdge*> buf_read_edges();
+    SKR_RENDER_GRAPH_API skr::Span<BufferReadWriteEdge*> buf_readwrite_edges();
+    SKR_RENDER_GRAPH_API skr::Span<PipelineBufferEdge*> buf_ppl_edges();
     SKR_RENDER_GRAPH_API void foreach_buffers(skr::stl_function<void(BufferNode*, BufferEdge*)>);
     inline uint32_t buffers_count() const
     {
         return (uint32_t)(in_buffer_edges.size() + out_buffer_edges.size() + ppl_buffer_edges.size());
     }
 
-    SKR_RENDER_GRAPH_API skr::span<AccelerationStructureReadEdge*> acceleration_structure_read_edges();
+    SKR_RENDER_GRAPH_API skr::Span<AccelerationStructureReadEdge*> acceleration_structure_read_edges();
     SKR_RENDER_GRAPH_API void foreach_acceleration_structures(skr::stl_function<void(AccelerationStructureNode*, AccelerationStructureEdge*)>);
     inline uint32_t acceleration_structures_count() const
     {
@@ -113,8 +113,9 @@ public:
 
 protected:
     ComputePassExecuteFunction executor;
-    CGPUComputePipelineId pipeline;
-    CGPURootSignatureId root_signature;
+    CGPUComputePipelineId pipeline = nullptr;
+    CGPURayPipelineId ray_pipeline = nullptr;
+    CGPURootSignatureId root_signature = nullptr;
 };
 
 class CopyPassNode : public PassNode

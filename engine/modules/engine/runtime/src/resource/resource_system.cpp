@@ -3,11 +3,11 @@
 #include "SkrBase/misc/debug.h"
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainersDef/stl_vector.hpp"
-#include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/resource/resource_factory.h"
+#include "SkrRuntime/io/ram_io.hpp"
+#include "SkrRuntime/resource/resource_factory.h"
 #include "SkrContainersDef/concurrent_queue.hpp"
 
-#include "SkrRT/sugoi/entity_registry.hpp"
+#include "SkrRuntime/sugoi/entity_registry.hpp"
 
 namespace skr
 {
@@ -29,18 +29,18 @@ public:
     void UnloadResource(SResourceHandle& handle) final override;
     void _UnloadResource(SResourceRecord* record);
     void FlushResource(SResourceHandle& handle) final override;
-    ESkrLoadingStatus GetResourceStatus(const skr_guid_t& handle) final override;
+    ESkrLoadingStatus GetResourceStatus(const GUID& handle) final override;
 
-    ResourceFactory* FindFactory(skr_guid_t type) const final override;
+    ResourceFactory* FindFactory(GUID type) const final override;
     void RegisterFactory(ResourceFactory* factory) final override;
-    void UnregisterFactory(skr_guid_t type) final override;
+    void UnregisterFactory(GUID type) final override;
 
     ResourceRegistry* GetRegistry() const final override;
     skr::io::IRAMService* GetRAMService() const final override;
 
 protected:
-    SResourceRecord* _GetOrCreateRecord(const skr_guid_t& guid) final override;
-    SResourceRecord* _GetRecord(const skr_guid_t& guid) final override;
+    SResourceRecord* _GetOrCreateRecord(const GUID& guid) final override;
+    SResourceRecord* _GetRecord(const GUID& guid) final override;
     SResourceRecord* _GetRecord(void* resource) final override;
     void _DestroyRecord(SResourceRecord* record) final override;
     void _UpdateAsyncSerde();
@@ -69,9 +69,9 @@ protected:
     sugoi::EntityRegistry resourceIds;
     task::counter_t counter;
     bool quit = false;
-    skr::ParallelFlatHashMap<skr_guid_t, SResourceRecord*, skr::Hash<skr_guid_t>> resourceRecords;
+    skr::ParallelFlatHashMap<GUID, SResourceRecord*, skr::Hash<GUID>> resourceRecords;
     skr::ParallelFlatHashMap<void*, SResourceRecord*> resourceToRecord;
-    skr::ParallelFlatHashMap<skr_guid_t, ResourceFactory*, skr::Hash<skr_guid_t>> resourceFactories;
+    skr::ParallelFlatHashMap<GUID, ResourceFactory*, skr::Hash<GUID>> resourceFactories;
 };
 
 ResourceSystemImpl::ResourceSystemImpl()
@@ -83,7 +83,7 @@ ResourceSystemImpl::~ResourceSystemImpl()
 {
 }
 
-SResourceRecord* ResourceSystemImpl::_GetOrCreateRecord(const skr_guid_t& guid)
+SResourceRecord* ResourceSystemImpl::_GetOrCreateRecord(const GUID& guid)
 {
     SMutexLock Lock(recordMutex.mMutex);
     auto record = _GetRecord(guid);
@@ -98,7 +98,7 @@ SResourceRecord* ResourceSystemImpl::_GetOrCreateRecord(const skr_guid_t& guid)
     return record;
 }
 
-SResourceRecord* ResourceSystemImpl::_GetRecord(const skr_guid_t& guid)
+SResourceRecord* ResourceSystemImpl::_GetRecord(const GUID& guid)
 {
     auto iter = resourceRecords.find(guid);
     return iter == resourceRecords.end() ? nullptr : iter->second;
@@ -123,7 +123,7 @@ void ResourceSystemImpl::_DestroyRecord(SResourceRecord* record)
     SkrDelete(record);
 }
 
-ResourceFactory* ResourceSystemImpl::FindFactory(skr_guid_t type) const
+ResourceFactory* ResourceSystemImpl::FindFactory(GUID type) const
 {
     auto iter = resourceFactories.find(type);
     if (iter != resourceFactories.end()) return iter->second;
@@ -148,7 +148,7 @@ skr::io::IRAMService* ResourceSystemImpl::GetRAMService() const
     return ioService;
 }
 
-void ResourceSystemImpl::UnregisterFactory(skr_guid_t type)
+void ResourceSystemImpl::UnregisterFactory(GUID type)
 {
     auto iter = resourceFactories.find(type);
     SKR_ASSERT(iter != resourceFactories.end());
@@ -251,7 +251,7 @@ void ResourceSystemImpl::FlushResource(SResourceHandle& handle){
     SKR_UNIMPLEMENTED_FUNCTION()
 }
 
-ESkrLoadingStatus ResourceSystemImpl::GetResourceStatus(const skr_guid_t& handle)
+ESkrLoadingStatus ResourceSystemImpl::GetResourceStatus(const GUID& handle)
 {
     SMutexLock Lock(recordMutex.mMutex);
     auto record = _GetRecord(handle);

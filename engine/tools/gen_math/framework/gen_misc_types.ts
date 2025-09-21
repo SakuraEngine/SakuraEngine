@@ -21,7 +21,25 @@ function _gen_quat(opt: GenMiscOption) {
   const fwd_b = opt.fwd_builder;
   const c_decl_cpp_b = opt.c_decl_cpp_builder;
   const c_decl_c_b = opt.c_decl_c_builder;
+  const memory_traits_b = opt.memory_traits_builder;
   const b = opt.builder;
+
+  // generate memory traits
+  memory_traits_b.$line(`// quaternion`);
+  for (const base_name in type_options) {
+    const type_opt = type_options[base_name]!;
+
+    // filter component kinds
+    if (type_opt.component_kind !== "floating") continue;
+
+    // get suffix
+    const _suffix = _suffix_lut[type_opt.component_name];
+
+    memory_traits_b.$line(`template<>`);
+    memory_traits_b.$line(`struct MemoryTraits<::skr::math::Quat${_suffix}> : MemoryTraitsPOD {`);
+    memory_traits_b.$line(`};`);
+  }
+  memory_traits_b.$line(``);
 
   fwd_b.$line(`// quaternion`)
   c_decl_cpp_b.$line(`// quaternion`)
@@ -169,8 +187,26 @@ function _gen_quat(opt: GenMiscOption) {
 function _gen_rotator(opt: GenMiscOption) {
   const fwd_b = opt.fwd_builder;
   const c_decl_cpp_b = opt.c_decl_cpp_builder;
+  const memory_traits_b = opt.memory_traits_builder;
   const c_decl_c_b = opt.c_decl_c_builder;
   const b = opt.builder;
+
+  // generate memory traits
+  memory_traits_b.$line(`// rotator`);
+  for (const base_name in type_options) {
+    const type_opt = type_options[base_name]!;
+
+    // filter component kinds
+    if (type_opt.component_kind !== "floating") continue;
+
+    // get suffix
+    const _suffix = _suffix_lut[type_opt.component_name];
+
+    memory_traits_b.$line(`template<>`);
+    memory_traits_b.$line(`struct MemoryTraits<::skr::math::Rotator${_suffix}> : MemoryTraitsPOD {`);
+    memory_traits_b.$line(`};`);
+  }
+  memory_traits_b.$line(``);
 
   fwd_b.$line(`// rotator`)
   c_decl_cpp_b.$line(`// rotator`)
@@ -300,8 +336,26 @@ function _gen_rotator(opt: GenMiscOption) {
 function _gen_transform(opt: GenMiscOption) {
   const fwd_b = opt.fwd_builder;
   const c_decl_cpp_b = opt.c_decl_cpp_builder;
+  const memory_traits_b = opt.memory_traits_builder;
   const c_decl_c_b = opt.c_decl_c_builder;
   const b = opt.builder;
+
+  // generate memory traits
+  memory_traits_b.$line(`// transform`);
+  for (const base_name in type_options) {
+    const type_opt = type_options[base_name]!;
+
+    // filter component kinds
+    if (type_opt.component_kind !== "floating") continue;
+
+    // get suffix
+    const _suffix = _suffix_lut[type_opt.component_name];
+
+    memory_traits_b.$line(`template<>`);
+    memory_traits_b.$line(`struct MemoryTraits<::skr::math::Transform${_suffix}> : MemoryTraitsPOD {`);
+    memory_traits_b.$line(`};`);
+  }
+  memory_traits_b.$line(``);
 
   fwd_b.$line(`// transform`)
   c_decl_cpp_b.$line(`// transform`)

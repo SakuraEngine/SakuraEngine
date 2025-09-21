@@ -175,7 +175,7 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr::AnimComponent* anim, const 
                     else
                         anim->views.add(vbv);
                 }
-                prim.views = skr::span<skr_vertex_buffer_view_t>(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
+                prim.views = skr::Span<skr_vertex_buffer_view_t>(anim->views.data() + vbv_start, renderMesh->primitive_commands[k].vbvs.size());
                 // SKR_LOG_INFO(u8"Anim Primitive %d has %d vertex buffers", k, prim.views.size());
             }
         }

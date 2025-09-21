@@ -1,7 +1,7 @@
 #include "SkrCore/log.h"
 #include "SkrContainers/vector.hpp"
 #include "SkrSceneCore/transform_system.h"
-#include "SkrSerde/json_serde.hpp"
+#include <SkrCore/serialize/json_archive.hpp>
 
 #include "SkrTestFramework/framework.hpp"
 
@@ -20,27 +20,36 @@ struct TestSceneType
     TestSceneType(T value)
         : value(value)
     {
-        skr::archive::JsonWriter writer(1);
-        {
-            writer.StartObject();
-            writer.Key(u8"key");
-            skr::json_write(&writer, value);
-            writer.EndObject();
-        }
-        {
-            auto json = writer.Write();
-            SKR_LOG_INFO(u8"SCENE TYPE JSON: %s", json.c_str());
+        skr::String json_str;
 
-            skr::archive::JsonReader reader(json.view());
-            reader.StartObject();
+        // write
+        {
+            auto writer = skr::ArWriteJson::Create();
+
             {
-                reader.Key(u8"key");
-
-                T _value;
-                skr::json_read(&reader, _value);
-                EXPECT_EQ(value, _value);
+                skr::Archive::ObjectScope obj_scope{ writer };
+                SKR_FAST_CHECK(obj_scope.is_success(), );
+                SKR_FAST_CHECK(writer.key_value(u8"key", value), );
             }
-            reader.EndObject();
+
+            // as string
+            SKR_FAST_CHECK(writer.root()->write_to_string(json_str), );
+        }
+
+        SKR_LOG_INFO(u8"SCENE TYPE JSON: %s", json_str.c_str_raw());
+
+        // read
+        {
+            auto reader = skr::ArReadJson::ReadBuffer(json_str.data(), json_str.size());
+
+            T read_value;
+            {
+                skr::Archive::ObjectScope obj_scope{ reader };
+                SKR_FAST_CHECK(obj_scope.is_success(), );
+                SKR_FAST_CHECK(reader.key_value(u8"key", read_value), );
+            }
+
+            EXPECT_EQ(value, read_value);
         }
     }
     T value;

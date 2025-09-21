@@ -17,8 +17,8 @@ struct Constants
 [[push_constant]]
 ConstantBuffer<Constants> push_constants;
 
-[[group(0)]] Texture2D<float> color_texture;
-[[group(0)]] Texture2D<float> mask_texture;
+[[group(0)]] Texture2D color_texture;
+[[group(0)]] Texture2D mask_texture;
 [[group(1)]] SamplerState color_sampler;
 
 struct [[stage_inout]] VSIn

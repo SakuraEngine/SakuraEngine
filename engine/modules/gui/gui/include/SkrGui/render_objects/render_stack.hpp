@@ -2,16 +2,15 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/math/layout.hpp"
 #include "SkrGui/framework/render_object/multi_child_render_object.hpp"
-#ifndef __meta__
-    #include "SkrGui/render_objects/render_stack.generated.h"
-#endif
+#include "SkrGui/render_objects/render_stack.generated.h"
 
 namespace skr::gui
 {
 
-sreflect_struct(guid = "977b69fd-b3c7-4030-8c9d-076bc94fdfbf")
-SKR_GUI_API RenderStack : public RenderBox,
-                          public IMultiChildRenderObject {
+struct [[sattr(guid = "977b69fd-b3c7-4030-8c9d-076bc94fdfbf"
+)]] SKR_GUI_API RenderStack : public RenderBox
+    , public IMultiChildRenderObject
+{
 public:
     SKR_GENERATE_BODY(RenderStack)
     using Super = RenderBox;
@@ -42,15 +41,16 @@ public:
     // transform
     void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT override;
 
-    struct SlotData {
+    struct SlotData
+    {
         Offsetf offset = Offsetf::Zero();
     };
 
 private:
     friend struct _StackHelper;
-    Alignment      _stack_alignment = Alignment::TopLeft();
-    EPositionalFit _child_fit       = EPositionalFit::PassThrough;
-    EStackSize     _stack_size      = EStackSize::Shrink;
+    Alignment _stack_alignment = Alignment::TopLeft();
+    EPositionalFit _child_fit = EPositionalFit::PassThrough;
+    EStackSize _stack_size = EStackSize::Shrink;
 
     // MIXIN
     MULTI_CHILD_RENDER_OBJECT_MIX_IN(RenderStack, RenderBox, SlotData)

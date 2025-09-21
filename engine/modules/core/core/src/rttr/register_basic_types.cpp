@@ -23,8 +23,8 @@ void primitive_type_loader(RTTRType* type)
 static void primitive_type_loader_void(RTTRType* type)
 {
     type->build_primitive([&](RTTRPrimitiveTable* data) {
-        data->name      = RTTRTraits<void>::get_name();
-        data->type_id   = RTTRTraits<void>::get_guid();
+        data->name      = TypeInfo<void>::get_name();
+        data->type_id   = TypeInfo<void>::get_guid();
         data->size      = 0;
         data->alignment = 0;
     });

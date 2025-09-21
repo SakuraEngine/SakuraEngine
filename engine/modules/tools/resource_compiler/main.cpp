@@ -1,14 +1,14 @@
 #include "SkrAnim/resources/animation_resource.hpp"
 #include "SkrOS/filesystem.hpp"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/misc/cmd_parser.hpp"
+#include "SkrRuntime/misc/cmd_parser.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrTask/parallel_for.hpp"
 #include "SkrContainers/stl_vector.hpp"
 #include "SkrCore/module/module_manager.hpp"
-#include "SkrRT/resource/resource_system.h"
+#include "SkrRuntime/resource/resource_system.h"
 #include <functional>
-#include "SkrRT/resource/local_resource_registry.hpp"
+#include "SkrRuntime/resource/local_resource_registry.hpp"
 
 #include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
@@ -154,7 +154,7 @@ int compile_project(skd::SProject* project)
     //----- schedule cook tasks (checking dependencies)
     {
         system.ParallelForEachAsset(1,
-            [&](skr::span<skr::RC<skd::asset::AssetMetaFile>> assets) {
+            [&](skr::Span<skr::RC<skd::asset::AssetMetaFile>> assets) {
                 SkrZoneScopedN("Cook");
                 for (auto asset : assets)
                 {

@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/math.h" // IWYU pragma: export
-#include "SkrRT/ecs/component.hpp" // IWYU pragma: export
+#include "SkrRuntime/ecs/component.hpp" // IWYU pragma: export
 #include "SkrContainersDef/array.hpp"
 
 namespace skr

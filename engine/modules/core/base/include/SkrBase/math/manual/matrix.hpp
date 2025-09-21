@@ -214,56 +214,56 @@ inline double3 mul_vector(const double3& lhs, const double4x4& rhs)
 inline bool operator==(const float3x3& lhs, const float3x3& rhs)
 {
     return all(lhs.axis_x == rhs.axis_x) &&
-           all(lhs.axis_y == rhs.axis_y) &&
-           all(lhs.axis_z == rhs.axis_z);
+        all(lhs.axis_y == rhs.axis_y) &&
+        all(lhs.axis_z == rhs.axis_z);
 }
 inline bool operator==(const double3x3& lhs, const double3x3& rhs)
 {
     return all(lhs.axis_x == rhs.axis_x) &&
-           all(lhs.axis_y == rhs.axis_y) &&
-           all(lhs.axis_z == rhs.axis_z);
+        all(lhs.axis_y == rhs.axis_y) &&
+        all(lhs.axis_z == rhs.axis_z);
 }
 inline bool operator==(const float4x4& lhs, const float4x4& rhs)
 {
     return all(lhs.axis_x == rhs.axis_x) &&
-           all(lhs.axis_y == rhs.axis_y) &&
-           all(lhs.axis_z == rhs.axis_z) &&
-           all(lhs.axis_w == rhs.axis_w);
+        all(lhs.axis_y == rhs.axis_y) &&
+        all(lhs.axis_z == rhs.axis_z) &&
+        all(lhs.axis_w == rhs.axis_w);
 }
 inline bool operator==(const double4x4& lhs, const double4x4& rhs)
 {
     return all(lhs.axis_x == rhs.axis_x) &&
-           all(lhs.axis_y == rhs.axis_y) &&
-           all(lhs.axis_z == rhs.axis_z) &&
-           all(lhs.axis_w == rhs.axis_w);
+        all(lhs.axis_y == rhs.axis_y) &&
+        all(lhs.axis_z == rhs.axis_z) &&
+        all(lhs.axis_w == rhs.axis_w);
 }
 
 // nearly equal function
 inline bool nearly_equal(const float3x3& lhs, const float3x3& rhs, float threshold = 1.e-4)
 {
     return all(nearly_equal(lhs.axis_x, rhs.axis_x, threshold)) &&
-           all(nearly_equal(lhs.axis_y, rhs.axis_y, threshold)) &&
-           all(nearly_equal(lhs.axis_z, rhs.axis_z, threshold));
+        all(nearly_equal(lhs.axis_y, rhs.axis_y, threshold)) &&
+        all(nearly_equal(lhs.axis_z, rhs.axis_z, threshold));
 }
 inline bool nearly_equal(const double3x3& lhs, const double3x3& rhs, double threshold = 1.e-4)
 {
     return all(nearly_equal(lhs.axis_x, rhs.axis_x, threshold)) &&
-           all(nearly_equal(lhs.axis_y, rhs.axis_y, threshold)) &&
-           all(nearly_equal(lhs.axis_z, rhs.axis_z, threshold));
+        all(nearly_equal(lhs.axis_y, rhs.axis_y, threshold)) &&
+        all(nearly_equal(lhs.axis_z, rhs.axis_z, threshold));
 }
 inline bool nearly_equal(const float4x4& lhs, const float4x4& rhs, float threshold = 1.e-4)
 {
     return all(nearly_equal(lhs.axis_x, rhs.axis_x, threshold)) &&
-           all(nearly_equal(lhs.axis_y, rhs.axis_y, threshold)) &&
-           all(nearly_equal(lhs.axis_z, rhs.axis_z, threshold)) &&
-           all(nearly_equal(lhs.axis_w, rhs.axis_w, threshold));
+        all(nearly_equal(lhs.axis_y, rhs.axis_y, threshold)) &&
+        all(nearly_equal(lhs.axis_z, rhs.axis_z, threshold)) &&
+        all(nearly_equal(lhs.axis_w, rhs.axis_w, threshold));
 }
 inline bool nearly_equal(const double4x4& lhs, const double4x4& rhs, double threshold = 1.e-4)
 {
     return all(nearly_equal(lhs.axis_x, rhs.axis_x, threshold)) &&
-           all(nearly_equal(lhs.axis_y, rhs.axis_y, threshold)) &&
-           all(nearly_equal(lhs.axis_z, rhs.axis_z, threshold)) &&
-           all(nearly_equal(lhs.axis_w, rhs.axis_w, threshold));
+        all(nearly_equal(lhs.axis_y, rhs.axis_y, threshold)) &&
+        all(nearly_equal(lhs.axis_z, rhs.axis_z, threshold)) &&
+        all(nearly_equal(lhs.axis_w, rhs.axis_w, threshold));
 }
 
 // matrix3x3 transpose

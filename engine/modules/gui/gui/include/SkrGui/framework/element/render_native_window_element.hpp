@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/framework/element/render_window_element.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/element/render_native_window_element.generated.h"
-#endif
+#include "SkrGui/framework/element/render_native_window_element.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "85142301-eaec-4908-8420-930bf85b02ff")
-SKR_GUI_API RenderNativeWindowElement : public RenderWindowElement {
+struct [[sattr(guid = "85142301-eaec-4908-8420-930bf85b02ff"
+)]] SKR_GUI_API RenderNativeWindowElement : public RenderWindowElement
+{
     SKR_GENERATE_BODY(ProxyElement)
     using Super = RenderWindowElement;
     using Super::Super;
@@ -21,8 +20,8 @@ SKR_GUI_API RenderNativeWindowElement : public RenderWindowElement {
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override;
 
     inline void setup_owner(BuildOwner* owner) SKR_NOEXCEPT { _owner = owner; }
-    void        prepare_initial_frame() SKR_NOEXCEPT;
-    void        clean_up_for_close() SKR_NOEXCEPT;
+    void prepare_initial_frame() SKR_NOEXCEPT;
+    void clean_up_for_close() SKR_NOEXCEPT;
 
     void set_new_child_widget(Widget* widget) SKR_NOEXCEPT;
 
@@ -31,7 +30,7 @@ private:
     void _rebuild();
 
 private:
-    Widget*  _new_child_widget = nullptr;
-    Element* _child            = nullptr;
+    Widget* _new_child_widget = nullptr;
+    Element* _child = nullptr;
 };
 } // namespace skr::gui

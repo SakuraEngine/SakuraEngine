@@ -96,7 +96,7 @@ void _EmbeddedParagraph::paint(NotNull<PaintingContext*> context, Offsetf offset
         }
     }
 }
-void _EmbeddedParagraph::_draw(godot::TextServer::TextDrawProxy* proxy, const skr_float2_t& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color)
+void _EmbeddedParagraph::_draw(godot::TextServer::TextDrawProxy* proxy, const float2& p_pos, const godot::Color& p_color, const godot::Color& p_dc_color)
 {
     const float line_height_scale = 1.f;
     const int   spacing_top       = 0;

@@ -83,11 +83,11 @@ public:
     const StackVector<PassNode*>& get_dependent_by_passes(PassNode* pass) const;
     
     // 逻辑拓扑查询 (NEW)
-    uint32_t get_logical_dependency_level(PassNode* pass) const;
-    uint32_t get_logical_topological_order(PassNode* pass) const;
+    uint32_t get_dependency_level(PassNode* pass) const;
+    uint32_t get_topological_order(PassNode* pass) const;
     uint32_t get_logical_critical_path_length(PassNode* pass) const;
     const LogicalTopologyResult& get_logical_topology_result() const { return logical_topology_; }
-    const StackVector<PassNode*>& get_logical_topological_order() const { return logical_topology_.logical_topological_order; }
+    const StackVector<PassNode*>& get_topological_order() const { return logical_topology_.logical_topological_order; }
     const StackVector<PassNode*>& get_logical_critical_path() const { return logical_topology_.logical_critical_path; }
     
     // 逻辑并行性查询

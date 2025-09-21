@@ -7,7 +7,8 @@ namespace skr
 inline namespace math
 {
 template <ECoordinateSystemHand kCoordHand, EAxis3 kCrossAxis, EAxis3 kUpAxis, EAxis3 kForwardAxis>
-struct CoordinateSystem {
+struct CoordinateSystem
+{
     static_assert(kCrossAxis != kUpAxis && kCrossAxis != kForwardAxis && kUpAxis != kForwardAxis, "Axes must be distinct.");
     static_assert(kCrossAxis >= EAxis3::X && kCrossAxis <= EAxis3::Z, "Invalid cross axis.");
     static_assert(kUpAxis >= EAxis3::X && kUpAxis <= EAxis3::Z, "Invalid up axis.");

@@ -7,7 +7,8 @@
 // functions and methods
 namespace skr
 {
-struct RTTRParamBuilder {
+struct RTTRParamBuilder
+{
     inline RTTRParamBuilder(RTTRParamData* data)
         : _data(data)
     {
@@ -41,7 +42,8 @@ private:
     RTTRParamData* _data;
 };
 
-struct RTTRFunctionBuilder {
+struct RTTRFunctionBuilder
+{
     inline RTTRFunctionBuilder(RTTRFunctionData* data)
         : _data(data)
     {
@@ -69,7 +71,8 @@ private:
     RTTRFunctionData* _data;
 };
 
-struct RTTRMethodBuilder {
+struct RTTRMethodBuilder
+{
     inline RTTRMethodBuilder(RTTRMethodData* data)
         : _data(data)
     {
@@ -97,7 +100,8 @@ private:
     RTTRMethodData* _data;
 };
 
-struct RTTRStaticMethodBuilder {
+struct RTTRStaticMethodBuilder
+{
     inline RTTRStaticMethodBuilder(RTTRStaticMethodData* data)
         : _data(data)
     {
@@ -125,7 +129,8 @@ private:
     RTTRStaticMethodData* _data;
 };
 
-struct RTTRExternMethodBuilder {
+struct RTTRExternMethodBuilder
+{
     inline RTTRExternMethodBuilder(RTTRExternMethodData* data)
         : _data(data)
     {
@@ -153,7 +158,8 @@ private:
     RTTRExternMethodData* _data;
 };
 
-struct RTTRCtorBuilder {
+struct RTTRCtorBuilder
+{
     inline RTTRCtorBuilder(RTTRCtorData* data)
         : _data(data)
     {
@@ -185,7 +191,8 @@ private:
 // fields
 namespace skr
 {
-struct RTTRFieldBuilder {
+struct RTTRFieldBuilder
+{
     inline RTTRFieldBuilder(RTTRFieldData* data)
         : _data(data)
     {
@@ -207,7 +214,8 @@ private:
     RTTRFieldData* _data;
 };
 
-struct RTTRStaticFieldBuilder {
+struct RTTRStaticFieldBuilder
+{
     inline RTTRStaticFieldBuilder(RTTRStaticFieldData* data)
         : _data(data)
     {
@@ -234,7 +242,8 @@ private:
 namespace skr
 {
 template <typename T>
-struct RTTRRecordBuilder {
+struct RTTRRecordBuilder
+{
     inline RTTRRecordBuilder(RTTRRecordData* data)
         : _data(data)
     {
@@ -244,9 +253,9 @@ struct RTTRRecordBuilder {
     inline RTTRRecordBuilder& basic_info()
     {
         // split namespace
-        String             name = RTTRTraits<T>::get_name();
+        String name = TypeInfo<T>::get_name();
         Vector<StringView> splitted;
-        auto               count = name.split(splitted, u8"::");
+        auto count = name.split(splitted, u8"::");
 
         // last part is name
         _data->name = splitted.at(splitted.size() - 1);
@@ -262,10 +271,10 @@ struct RTTRRecordBuilder {
         }
 
         // fill type id
-        _data->type_id = RTTRTraits<T>::get_guid();
+        _data->type_id = TypeInfo<T>::get_guid();
 
         // fill size & alignment
-        _data->size      = sizeof(T);
+        _data->size = sizeof(T);
         _data->alignment = alignof(T);
 
         // fill memory traits
@@ -335,32 +344,18 @@ struct RTTRRecordBuilder {
             }>(SkrCoreExternMethods::Swap);
         }
 
-        // fill bin serde
-        if constexpr (skr::concepts::HasBinRead<T>)
+        // fill serialize
+        if constexpr (skr::concepts::HasSerdeRead<T>)
         {
-            extern_method<+[](void* object, void* reader) -> bool {
-                return skr::bin_read<T>((SBinaryReader*)reader, *(T*)object);
-            }>(SkrCoreExternMethods::ReadBin);
+            extern_method<+[](ArchiveRead& reader, T& object) -> void {
+                return skr::Serialize<T>::read(reader, object);
+            }>(SkrCoreExternMethods::SerdeRead);
         }
-        if constexpr (skr::concepts::HasBinWrite<T>)
+        if constexpr (skr::concepts::HasSerdeWrite<T>)
         {
-            extern_method<+[](void* object, void* writer) -> bool {
-                return skr::bin_write<T>((SBinaryWriter*)writer, *(T*)object);
-            }>(SkrCoreExternMethods::WriteBin);
-        }
-
-        // fill json serde
-        if constexpr (skr::concepts::HasJsonRead<T>)
-        {
-            extern_method<+[](void* object, void* reader) -> bool {
-                return skr::json_read<T>((skr::archive::JsonReader*)reader, *(T*)object);
-            }>(SkrCoreExternMethods::ReadJson);
-        }
-        if constexpr (skr::concepts::HasJsonWrite<T>)
-        {
-            extern_method<+[](void* object, void* writer) -> bool {
-                return skr::json_write<T>((skr::archive::JsonWriter*)writer, *(T*)object);
-            }>(SkrCoreExternMethods::WriteJson);
+            extern_method<+[](ArchiveWrite& writer, const T& object) -> void {
+                return skr::Serialize<T>::write(writer, object);
+            }>(SkrCoreExternMethods::SerdeWrite);
         }
 
         return *this;
@@ -388,7 +383,7 @@ struct RTTRRecordBuilder {
         // new ctor data
         auto ctor_data = SkrNew<RTTRCtorData>();
         ctor_data->fill_signature<Args...>();
-        ctor_data->native_invoke        = RTTRExportHelper::export_ctor<T, Args...>();
+        ctor_data->native_invoke = RTTRExportHelper::export_ctor<T, Args...>();
         ctor_data->dynamic_stack_invoke = RTTRExportHelper::export_ctor_dynamic_stack<T, Args...>();
         _data->ctor_data.add(ctor_data);
         return { ctor_data };
@@ -406,11 +401,11 @@ struct RTTRRecordBuilder {
     template <auto func>
     inline RTTRMethodBuilder method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
     {
-        auto method_data          = SkrNew<RTTRMethodData>();
-        method_data->name         = std::move(name);
+        auto method_data = SkrNew<RTTRMethodData>();
+        method_data->name = std::move(name);
         method_data->access_level = access_level;
         method_data->fill_signature(func);
-        method_data->native_invoke        = RTTRExportHelper::export_method<func>();
+        method_data->native_invoke = RTTRExportHelper::export_method<func>();
         method_data->dynamic_stack_invoke = RTTRExportHelper::export_method_dynamic_stack<func>();
         _data->methods.add(method_data);
         return { method_data };
@@ -423,11 +418,11 @@ struct RTTRRecordBuilder {
     template <auto func>
     inline RTTRStaticMethodBuilder static_method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
     {
-        auto method_data          = SkrNew<RTTRStaticMethodData>();
-        method_data->name         = std::move(name);
+        auto method_data = SkrNew<RTTRStaticMethodData>();
+        method_data->name = std::move(name);
         method_data->access_level = access_level;
         method_data->fill_signature(func);
-        method_data->native_invoke        = RTTRExportHelper::export_static_method<func>();
+        method_data->native_invoke = RTTRExportHelper::export_static_method<func>();
         method_data->dynamic_stack_invoke = RTTRExportHelper::export_static_method_dynamic_stack<func>();
         _data->static_methods.add(method_data);
         return { method_data };
@@ -440,11 +435,11 @@ struct RTTRRecordBuilder {
     template <auto func>
     inline RTTRExternMethodBuilder extern_method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
     {
-        auto method_data          = SkrNew<RTTRExternMethodData>();
-        method_data->name         = std::move(name);
+        auto method_data = SkrNew<RTTRExternMethodData>();
+        method_data->name = std::move(name);
         method_data->access_level = access_level;
         method_data->fill_signature(func);
-        method_data->native_invoke        = RTTRExportHelper::export_extern_method<func>();
+        method_data->native_invoke = RTTRExportHelper::export_extern_method<func>();
         method_data->dynamic_stack_invoke = RTTRExportHelper::export_extern_method_dynamic_stack<func>();
         _data->extern_methods.add(method_data);
         return { method_data };
@@ -459,8 +454,8 @@ struct RTTRRecordBuilder {
     template <auto _field>
     inline RTTRFieldBuilder field(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
     {
-        auto field_data          = SkrNew<RTTRFieldData>();
-        field_data->name         = std::move(name);
+        auto field_data = SkrNew<RTTRFieldData>();
+        field_data->name = std::move(name);
         field_data->access_level = access_level;
         field_data->fill_signature<_field>(_field);
         _data->fields.add(field_data);
@@ -469,10 +464,10 @@ struct RTTRRecordBuilder {
     template <auto _field>
     inline RTTRStaticFieldBuilder static_field(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
     {
-        auto field_data          = SkrNew<RTTRStaticFieldData>();
-        field_data->name         = std::move(name);
+        auto field_data = SkrNew<RTTRStaticFieldData>();
+        field_data->name = std::move(name);
         field_data->access_level = access_level;
-        field_data->address      = reinterpret_cast<void*>(_field);
+        field_data->address = reinterpret_cast<void*>(_field);
         field_data->fill_signature(_field);
         _data->static_fields.add(field_data);
         return { field_data };
@@ -498,7 +493,8 @@ private:
 // enum
 namespace skr
 {
-struct RTTREnumItemBuilder {
+struct RTTREnumItemBuilder
+{
     inline RTTREnumItemBuilder(RTTREnumItemData* data)
         : _data(data)
     {
@@ -521,7 +517,8 @@ private:
 };
 
 template <typename T>
-struct RTTREnumBuilder {
+struct RTTREnumBuilder
+{
     inline RTTREnumBuilder(RTTREnumData* data)
         : _data(data)
     {
@@ -531,9 +528,9 @@ struct RTTREnumBuilder {
     inline RTTREnumBuilder& basic_info()
     {
         // split namespace
-        String             name = RTTRTraits<T>::get_name();
+        String name = TypeInfo<T>::get_name();
         Vector<StringView> splitted;
-        auto               count = name.split(splitted, u8"::");
+        auto count = name.split(splitted, u8"::");
 
         // last part is name
         _data->name = splitted.at(splitted.size() - 1);
@@ -549,25 +546,25 @@ struct RTTREnumBuilder {
         }
 
         // fill type id
-        _data->type_id = RTTRTraits<T>::get_guid();
+        _data->type_id = TypeInfo<T>::get_guid();
 
         // fill size & alignment
-        _data->size      = sizeof(T);
+        _data->size = sizeof(T);
         _data->alignment = alignof(T);
 
         // fill memory traits
         _data->memory_traits_data.Fill<T>();
 
         // fill underlying type id
-        _data->underlying_type_id = RTTRTraits<std::underlying_type_t<T>>::get_guid();
+        _data->underlying_type_id = TypeInfo<std::underlying_type_t<T>>::get_guid();
         return *this;
     }
 
     // items
     inline RTTREnumItemBuilder item(String name, T value)
     {
-        auto* item_data  = SkrNew<RTTREnumItemData>();
-        item_data->name  = std::move(name);
+        auto* item_data = SkrNew<RTTREnumItemData>();
+        item_data->name = std::move(name);
         item_data->value = static_cast<std::underlying_type_t<T>>(value);
         _data->items.add(item_data);
         return { item_data };
@@ -589,11 +586,11 @@ struct RTTREnumBuilder {
     template <auto func>
     inline RTTRExternMethodBuilder extern_method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
     {
-        auto method_data          = SkrNew<RTTRExternMethodData>();
-        method_data->name         = std::move(name);
+        auto method_data = SkrNew<RTTRExternMethodData>();
+        method_data->name = std::move(name);
         method_data->access_level = access_level;
         method_data->fill_signature(func);
-        method_data->native_invoke        = RTTRExportHelper::export_extern_method<func>();
+        method_data->native_invoke = RTTRExportHelper::export_extern_method<func>();
         method_data->dynamic_stack_invoke = RTTRExportHelper::export_extern_method_dynamic_stack<func>();
         _data->extern_methods.add(method_data);
         return { method_data };
@@ -613,7 +610,8 @@ private:
 namespace skr
 {
 template <typename T>
-struct RTTRPrimitiveBuilder {
+struct RTTRPrimitiveBuilder
+{
     inline RTTRPrimitiveBuilder(RTTRPrimitiveTable* data)
         : _data(data)
     {
@@ -623,9 +621,9 @@ struct RTTRPrimitiveBuilder {
     inline RTTRPrimitiveBuilder& basic_info()
     {
         // fill basic data
-        _data->name      = RTTRTraits<T>::get_name();
-        _data->type_id   = RTTRTraits<T>::get_guid();
-        _data->size      = sizeof(T);
+        _data->name = TypeInfo<T>::get_name();
+        _data->type_id = TypeInfo<T>::get_guid();
+        _data->size = sizeof(T);
         _data->alignment = alignof(T);
 
         // fill memory traits
@@ -647,32 +645,18 @@ struct RTTRPrimitiveBuilder {
             }>(SkrCoreExternMethods::Swap);
         }
 
-        // fill bin serde
-        // if constexpr (skr::concepts::HasBinRead<T>)
+        // fill serialize
+        // if constexpr (skr::concepts::HasSerdeRead<T>)
         {
-            extern_method<+[](void* object, void* reader) -> bool {
-                return skr::bin_read<T>((SBinaryReader*)reader, *(T*)object);
-            }>(SkrCoreExternMethods::ReadBin);
+            extern_method<+[](ArchiveRead& reader, T& object) -> void {
+                return skr::Serialize<T>::read(reader, object);
+            }>(SkrCoreExternMethods::SerdeRead);
         }
-        // if constexpr (skr::concepts::HasBinWrite<T>)
+        // if constexpr (skr::concepts::HasSerdeWrite<T>)
         {
-            extern_method<+[](void* object, void* writer) -> bool {
-                return skr::bin_write<T>((SBinaryWriter*)writer, *(T*)object);
-            }>(SkrCoreExternMethods::WriteBin);
-        }
-
-        // fill json serde
-        // if constexpr (skr::concepts::HasJsonRead<T>)
-        {
-            extern_method<+[](void* object, void* reader) -> bool {
-                return skr::json_read<T>((skr::archive::JsonReader*)reader, *(T*)object);
-            }>(SkrCoreExternMethods::ReadJson);
-        }
-        // if constexpr (skr::concepts::HasJsonWrite<T>)
-        {
-            extern_method<+[](void* object, void* writer) -> bool {
-                return skr::json_write<T>((skr::archive::JsonWriter*)writer, *(T*)object);
-            }>(SkrCoreExternMethods::WriteJson);
+            extern_method<+[](ArchiveWrite& writer, const T& object) -> void {
+                return skr::Serialize<T>::write(writer, object);
+            }>(SkrCoreExternMethods::SerdeWrite);
         }
 
         return *this;
@@ -681,11 +665,11 @@ struct RTTRPrimitiveBuilder {
     template <auto func>
     inline RTTRExternMethodBuilder extern_method(String name, ERTTRAccessLevel access_level = ERTTRAccessLevel::Public)
     {
-        auto method_data          = SkrNew<RTTRExternMethodData>();
-        method_data->name         = std::move(name);
+        auto method_data = SkrNew<RTTRExternMethodData>();
+        method_data->name = std::move(name);
         method_data->access_level = access_level;
         method_data->fill_signature(func);
-        method_data->native_invoke        = RTTRExportHelper::export_extern_method<func>();
+        method_data->native_invoke = RTTRExportHelper::export_extern_method<func>();
         method_data->dynamic_stack_invoke = RTTRExportHelper::export_extern_method_dynamic_stack<func>();
         _data->extern_methods.add(method_data);
         return { method_data };

@@ -1,7 +1,5 @@
 #include <std/std.hxx>
 
-
-
 // Upload operation descriptor (must match C++ side)
 struct Upload
 {
@@ -24,7 +22,7 @@ struct SparseUploadConstants
 ConstantBuffer<SparseUploadConstants> constants;
 
 // Multi-threaded sparse upload - simplified but maintains parallelism
-[[compute_shader("sparse_upload"), kernel_1d(256), dump]]
+[[compute_shader("sparse_upload"), numthreads(256, 1, 1)]]
 void sparse_upload_main([[sv_thread_id]] uint3 thread_id)
 {
     uint operation_index = thread_id.x;

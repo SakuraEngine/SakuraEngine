@@ -23,12 +23,14 @@ namespace skr
 inline namespace math
 {
 template <typename T>
-struct RtmConvert {
+struct RtmConvert
+{
 };
 
 // vector2
 template <>
-struct RtmConvert<float2> {
+struct RtmConvert<float2>
+{
     inline static rtm::vector4f to_rtm(const float2& v)
     {
         return rtm::vector_load2(&v.x);
@@ -45,7 +47,8 @@ struct RtmConvert<float2> {
     }
 };
 template <>
-struct RtmConvert<double2> {
+struct RtmConvert<double2>
+{
     inline static rtm::vector4d to_rtm(const double2& v)
     {
         return rtm::vector_load2(&v.x);
@@ -64,7 +67,8 @@ struct RtmConvert<double2> {
 
 // vector3
 template <>
-struct RtmConvert<float3> {
+struct RtmConvert<float3>
+{
     inline static rtm::vector4f to_rtm(const float3& v)
     {
         return rtm::vector_load3(&v.x);
@@ -81,7 +85,8 @@ struct RtmConvert<float3> {
     }
 };
 template <>
-struct RtmConvert<double3> {
+struct RtmConvert<double3>
+{
     inline static rtm::vector4d to_rtm(const double3& v)
     {
         return rtm::vector_load3(&v.x);
@@ -100,7 +105,8 @@ struct RtmConvert<double3> {
 
 // vector4
 template <>
-struct RtmConvert<float4> {
+struct RtmConvert<float4>
+{
     inline static rtm::vector4f to_rtm(const float4& v)
     {
         return rtm::vector_load(&v.x);
@@ -117,7 +123,8 @@ struct RtmConvert<float4> {
     }
 };
 template <>
-struct RtmConvert<double4> {
+struct RtmConvert<double4>
+{
     inline static rtm::vector4d to_rtm(const double4& v)
     {
         return rtm::vector_load(&v.x);
@@ -136,7 +143,8 @@ struct RtmConvert<double4> {
 
 // matrix3x3
 template <>
-struct RtmConvert<float3x3> {
+struct RtmConvert<float3x3>
+{
     inline static rtm::matrix3x3f to_rtm(const float3x3& m)
     {
         return {
@@ -159,7 +167,8 @@ struct RtmConvert<float3x3> {
     }
 };
 template <>
-struct RtmConvert<double3x3> {
+struct RtmConvert<double3x3>
+{
     inline static rtm::matrix3x3d to_rtm(const double3x3& m)
     {
         return {
@@ -184,7 +193,8 @@ struct RtmConvert<double3x3> {
 
 // matrix4x4
 template <>
-struct RtmConvert<float4x4> {
+struct RtmConvert<float4x4>
+{
     inline static rtm::matrix4x4f to_rtm(const float4x4& m)
     {
         return {
@@ -209,7 +219,8 @@ struct RtmConvert<float4x4> {
     }
 };
 template <>
-struct RtmConvert<double4x4> {
+struct RtmConvert<double4x4>
+{
     inline static rtm::matrix4x4d to_rtm(const double4x4& m)
     {
         return {
@@ -236,7 +247,8 @@ struct RtmConvert<double4x4> {
 
 // quat
 template <>
-struct RtmConvert<QuatF> {
+struct RtmConvert<QuatF>
+{
     inline static rtm::quatf to_rtm(const QuatF& q)
     {
         return rtm::quat_load(&q.x);
@@ -253,7 +265,8 @@ struct RtmConvert<QuatF> {
     }
 };
 template <>
-struct RtmConvert<QuatD> {
+struct RtmConvert<QuatD>
+{
     inline static rtm::quatd to_rtm(const QuatD& q)
     {
         return rtm::quat_load(&q.x);
@@ -272,7 +285,8 @@ struct RtmConvert<QuatD> {
 
 // transform
 template <>
-struct RtmConvert<TransformF> {
+struct RtmConvert<TransformF>
+{
     inline static rtm::qvvf to_rtm(const TransformF& t)
     {
         return rtm::qvvf(
@@ -295,7 +309,8 @@ struct RtmConvert<TransformF> {
     }
 };
 template <>
-struct RtmConvert<TransformD> {
+struct RtmConvert<TransformD>
+{
     inline static rtm::qvvd to_rtm(const TransformD& t)
     {
         return rtm::qvvd(

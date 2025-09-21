@@ -1,11 +1,11 @@
 #include "SkrCore/memory/sp.hpp"
 #include "SkrGraphics/api.h"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 #include <SkrOS/filesystem.hpp>
 #include "SkrBase/misc/debug.h"
-#include "SkrRT/io/vram_io.hpp"
-#include "SkrRT/resource/resource_factory.h"
-#include "SkrRT/resource/resource_system.h"
+#include "SkrRuntime/io/vram_io.hpp"
+#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_system.h"
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 
@@ -38,7 +38,7 @@ struct SKR_RENDERER_API TextureFactoryImpl : public TextureFactory
         this->root.dstorage_root = dstorage_root.c_str();
     }
     ~TextureFactoryImpl() noexcept = default;
-    skr_guid_t GetResourceType() override;
+    GUID GetResourceType() override;
     bool AsyncIO() override { return true; }
     bool Unload(SResourceRecord* record) override;
     ESkrInstallStatus Install(SResourceRecord* record) override;
@@ -121,7 +121,7 @@ void TextureFactory::Destroy(TextureFactory* factory)
     SkrDelete(factory);
 }
 
-skr_guid_t TextureFactoryImpl::GetResourceType()
+GUID TextureFactoryImpl::GetResourceType()
 {
     const auto resource_type = ::skr::type_id_of<TextureResource>();
     return resource_type;
@@ -178,6 +178,7 @@ ESkrInstallStatus TextureFactoryImpl::InstallImpl(SResourceRecord* record)
             tdesc.height = texture_resource->height;
             tdesc.depth = texture_resource->depth;
             tdesc.format = (ECGPUFormat)texture_resource->format;
+            tdesc.mip_levels = texture_resource->mips_count;
 
             auto request = vram_service->open_texture_request();
             request->set_vfs(root.vfs);

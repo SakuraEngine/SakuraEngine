@@ -1,7 +1,6 @@
 #include "SkrToolCore/cook_system/cook_system.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/material_asset.hpp"
-#include "SkrSerde/json_serde.hpp"
 
 namespace skd::asset
 {
@@ -18,10 +17,9 @@ void* MaterialTypeImporter::Import(skr::io::IRAMService* ioService, CookContext*
         return nullptr;
     }
     '*/
-    skr::String              jString(skr::StringView((const char8_t*)blob->get_data(), blob->get_size()));
-    skr::archive::JsonReader jsonVal(jString.view());
-    auto                     type_asset = SkrNew<MaterialTypeAsset>();
-    skr::json_read(&jsonVal, *type_asset);
+    auto reader = skr::ArReadJson::ReadBuffer(blob->get_data(), blob->get_size());
+    auto type_asset = SkrNew<MaterialTypeAsset>();
+    reader.value(*type_asset);
     return type_asset;
 }
 
@@ -59,7 +57,7 @@ bool MaterialTypeCooker::Cook(CookContext* ctx)
         MaterialValue runtime_value;
         runtime_value.slot_name = property.name;
         runtime_value.prop_type = property.prop_type;
-        runtime_value.value     = property.default_value;
+        runtime_value.value = property.default_value;
         if (!property.default_resource.is_null())
         {
             runtime_value.resource = property.default_resource.get_guid();
@@ -68,7 +66,7 @@ bool MaterialTypeCooker::Cook(CookContext* ctx)
     }
     runtime_material_type.switch_defaults = material_type->switch_defaults;
     runtime_material_type.option_defaults = material_type->option_defaults;
-    runtime_material_type.vertex_type     = material_type->vertex_type;
+    runtime_material_type.vertex_type = material_type->vertex_type;
 
     // write runtime resource to disk
     ctx->Save(runtime_material_type);

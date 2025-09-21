@@ -27,7 +27,7 @@ bool AnimCooker::Cook(CookContext* ctx)
     auto anim_asset_file = ctx->GetAssetMetaFile();
     auto& anim_asset = *anim_asset_file->GetMetadata<AnimAsset>();
     //-----emit static dependencies
-    if (anim_asset.skeletonAsset.get_serialized() == skr_guid_t{})
+    if (anim_asset.skeletonAsset.get_serialized().is_zero())
     {
         SKR_LOG_ERROR(u8"Failed to cook animation asset %s. No skeleton asset specified.", ctx->GetAssetMetaFile()->GetURI().string().c_str());
         return false;

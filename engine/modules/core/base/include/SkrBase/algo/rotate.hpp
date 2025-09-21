@@ -21,8 +21,8 @@ SKR_INLINE void rotate(T p, TSize count, TSize amount)
         // move per complete system of residues
         for (TSize i = 0; i < loc_gcd; ++i)
         {
-            auto buf_object    = std::move(*(p + i));
-            TSize   index_to_fill = i;
+            auto  buf_object    = std::move(*(p + i));
+            TSize index_to_fill = i;
             // move per element of complete system of residues by amount
             for (TSize j = 0; j < cycle_size; ++j)
             {

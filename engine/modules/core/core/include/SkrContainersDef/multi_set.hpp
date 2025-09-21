@@ -10,28 +10,28 @@ namespace skr
 using MultiSetMemoryBase = container::SparseHashSetMemoryBase<uint64_t>;
 
 template <typename T, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
-using MultiSet = container::MultiSparseHashSet<container::SparseHashSetMemory<
-T,                  /*element Type*/
-uint64_t,           /*BitBlock Type*/
-HashTraits,         /*Hasher Traits*/
-MultiSetMemoryBase, /*base*/
-Allocator>>;        /*Allocator Type*/
+using MultiSet [[sfinal_alias]] = container::MultiSparseHashSet<container::SparseHashSetMemory<
+    T,                  /*element Type*/
+    uint64_t,           /*BitBlock Type*/
+    HashTraits,         /*Hasher Traits*/
+    MultiSetMemoryBase, /*base*/
+    Allocator>>;        /*Allocator Type*/
 
 template <typename T, uint64_t kCount, typename HashTraits = container::HashTraits<T>>
-using FixedMultiSet = container::MultiSparseHashSet<container::FixedSparseHashSetMemory<
-T,                 /*element Type*/
-uint64_t,          /*BitBlock Type*/
-HashTraits,        /*Hasher Traits*/
-kCount,            /*Fixed Count*/
-MultiSetMemoryBase /*base*/
->>;
+using FixedMultiSet [[sfinal_alias]] = container::MultiSparseHashSet<container::FixedSparseHashSetMemory<
+    T,                 /*element Type*/
+    uint64_t,          /*BitBlock Type*/
+    HashTraits,        /*Hasher Traits*/
+    kCount,            /*Fixed Count*/
+    MultiSetMemoryBase /*base*/
+    >>;
 
 template <typename T, uint64_t kInlineCount, typename HashTraits = container::HashTraits<T>, typename Allocator = SkrAllocator>
-using InlineMultiSet = container::MultiSparseHashSet<container::InlineSparseHashSetMemory<
-T,                  /*element Type*/
-uint64_t,           /*BitBlock Type*/
-HashTraits,         /*Hasher Traits*/
-kInlineCount,       /*Inline Count*/
-MultiSetMemoryBase, /*base*/
-Allocator>>;        /*Allocator Type*/
+using InlineMultiSet [[sfinal_alias]] = container::MultiSparseHashSet<container::InlineSparseHashSetMemory<
+    T,                  /*element Type*/
+    uint64_t,           /*BitBlock Type*/
+    HashTraits,         /*Hasher Traits*/
+    kInlineCount,       /*Inline Count*/
+    MultiSetMemoryBase, /*base*/
+    Allocator>>;        /*Allocator Type*/
 } // namespace skr

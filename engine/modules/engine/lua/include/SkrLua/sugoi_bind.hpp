@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/sugoi.h"
 #include "SkrLua/bind.hpp"
 
 namespace sugoi

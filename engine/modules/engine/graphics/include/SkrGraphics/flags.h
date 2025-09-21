@@ -112,14 +112,6 @@ typedef enum ECGPUFormat
     CGPU_FORMAT_R32_UINT = 75,
     CGPU_FORMAT_R32_SINT = 76,
     CGPU_FORMAT_R32_SFLOAT = 77,
-    CGPU_FORMAT_A2R10G10B10_UNORM = 78,
-    CGPU_FORMAT_A2R10G10B10_UINT = 79,
-    CGPU_FORMAT_A2R10G10B10_SNORM = 80,
-    CGPU_FORMAT_A2R10G10B10_SINT = 81,
-    CGPU_FORMAT_A2B10G10R10_UNORM = 82,
-    CGPU_FORMAT_A2B10G10R10_UINT = 83,
-    CGPU_FORMAT_A2B10G10R10_SNORM = 84,
-    CGPU_FORMAT_A2B10G10R10_SINT = 85,
     CGPU_FORMAT_R10G10B10A2_UNORM = 86,
     CGPU_FORMAT_R10G10B10A2_UINT = 87,
     CGPU_FORMAT_R10G10B10A2_SNORM = 88,
@@ -635,29 +627,30 @@ typedef enum ECGPUTextureFlag
     /// Actually VMA/D3D12MA allocate dedicated memories with ALLOW_ALIAS flag with specific loacl heaps
     /// If the texture needs to be restricted Committed/Dedicated(thus you want to keep its priority high)
     /// Toggle is_restrict_dedicated flag in CGPUTextureDescriptor
-    CGPU_TEXTURE_FLAG_DEDICATED_BIT = 0x01,
+    CGPU_TEXTURE_FLAG_HEAP_DEDICATED_BIT = 0x01,
+    CGPU_TEXTURE_FLAG_DRIVER_DEDICATED_BIT = 0x02,
     /// Texture will be allocated in memory which can be shared among multiple processes
-    CGPU_TEXTURE_FLAG_EXPORT_BIT = 0x02,
+    CGPU_TEXTURE_FLAG_EXPORT_BIT = 0x04,
     /// Texture will be allocated in memory which can be shared among multiple gpus
-    CGPU_TEXTURE_FLAG_EXPORT_ADAPTER_BIT = 0x04,
+    CGPU_TEXTURE_FLAG_EXPORT_ADAPTER_BIT = 0x08,
     /// Use on-tile memory to store this texture
-    CGPU_TEXTURE_FLAG_ON_TILE = 0x08,
+    CGPU_TEXTURE_FLAG_ON_TILE = 0x10,
     /// Prevent compression meta data from generating (XBox)
-    CGPU_TEXTURE_FLAG_NO_COMPRESSION = 0x10,
+    CGPU_TEXTURE_FLAG_NO_COMPRESSION = 0x20,
     /// Force 2D instead of automatically determining dimension based on width, height, depth
-    CGPU_TEXTURE_FLAG_FORCE_2D = 0x20,
+    CGPU_TEXTURE_FLAG_FORCE_2D = 0x40,
     /// Force 3D instead of automatically determining dimension based on width, height, depth
-    CGPU_TEXTURE_FLAG_FORCE_3D = 0x40,
+    CGPU_TEXTURE_FLAG_FORCE_3D = 0x80,
     /// Display target
-    CGPU_TEXTURE_FLAG_ALLOW_DISPLAY_TARGET = 0x80,
+    CGPU_TEXTURE_FLAG_ALLOW_DISPLAY_TARGET = 0x100,
     /// Create a normal map texture
-    CGPU_TEXTURE_FLAG_NORMAL_MAP = 0x100,
+    CGPU_TEXTURE_FLAG_NORMAL_MAP = 0x200,
     /// Fragment mask
-    CGPU_TEXTURE_FLAG_FRAG_MASK = 0x200,
+    CGPU_TEXTURE_FLAG_FRAG_MASK = 0x400,
     /// Create as AliasingResource
-    CGPU_TEXTURE_FLAG_ALIASING_RESOURCE = 0x400,
+    CGPU_TEXTURE_FLAG_ALIASING_RESOURCE = 0x800,
     /// Create as TiledResource
-    CGPU_TEXTURE_FLAG_TILED_RESOURCE = 0x800,
+    CGPU_TEXTURE_FLAG_TILED_RESOURCE = 0x1000,
     /// 
     CGPU_TEXTURE_FLAG_USABLE_MAX = 0x40000,
     CGPU_TEXTURE_FLAG_MAX_ENUM_BIT = 0x7FFFFFFF
@@ -725,6 +718,8 @@ typedef uint32_t CGPUTextureUsages;
 
 typedef enum ECGPUViewUsage
 {
+    CGPU_VIEW_USAGE_NONE = 0x0,
+    
     CGPU_BUFFER_VIEW_USAGE_CBV = 0x01,
 
     CGPU_BUFFER_VIEW_USAGE_UAV_STRUCTURED = 0x10,

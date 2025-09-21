@@ -19,7 +19,8 @@ namespace skr::container
 // TODO. iterator
 // TODO. append repeat
 template <typename Memory>
-struct U8String : protected Memory {
+struct U8String : protected Memory
+{
     // from memory
     using typename Memory::DataType;
     using typename Memory::SizeType;
@@ -177,6 +178,7 @@ struct U8String : protected Memory {
     void clear();
     void release(SizeType reserve_capacity = 0);
     void reserve(SizeType expect_capacity);
+    void grow_to(SizeType expect_capacity);
     void shrink();
     void resize(SizeType expect_size, const DataType& new_value);
     void resize_unsafe(SizeType expect_size);
@@ -1318,6 +1320,15 @@ inline void U8String<Memory>::reserve(SizeType expect_capacity)
     {
         _pre_modify();
         _realloc(expect_capacity);
+    }
+}
+template <typename Memory>
+inline void U8String<Memory>::grow_to(SizeType expect_capacity)
+{
+    if (expect_capacity > capacity())
+    {
+        _pre_modify();
+        Memory::grow_to(expect_capacity);
     }
 }
 template <typename Memory>

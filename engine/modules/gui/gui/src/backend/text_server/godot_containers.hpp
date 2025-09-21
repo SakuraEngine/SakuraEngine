@@ -22,20 +22,20 @@ struct Comparator {
 };
 
 template <class T>
-class Span : public ::skr::span<T>
+class Span : public ::skr::Span<T>
 {
 public:
     Span() SKR_NOEXCEPT = default;
 
     template <typename U>
     Span(const skr::Vector<U>& other) SKR_NOEXCEPT
-        : skr::span<T>(other.data(), other.size())
+        : skr::Span<T>(other.data(), other.size())
     {
     }
 
     template <typename U>
     Span(const U* ptr, size_t size) SKR_NOEXCEPT
-        : skr::span<T>(ptr, size)
+        : skr::Span<T>(ptr, size)
     {
     }
 };

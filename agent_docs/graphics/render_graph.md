@@ -173,8 +173,8 @@ auto compute_pass = graph.add_compute_pass(
         cgpu_compute_encoder_bind_descriptor_set(encoder, compute_desc_set);
         
         // 派发计算
-        uint32_t group_count = (particle_count + 63) / 64;
-        cgpu_compute_encoder_dispatch(encoder, group_count, 1, 1);
+        cgpu_compute_encoder_set_threadgroup_size(compute_encoder, 64, 1, 1);
+        cgpu_compute_encoder_dispatch(encoder, particle_count, 1, 1);
     }
 );
 ```

@@ -49,7 +49,7 @@ void ResourceLifetimeAnalysis::analyze_resource_lifetimes(RenderGraph* graph) SK
             
             // 检查该Pass是否使用了这个资源
             bool uses_resource = false;
-            for (const auto& access : pass_info->resource_info.all_resource_accesses)
+            for (const auto& access : pass_info->resource_info.resource_accesses)
             {
                 if (access.resource == resource)
                 {
@@ -60,13 +60,13 @@ void ResourceLifetimeAnalysis::analyze_resource_lifetimes(RenderGraph* graph) SK
             
             if (uses_resource)
             {
-                uint32_t dependency_level = dependency_analysis_.get_logical_dependency_level(pass);
+                uint32_t dependency_level = dependency_analysis_.get_dependency_level(pass);
                 // 更新生命周期范围
                 if (dependency_level < lifetime.start_dependency_level)
                 {
                     lifetime.start_dependency_level = dependency_level;
                     lifetime.first_using_pass = pass; // 记录第一个使用该资源的Pass
-                    lifetime.first_using_state = pass_info->resource_info.all_resource_accesses.find_if(
+                    lifetime.first_using_state = pass_info->resource_info.resource_accesses.find_if(
                         [resource](auto info) { return info.resource == resource; }
                     ).ref().resource_state;
                     
@@ -80,7 +80,7 @@ void ResourceLifetimeAnalysis::analyze_resource_lifetimes(RenderGraph* graph) SK
                 {
                     lifetime.end_dependency_level = dependency_level;
                     lifetime.last_using_pass = pass; // 记录最后一个使用该资源的Pass
-                    lifetime.last_using_state = pass_info->resource_info.all_resource_accesses.find_if(
+                    lifetime.last_using_state = pass_info->resource_info.resource_accesses.find_if(
                         [resource](auto info) { return info.resource == resource; }
                     ).ref().resource_state;
                 }

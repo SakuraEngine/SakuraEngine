@@ -115,48 +115,48 @@ MTLTextureType MetalUtil_TextureDimensionToType(ECGPUTextureDimension dim)
     }
 }
 
-MTLBindingAccess MetalUtil_ResourceTypeToAccess(ECGPUResourceType type)
+typedef struct ShaderResourceView
 {
-    switch (type)
-    {
-    case CGPU_RESOURCE_TYPE_BUFFER:
-    case CGPU_RESOURCE_TYPE_TEXTURE:
-    case CGPU_RESOURCE_TYPE_SAMPLER:
-    case CGPU_RESOURCE_TYPE_UNIFORM_BUFFER:
-        return MTLBindingAccessReadOnly;
+    ECGPUResourceType type;
+    CGPUViewUsages usage;
+} ShaderResourceView;
 
-    case CGPU_RESOURCE_TYPE_RW_BUFFER:
-    case CGPU_RESOURCE_TYPE_INDIRECT_BUFFER:
-    case CGPU_RESOURCE_TYPE_RW_TEXTURE:
-        return MTLBindingAccessReadWrite;
-        
-    default:
-        SKR_ASSERT(false && "Unsupported resource type");
-        return MTLBindingAccessReadOnly;
-    }
-}
-
-ECGPUResourceType MetalUtil_GetResourceType(MTLStructType* structure, ECGPUTextureDimension* dim)
+ShaderResourceView MetalUtil_GetResourceType(MTLStructType* structure, ECGPUTextureDimension* dim)
 {
-    ECGPUResourceType r = CGPU_RESOURCE_TYPE_NONE;
+    ECGPUResourceType t = CGPU_RESOURCE_TYPE2_NONE;
+    CGPUViewUsages u = CGPU_VIEW_USAGE_NONE;
+
     if (structure.members.count == 1)
     {
         MTLDataType T = structure.members[0].dataType;
         if (T == MTLDataTypeTexture)
         {
+            t = CGPU_RESOURCE_TYPE2_TEXTURE;
+
             MTLTextureReferenceType* TexType = structure.members[0].textureReferenceType;
-            r = (TexType.access == MTLBindingAccessReadOnly) ? CGPU_RESOURCE_TYPE_TEXTURE : CGPU_RESOURCE_TYPE_RW_TEXTURE;
+            u = (TexType.access == MTLBindingAccessReadOnly) ? CGPU_TEXTURE_VIEW_USAGE_SRV : CGPU_TEXTURE_VIEW_USAGE_UAV;
             *dim = gTexDimLUT[TexType.textureType];
             SKR_ASSERT(*dim != CGPU_TEXTURE_DIMENSION_UNDEFINED);
         }
         else if (T == MTLDataTypeSampler)
-            r = CGPU_RESOURCE_TYPE_SAMPLER;
+        {
+            t = CGPU_RESOURCE_TYPE2_SAMPLER;
+        }
         else if (T == MTLDataTypePointer)
-            r = CGPU_RESOURCE_TYPE_UNIFORM_BUFFER;
+        {
+            t = CGPU_RESOURCE_TYPE2_BUFFER;
+            u = CGPU_BUFFER_VIEW_USAGE_CBV;
+        }
         else if (T == MTLDataTypeInstanceAccelerationStructure)
-            r = CGPU_RESOURCE_TYPE_ACCELERATION_STRUCTURE;
+        {
+            t = CGPU_RESOURCE_TYPE2_ACCELERATION_STRUCTURE;
+        }
         else if (T == MTLDataTypeStruct)
-            r = CGPU_RESOURCE_TYPE_PUSH_CONSTANT;
+        {
+            t = CGPU_RESOURCE_TYPE2_BUFFER;
+            u = CGPU_BUFFER_VIEW_USAGE_PUSH_CONSTANT;
+        }
+        SKR_ASSERT(t != CGPU_RESOURCE_TYPE2_NONE);
     }
     else if (structure.members.count == 2)
     {
@@ -164,9 +164,21 @@ ECGPUResourceType MetalUtil_GetResourceType(MTLStructType* structure, ECGPUTextu
         if (T == MTLDataTypePointer) // RW/RO Buffer
         {
             MTLBindingAccess Access = structure.members[0].pointerType.access;
-            r = (Access == MTLBindingAccessReadOnly) ? CGPU_RESOURCE_TYPE_BUFFER : CGPU_RESOURCE_TYPE_RW_BUFFER;
+            t = CGPU_RESOURCE_TYPE2_BUFFER;
+            u = (Access == MTLBindingAccessReadOnly) ? CGPU_BUFFER_VIEW_USAGE_SRV_RAW : CGPU_BUFFER_VIEW_USAGE_UAV_RAW;
         }
+        else if (T == MTLDataTypeTexture) // Texel Buffer
+        {
+            MTLBindingAccess Access = structure.members[0].pointerType.access;
+            t = CGPU_RESOURCE_TYPE2_BUFFER;
+            u = (Access == MTLBindingAccessReadOnly) ? CGPU_BUFFER_VIEW_USAGE_SRV_TEXEL : CGPU_BUFFER_VIEW_USAGE_UAV_TEXEL;
+        }
+        SKR_ASSERT(t != CGPU_RESOURCE_TYPE2_NONE);
     }
+    ShaderResourceView r;
+    r.type = t;
+    r.usage = u;
+    SKR_ASSERT(r.type != CGPU_RESOURCE_TYPE2_NONE);
     return r;
 }
 
@@ -176,7 +188,7 @@ ECGPUResourceType MetalUtil_GetShaderResourceType(id<MTLBufferBinding> SRT, uint
     MTLArrayType* arrayType = member.arrayType;
     MTLPointerType* pointerType = member.pointerType;
     const bool is_array = (arrayType != nil) || (pointerType != nil);
-    ECGPUResourceType resource_type = CGPU_RESOURCE_TYPE_NONE;
+    ECGPUResourceType resource_type = CGPU_RESOURCE_TYPE2_NONE;
     resource->dim = CGPU_TEXTURE_DIMENSION_UNDEFINED;
     resource->set = set;
     resource->binding = member.argumentIndex;
@@ -186,8 +198,10 @@ ECGPUResourceType MetalUtil_GetShaderResourceType(id<MTLBufferBinding> SRT, uint
 
     if (!is_array)
     {
-        resource_type = MetalUtil_GetResourceType(structure, &resource->dim);
-        if (resource_type == CGPU_RESOURCE_TYPE_PUSH_CONSTANT)
+        ShaderResourceView v = MetalUtil_GetResourceType(structure, &resource->dim);
+        resource_type = v.type;
+        resource->view_usages = v.usage;
+        if (resource->view_usages == CGPU_BUFFER_VIEW_USAGE_PUSH_CONSTANT)
             resource->size = SRT.bufferDataSize;
         else
             resource->size = 1;
@@ -196,10 +210,12 @@ ECGPUResourceType MetalUtil_GetShaderResourceType(id<MTLBufferBinding> SRT, uint
     {
         MTLStructType* elementStructType = arrayType ? arrayType.elementStructType : pointerType.elementStructType;
         resource->size = arrayType ? arrayType.arrayLength : ~0;
-        resource_type = MetalUtil_GetResourceType(elementStructType, &resource->dim);
+        ShaderResourceView v = MetalUtil_GetResourceType(elementStructType, &resource->dim);
+        resource_type = v.type;
+        resource->view_usages = v.usage;
     }
     resource->type = resource_type;
-    SKR_ASSERT(resource->type != CGPU_RESOURCE_TYPE_NONE);
+    SKR_ASSERT(resource->type != CGPU_RESOURCE_TYPE2_NONE);
     return resource_type;
 }
 
@@ -518,4 +534,71 @@ id<MTLSamplerState> MetalUtil_GetLinearSampler(CGPUDevice_Metal* device)
     linearSampler = [device->pDevice newSamplerStateWithDescriptor:samplerDesc];
     
     return linearSampler;
+}
+
+id<MTLTexture> MetalUtil_CreateTextureView(CGPUDeviceId device, const struct CGPUTextureViewDescriptor* desc)
+{
+    CGPUTexture_Metal* texture = (CGPUTexture_Metal*)desc->texture;
+    id<MTLTexture> view = nil;
+    @autoreleasepool {
+        // Determine view parameters
+        ECGPUFormat viewFormat = desc->format != CGPU_FORMAT_UNDEFINED ? desc->format : texture->super.info->format;
+        MTLPixelFormat mtlFormat = MetalUtil_TranslatePixelFormat(viewFormat);
+        
+        // Calculate mip and array ranges
+        uint32_t baseMip = desc->base_mip_level;
+        uint32_t mipCount = desc->mip_level_count ? desc->mip_level_count : (texture->super.info->mip_levels - baseMip);
+        uint32_t baseLayer = desc->base_array_layer;
+        uint32_t layerCount = desc->array_layer_count ? desc->array_layer_count : (texture->super.info->array_size - baseLayer);
+        
+        // Validate ranges
+        cgpu_assert(baseMip < texture->super.info->mip_levels && "Base mip level out of range");
+        cgpu_assert(baseMip + mipCount <= texture->super.info->mip_levels && "Mip range out of bounds");
+        cgpu_assert(baseLayer < texture->super.info->array_size && "Base array layer out of range");
+        cgpu_assert(baseLayer + layerCount <= texture->super.info->array_size && "Array range out of bounds");
+        
+        // Create texture view
+        NSRange levelRange = NSMakeRange(baseMip, mipCount);
+        NSRange sliceRange = NSMakeRange(baseLayer, layerCount);
+        
+        // Handle swizzle if needed (Metal doesn't support arbitrary swizzle, only specific patterns)
+        MTLTextureSwizzleChannels swizzle = MTLTextureSwizzleChannelsDefault;
+        
+        // Check if we need a different view type
+        MTLTextureType viewType = texture->pTexture.textureType;
+        if (desc->dims != CGPU_TEXTURE_DIMENSION_UNDEFINED)
+        {
+            viewType = MetalUtil_TranslateTextureType(desc->dims, layerCount, false);
+        }
+        
+        if (@available(macOS 10.15, iOS 13.0, *))
+        {
+            view = [texture->pTexture newTextureViewWithPixelFormat:mtlFormat
+                                                                      textureType:viewType
+                                                                           levels:levelRange
+                                                                           slices:sliceRange
+                                                                          swizzle:swizzle];
+        }
+        else
+        {
+            view = [texture->pTexture newTextureViewWithPixelFormat:mtlFormat
+                                                                      textureType:viewType
+                                                                           levels:levelRange
+                                                                           slices:sliceRange];
+        }
+        
+        if (!view)
+        {
+            cgpu_assert(false && "Failed to create Metal texture view");
+            cgpu_free_aligned(view, _Alignof(CGPUTextureView_Metal));
+            return NULL;
+        }
+        
+        // Set debug name if provided
+        if (device->adapter->instance->enable_set_name && desc->name)
+        {
+            view.label = [NSString stringWithUTF8String:(const char*)desc->name];
+        }
+    }
+    return view;
 }

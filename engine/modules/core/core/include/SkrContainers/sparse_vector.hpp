@@ -19,110 +19,79 @@ struct TypeSignatureTraits<::skr::SparseVector<T>>
 };
 } // namespace skr
 
-// bin serde
-#include "SkrSerde/bin_serde.hpp"
+// serialize
+#include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
-template <typename T>
-struct BinSerde<skr::SparseVector<T>>
+template <typename SparseVector>
+struct SerializeSkrSparseVectorImpl
 {
-    inline static bool read(SBinaryReader* r, skr::SparseVector<T>& v)
+    inline static void read(ArchiveRead& r, SparseVector& v)
     {
-        // read size
-        uint32_t size;
-        if (!bin_read(r, size)) return false;
-
-        // read sparse indices and values
-        skr::SparseVector<T> temp;
-        for (uint32_t i = 0; i < size; ++i)
+        using DataType = typename SparseVector::value_type;
+        if (r.is_structured())
         {
-            uint64_t index;
-            T value;
-            if (!bin_read(r, index))
-                return false;
-            if (!bin_read(r, value))
-                return false;
-            temp.add_at(index, std::move(value));
-        }
+            Archive::ArrayScope arr_scope{ r };
+            SKR_FAST_CHECK(arr_scope.is_success(), );
 
-        // move to target
-        v = std::move(temp);
-        return true;
+            // reserve
+            v.clear();
+            uint64_t arr_size;
+            SKR_FAST_CHECK(r.array_size_structured(arr_size), );
+            v.reserve(arr_size);
+
+            // read content
+            for (uint64_t i = 0; i < arr_size; ++i)
+            {
+                DataType value;
+                SKR_FAST_CHECK(r.value<DataType>(value), );
+                v.add(std::move(value));
+            }
+        }
+        else
+        {
+            // read count
+            uint64_t count = 0;
+            SKR_FAST_CHECK(r.value<uint64_t>(count), );
+
+            // reserve
+            v.clear();
+            v.reserve(count);
+
+            // read content
+            for (uint64_t i = 0; i < count; ++i)
+            {
+                DataType value;
+                SKR_FAST_CHECK(r.value<DataType>(value), );
+                v.add(std::move(value));
+            }
+        }
     }
-    inline static bool write(SBinaryWriter* w, const skr::SparseVector<T>& v)
+    inline static void write(ArchiveWrite& w, const SparseVector& v)
     {
-        // write size
-        uint32_t size = static_cast<uint32_t>(v.size());
-        if (!bin_write(w, size)) return false;
-
-        // write sparse indices and values
-        for (const auto& slot : v)
+        using DataType = typename SparseVector::value_type;
+        if (w.is_structured())
         {
-            if (!bin_write(w, slot.index)) return false;
-            if (!bin_write(w, slot.value)) return false;
+            Archive::ArrayScope arr_scope{ w };
+            SKR_FAST_CHECK(arr_scope.is_success(), );
+
+            // write content
+            for (const auto& slot : v)
+            {
+                SKR_FAST_CHECK(w.value<DataType>(slot), );
+            }
         }
-        return true;
-    }
-};
-} // namespace skr
-
-// json serde
-#include "SkrSerde/json_serde.hpp"
-namespace skr
-{
-template <typename T>
-struct JsonSerde<skr::SparseVector<T>>
-{
-    inline static bool read(skr::archive::JsonReader* r, skr::SparseVector<T>& v)
-    {
-        size_t count;
-        SKR_EXPECTED_CHECK(r->StartArray(count), false);
-
-        skr::SparseVector<T> temp;
-        for (size_t i = 0; i < count; ++i)
+        else
         {
-            SKR_EXPECTED_CHECK(r->StartObject(), false);
+            // write count
+            SKR_FAST_CHECK(w.value<uint64_t>(static_cast<uint64_t>(v.size())), );
 
-            SKR_EXPECTED_CHECK(r->Key(u8"index"), false);
-            uint64_t index;
-            if (!json_read(r, index))
-                return false;
-
-            SKR_EXPECTED_CHECK(r->Key(u8"value"), false);
-            T value;
-            if (!json_read<T>(r, value))
-                return false;
-
-            SKR_EXPECTED_CHECK(r->EndObject(), false);
-
-            temp.add_at(index, std::move(value));
+            // write content
+            for (const auto& slot : v)
+            {
+                SKR_FAST_CHECK(w.value<DataType>(slot), );
+            }
         }
-
-        SKR_EXPECTED_CHECK(r->EndArray(), false);
-        v = std::move(temp);
-        return true;
-    }
-    inline static bool write(skr::archive::JsonWriter* w, const skr::SparseVector<T>& v)
-    {
-        SKR_EXPECTED_CHECK(w->StartArray(), false);
-
-        for (const auto& slot : v)
-        {
-            SKR_EXPECTED_CHECK(w->StartObject(), false);
-
-            SKR_EXPECTED_CHECK(w->Key(u8"index"), false);
-            if (!json_write(w, slot.index))
-                return false;
-
-            SKR_EXPECTED_CHECK(w->Key(u8"value"), false);
-            if (!json_write<T>(w, slot.value))
-                return false;
-
-            SKR_EXPECTED_CHECK(w->EndObject(), false);
-        }
-
-        SKR_EXPECTED_CHECK(w->EndArray(), false);
-        return true;
     }
 };
 } // namespace skr

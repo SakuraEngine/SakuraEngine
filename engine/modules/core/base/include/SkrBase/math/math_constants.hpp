@@ -27,17 +27,20 @@ enum class ECoordinateSystemHand
     RightHand = 1,
 };
 
-struct MathNoInitType {
+struct MathNoInitType
+{
 };
 inline constexpr MathNoInitType kMathNoInit = MathNoInitType{};
 
 // template maker
 template <typename T, size_t kDimensions>
-struct MathVectorMaker {
+struct MathVectorMaker
+{
     // using Type = float3; // make vector from type and dimension
 };
 template <typename T, size_t kDimensions>
-struct MathMatrixMaker {
+struct MathMatrixMaker
+{
     // using Type = float3x3; // make matrix from type and dimension
 };
 template <typename T, size_t kDimensions>
@@ -47,13 +50,15 @@ using matrix_t = typename MathMatrixMaker<T, kDimensions>::Type;
 
 // traits
 template <typename T>
-struct MathVectorTraits {
+struct MathVectorTraits
+{
     // inline static constexpr size_t kDimensions = 3; // get vector dimension
     // using ComponentType = float; // get vector component type
     // using ImplementationFlag = void;
 };
 template <typename T>
-struct MathMatrixTraits {
+struct MathMatrixTraits
+{
     // inline static constexpr size_t kDimensions = 3; // get matrix dimension
     // using ComponentType = float; // get matrix component type
     // using ImplementationFlag = void;

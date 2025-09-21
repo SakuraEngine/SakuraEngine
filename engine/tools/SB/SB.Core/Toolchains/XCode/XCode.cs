@@ -7,11 +7,12 @@ namespace SB.Core
     [Setup<XCodeSetup>]
     public partial class XCode : IToolchain
     {
-        internal void FastPathFind()
+        internal void FindWithinCommandLineTools()
         {
             HasCommandLineTools = Directory.Exists(CommandLineToolsDirectory);
             HasXCodeIDE = Directory.Exists(XCodeDirectory);
-            if (!HasCommandLineTools && !HasXCodeIDE)
+
+            if (!HasCommandLineTools)
                 return;
             var RootDirectoryToFind = HasCommandLineTools ? CommandLineToolsDirectory : XCodeDirectory;
             // find tools
@@ -26,7 +27,7 @@ namespace SB.Core
             DeveloperDirectory = RootDirectoryToFind;
         }
 
-        internal void XCRunFind()
+        internal void FindWithXCRun()
         {
             if (PlatSDKDirectory is null)
             {
@@ -37,6 +38,7 @@ namespace SB.Core
             {
                 BuildSystem.RunProcess("xcrun", "xcode-select --print-path", out string? output, out string? error);
                 DeveloperDirectory = output.Trim();
+                DeveloperDirectory = Path.Combine(DeveloperDirectory, "Toolchains/XcodeDefault.xctoolchain");
             }
             if (SDKVersion is null)
             {
@@ -93,7 +95,7 @@ namespace SB.Core
         public bool HasCommandLineTools { get; private set; } = false;
         public string CommandLineToolsDirectory { get; private set; } = "/Library/Developer/CommandLineTools/";
         public bool HasXCodeIDE { get; private set; } = false;
-        public string XCodeDirectory { get; private set; } = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/";
+        public string XCodeDirectory { get; private set; } = "/Applications/Xcode.app/Contents/Developer";
         // Auto detect:
         // xcrun -sdk macosx --show-sdk-path
         // From XCode:
@@ -121,8 +123,8 @@ namespace SB.Core
         {
             if (BuildSystem.HostOS == OSPlatform.OSX)
             {
-                XCode.FastPathFind();
-                XCode.XCRunFind();
+                XCode.FindWithinCommandLineTools();
+                XCode.FindWithXCRun();
                 XCode.InitializeTools();
             }
         }

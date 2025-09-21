@@ -1,7 +1,7 @@
 #pragma once
 #include <atomic>
-#include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/resource/resource_system.h"
+#include "SkrRuntime/io/ram_io.hpp"
+#include "SkrRuntime/resource/resource_system.h"
 #include "SkrTask/fib_task.hpp"
 
 
@@ -12,12 +12,12 @@ struct SResourceRequestImpl : public ResourceRequest
     friend struct ResourceRegistry;
     friend struct ResourceSystemImpl;
 public:
-    skr_guid_t GetGuid() const override;
-    skr::span<const uint8_t> GetData() const override;
+    skr::GUID GetGuid() const override;
+    skr::Span<const uint8_t> GetData() const override;
 #ifdef SKR_RESOURCE_DEV_MODE
-    skr::span<const uint8_t> GetArtifactsData() const override;
+    skr::Span<const uint8_t> GetArtifactsData() const override;
 #endif
-    skr::span<const skr_guid_t> GetDependencies() const override;
+    skr::Span<const skr::GUID> GetDependencies() const override;
 
     void UpdateLoad(bool requestInstall) override;
     void UpdateUnload() override;
@@ -48,7 +48,7 @@ protected:
     ResourceFactory* factory;
     skr_vfs_t* vfs;
 
-    skr::InlineVector<skr_guid_t, 4> dependencies;
+    skr::InlineVector<skr::GUID, 4> dependencies;
     SResourceRecord* resourceRecord;
     skr_io_future_t dataFuture;
     skr::BlobId dataBlob;

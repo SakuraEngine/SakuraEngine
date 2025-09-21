@@ -353,28 +353,28 @@ inline bool is_finite(const TransformD& transform)
 inline bool operator==(const TransformF& lhs, const TransformF& rhs)
 {
     return all(lhs.rotation.as_vector() == rhs.rotation.as_vector()) &&
-           all(lhs.position == rhs.position) &&
-           all(lhs.scale == rhs.scale);
+        all(lhs.position == rhs.position) &&
+        all(lhs.scale == rhs.scale);
 }
 inline bool operator==(const TransformD& lhs, const TransformD& rhs)
 {
     return all(lhs.rotation.as_vector() == rhs.rotation.as_vector()) &&
-           all(lhs.position == rhs.position) &&
-           all(lhs.scale == rhs.scale);
+        all(lhs.position == rhs.position) &&
+        all(lhs.scale == rhs.scale);
 }
 
 // nearly equal
 inline bool nearly_equal(const TransformF& lhs, const TransformF& rhs, float threshold = float(0.00001))
 {
     return all(nearly_equal(lhs.rotation, rhs.rotation, threshold)) &&
-           all(nearly_equal(lhs.position, rhs.position, threshold)) &&
-           all(nearly_equal(lhs.scale, rhs.scale, threshold));
+        all(nearly_equal(lhs.position, rhs.position, threshold)) &&
+        all(nearly_equal(lhs.scale, rhs.scale, threshold));
 }
 inline bool nearly_equal(const TransformD& lhs, const TransformD& rhs, double threshold = double(0.00001))
 {
     return all(nearly_equal(lhs.rotation, rhs.rotation, threshold)) &&
-           all(nearly_equal(lhs.position, rhs.position, threshold)) &&
-           all(nearly_equal(lhs.scale, rhs.scale, threshold));
+        all(nearly_equal(lhs.position, rhs.position, threshold)) &&
+        all(nearly_equal(lhs.scale, rhs.scale, threshold));
 }
 
 // mul assign operator
@@ -401,28 +401,28 @@ inline TransformD& TransformD::operator*=(const TransformD& rhs)
 inline bool TransformF::is_identity() const
 {
     return rotation.is_identity() &&
-           all(position == float3(0)) &&
-           all(scale == float3(1));
+        all(position == float3(0)) &&
+        all(scale == float3(1));
 }
 inline bool TransformD::is_identity() const
 {
     return rotation.is_identity() &&
-           all(position == double3(0)) &&
-           all(scale == double3(1));
+        all(position == double3(0)) &&
+        all(scale == double3(1));
 }
 
 // is nearly identity
 inline bool TransformF::is_nearly_identity(float threshold) const
 {
     return rotation.is_nearly_identity(threshold) &&
-           all(nearly_equal(position, float3(0), threshold)) &&
-           all(nearly_equal(scale, float3(1), threshold));
+        all(nearly_equal(position, float3(0), threshold)) &&
+        all(nearly_equal(scale, float3(1), threshold));
 }
 inline bool TransformD::is_nearly_identity(double threshold) const
 {
     return rotation.is_nearly_identity(threshold) &&
-           all(nearly_equal(position, double3(0), threshold)) &&
-           all(nearly_equal(scale, double3(1), threshold));
+        all(nearly_equal(position, double3(0), threshold)) &&
+        all(nearly_equal(scale, double3(1), threshold));
 }
 
 // to matrix

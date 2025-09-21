@@ -16,7 +16,7 @@ SKR_INLINE void construct(T* p)
     }
     else
     {
-        std::memset(p, 0, sizeof(T));
+        std::memset((void*)p, 0, sizeof(T));
     }
 }
 template <typename T>
@@ -42,7 +42,7 @@ SKR_INLINE void copy(Dst* dst, Src* src)
         else
         {
             static_assert(sizeof(Dst) == sizeof(Src));
-            std::memcpy(dst, src, sizeof(Src));
+            std::memcpy((void*)dst, (void*)src, sizeof(Src));
         }
     }
 }
@@ -58,7 +58,7 @@ SKR_INLINE void assign(Dst* dst, Src* src)
         else
         {
             static_assert(sizeof(Dst) == sizeof(Src));
-            std::memcpy(dst, src, sizeof(Src));
+            std::memcpy((void*)dst, (void*)src, sizeof(Src));
         }
     }
 }
@@ -76,7 +76,7 @@ SKR_INLINE void move(Dst* dst, Src* src)
         else
         {
             static_assert(sizeof(Dst) == sizeof(Src));
-            std::memmove((void*)dst, src, sizeof(Src));
+            std::memmove((void*)dst, (void*)src, sizeof(Src));
         }
 
         if constexpr (MemoryTraits<Dst, Src>::need_dtor_after_move)
@@ -97,7 +97,7 @@ SKR_INLINE void move_assign(Dst* dst, Src* src)
         else
         {
             static_assert(sizeof(Dst) == sizeof(Src));
-            std::memcpy(dst, src, sizeof(Src));
+            std::memcpy((void*)dst, (void*)src, sizeof(Src));
         }
 
         if constexpr (MemoryTraits<Dst, Src>::need_dtor_after_move)
@@ -141,7 +141,7 @@ SKR_INLINE void construct(T* p, size_t count)
     }
     else
     {
-        std::memset(p, 0, sizeof(T) * count);
+        std::memset((void*)p, 0, sizeof(T) * count);
     }
 }
 template <typename T>
@@ -178,7 +178,7 @@ SKR_INLINE void copy(Dst* dst, Src* src, size_t count)
         }
         else
         {
-            std::memcpy(dst, src, sizeof(Src) * count);
+            std::memcpy((void*)dst, (void*)src, sizeof(Src) * count);
         }
     }
 }
@@ -199,7 +199,7 @@ SKR_INLINE void assign(Dst* dst, Src* src, size_t count)
         }
         else
         {
-            std::memcpy(dst, src, sizeof(Src) * count);
+            std::memcpy((void*)dst, (void*)src, sizeof(Src) * count);
         }
     }
 }
@@ -248,7 +248,7 @@ SKR_INLINE void move(Dst* dst, Src* src, size_t count)
         }
         else
         {
-            std::memmove(dst, src, sizeof(Src) * count);
+            std::memmove((void*)dst, (void*)src, sizeof(Src) * count);
         }
     }
 }
@@ -295,7 +295,7 @@ SKR_INLINE void move_assign(Dst* dst, Src* src, size_t count)
         }
         else
         {
-            std::memmove(dst, src, sizeof(Src) * count);
+            std::memmove((void*)dst, (void*)src, sizeof(Src) * count);
         }
     }
 }
@@ -360,7 +360,7 @@ SKR_INLINE int64_t distance_item(const void* p1, const void* p2, uint64_t item_s
 // zero memory
 SKR_INLINE void zero_memory(void* p, size_t size) noexcept
 {
-    ::std::memset(p, 0, size);
+    ::std::memset((void*)p, 0, size);
 }
 
 } // namespace skr::memory

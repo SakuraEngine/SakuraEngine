@@ -502,8 +502,8 @@ using EdgeInsetsi = Rect<int32_t>;
 
 // TODO. Ray Hit Test
 struct Ray {
-    skr_float3_t origin;
-    skr_float3_t direction;
+    float3 origin;
+    float3 direction;
 };
 
 #undef SKR_GUI_MATH_ENABLE_IF_FLOAT

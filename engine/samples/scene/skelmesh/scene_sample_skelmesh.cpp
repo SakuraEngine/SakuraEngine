@@ -6,20 +6,20 @@
 #include <SkrCore/platform/vfs.h>
 #include <SkrCore/time.h>
 #include <SkrCore/async/thread_job.hpp>
-#include <SkrRT/io/vram_io.hpp>
+#include <SkrRuntime/io/vram_io.hpp>
 
 #include "SkrOS/thread.h"
 #include "SkrProfile/profile.h"
-#include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/misc/cmd_parser.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
+#include "SkrRuntime/misc/cmd_parser.hpp"
 
 #include <SkrOS/filesystem.hpp>
 #include "SkrCore/memory/impl/skr_new_delete.hpp"
 #include "SkrSceneCore/scene_components.h"
 #include "SkrSystem/advanced_input.h"
-#include <SkrRT/ecs/world.hpp>
-#include <SkrRT/resource/resource_system.h>
-#include <SkrRT/resource/local_resource_registry.hpp>
+#include <SkrRuntime/ecs/world.hpp>
+#include <SkrRuntime/resource/resource_system.h>
+#include <SkrRuntime/resource/local_resource_registry.hpp>
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrImGui/imgui_app.hpp"
 #include "SkrRenderer/skr_renderer.h"
@@ -73,7 +73,7 @@ struct SceneSampleSkelMeshModule : public skr::IDynamicModule
     void InitializeAssetSystem();
     void DestroyAssetSystem();
     void DestroyResourceSystem();
-    void CookAndLoadGLTF();
+    void CookAndLoadTestGLTF();
 
     float current_time = 0.0f;
 
@@ -294,7 +294,7 @@ void SceneSampleSkelMeshModule::on_unload()
     SKR_LOG_INFO(u8"Scene Sample Mesh Module Unloaded");
 }
 
-void SceneSampleSkelMeshModule::CookAndLoadGLTF()
+void SceneSampleSkelMeshModule::CookAndLoadTestGLTF()
 {
     auto& cook_system = *skd::asset::GetCookSystem();
 
@@ -374,7 +374,7 @@ void SceneSampleSkelMeshModule::CookAndLoadGLTF()
 
     {
         cook_system.ParallelForEachAsset(1,
-            [&](skr::span<skr::RC<skd::asset::AssetMetaFile>> assets) {
+            [&](skr::Span<skr::RC<skd::asset::AssetMetaFile>> assets) {
                 SkrZoneScopedN("Cook");
                 for (auto asset : assets)
                 {
@@ -451,7 +451,7 @@ int SceneSampleSkelMeshModule::main_module_exec(int argc, char8_t** argv)
     for (auto i = 0; i < hierarchy_count; ++i)
     {
         auto actor = actor_manager.CreateActor<skr::MeshActor>().cast_static<skr::MeshActor>();
-        hierarchy_actors.push_back(actor);
+        hierarchy_actors.push_back(actor.cast_static<skr::SkelMeshActor>());
 
         actor.lock()->SetDisplayName(skr::format(u8"HActor {}", i).c_str());
         actor.lock()->CreateEntity();
@@ -483,7 +483,7 @@ int SceneSampleSkelMeshModule::main_module_exec(int argc, char8_t** argv)
         actor.lock()->GetComponent<skr::MeshComponent>()->mesh_resource = MeshAssetID;
     }
 
-    CookAndLoadGLTF();
+    CookAndLoadTestGLTF();
 
     {
         skr::render_graph::RenderGraphBuilder graph_builder;
@@ -728,7 +728,7 @@ int SceneSampleSkelMeshModule::main_module_exec(int argc, char8_t** argv)
                         .format(CGPU_FORMAT_D32_SFLOAT)
                         .sample_count(CGPU_SAMPLE_COUNT_1)
                         .allow_depth_stencil();
-                    if (back_desc->width > 2048) builder.allocate_dedicated();
+                    if (back_desc->width > 2048) builder.heap_dedicated();
                 });
 
             scene_renderer->draw_primitives(render_graph, scene_render_system->get_drawcalls());

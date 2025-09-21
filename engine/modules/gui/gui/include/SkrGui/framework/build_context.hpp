@@ -2,36 +2,34 @@
 #include "SkrGui/math/geometry.hpp"
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/build_context.generated.h"
-#endif
+#include "SkrGui/framework/build_context.generated.h"
 
 namespace skr::gui
 {
-sreflect_interface(
+struct [[sattr(
     guid = "0ff4a42c-7195-48c5-a979-263dab05ac2d"
-)
-SKR_GUI_API IBuildContext : virtual public skr::IObject {
+)]] SKR_GUI_API IBuildContext : virtual public skr::IObject
+{
     SKR_GENERATE_BODY(IBuildContext)
     virtual ~IBuildContext() = default;
-    using VisitFuncRef       = FunctionRef<bool(NotNull<Element*>)>;
+    using VisitFuncRef = FunctionRef<bool(NotNull<Element*>)>;
 
     // data query
-    virtual Widget*     bound_widget() const SKR_NOEXCEPT = 0;
-    virtual BuildOwner* build_owner() const SKR_NOEXCEPT  = 0;
-    virtual bool        is_destroyed() const SKR_NOEXCEPT = 0;
+    virtual Widget* bound_widget() const SKR_NOEXCEPT = 0;
+    virtual BuildOwner* build_owner() const SKR_NOEXCEPT = 0;
+    virtual bool is_destroyed() const SKR_NOEXCEPT = 0;
 
     // render object query
-    virtual RenderObject*   find_render_object() const SKR_NOEXCEPT = 0;
-    virtual Optional<Sizef> render_box_size() const SKR_NOEXCEPT    = 0;
+    virtual RenderObject* find_render_object() const SKR_NOEXCEPT = 0;
+    virtual Optional<Sizef> render_box_size() const SKR_NOEXCEPT = 0;
 
     // visit
     virtual void visit_ancestor_elements(VisitFuncRef visitor) const SKR_NOEXCEPT = 0;
-    virtual void visit_child_elements(VisitFuncRef visitor) const SKR_NOEXCEPT    = 0;
+    virtual void visit_child_elements(VisitFuncRef visitor) const SKR_NOEXCEPT = 0;
 
     // find api
-    Widget*       find_ancestor_widget(const GUID& type_id, bool exact_type = false) const SKR_NOEXCEPT;
-    State*        find_ancestor_state(const GUID& type_id, bool exact_type = false) const SKR_NOEXCEPT;
+    Widget* find_ancestor_widget(const GUID& type_id, bool exact_type = false) const SKR_NOEXCEPT;
+    State* find_ancestor_state(const GUID& type_id, bool exact_type = false) const SKR_NOEXCEPT;
     RenderObject* find_ancestor_render_object() const SKR_NOEXCEPT;
     RenderObject* find_ancestor_render_object(const GUID& type_id, bool exact_type = false) const SKR_NOEXCEPT;
 

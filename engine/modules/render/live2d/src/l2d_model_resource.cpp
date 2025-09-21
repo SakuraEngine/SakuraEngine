@@ -3,7 +3,7 @@
 #include "SkrBase/misc/debug.h" 
 #include "SkrCore/memory/memory.h"
 #include "SkrCore/log.h"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 #include "SkrCore/platform/vfs.h"
 
 #include "live2d_helpers.hpp"
@@ -645,7 +645,7 @@ const uint32_t* skr_live2d_model_get_sorted_drawable_list(skr_live2d_model_resou
 }
 
 void skr_live2d_model_get_drawable_colors(skr_live2d_model_resource_id model, uint32_t drawable_index, 
-    skr_float4_t* multiply_color, skr_float4_t* screen_color)
+    skr::float4* multiply_color, skr::float4* screen_color)
 {
     auto _model = model->model->GetModel();
     const auto _multiply_color = _model->GetMultiplyColor(drawable_index);

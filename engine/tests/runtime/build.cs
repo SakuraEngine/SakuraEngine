@@ -7,51 +7,37 @@ public static class RuntimeTests
     static RuntimeTests()
     {
         Test.UnitTest("GoapTest")
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("goap/test_goap.cpp");
 
-        Test.UnitTest("GraphTest")
+        Test.UnitTest("TestGraph")
             .Depend(Visibility.Public, "SkrRenderGraph")
             .AddCppFiles("graph/graph.cpp");
 
         Test.UnitTest("VFSTest")
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("vfs/main.cpp");
 
         Test.UnitTest("IOServiceTest")
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("io_service/*.cpp");
 
-        Test.UnitTest("SceneTest")
+        Test.UnitTest("TestScene")
             .Depend(Visibility.Public, "SkrScene")
             .AddCppFiles("scene/*.cpp");
 
-        Test.UnitTest("ECSTest_CStyle")
-            .Depend(Visibility.Public, "SkrRT")
+        Test.UnitTest("TestECS_CStyle")
+            .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("ecs/c_style/*.cpp");
 
-        Engine.Program("ECSTest_CPPStyle")
+        Engine.Program("TestECS_CPPStyle")
             .EnableCodegen("ecs/cpp_style")
             .AddMetaHeaders("ecs/cpp_style/**.hpp")
             .Depend(Visibility.Private, "SkrTestFramework")
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("ecs/cpp_style/*.cpp");
 
-        Engine.Program("RTTRTest")
-            .EnableCodegen("rttr")
-            .AddMetaHeaders("rttr/**.hpp")
-            .Depend(Visibility.Private, "SkrTestFramework")
-            .Depend(Visibility.Public, "SkrRT")
-            .AddCppFiles("rttr/**.cpp");
-
-        Engine.Program("ProxyTest")
-            .EnableCodegen("proxy")
-            .AddMetaHeaders("proxy/**.hpp")
-            .Depend(Visibility.Private, "SkrTestFramework")
-            .Depend(Visibility.Public, "SkrRT")
-            .AddCppFiles("proxy/**.cpp");
-
-        Engine.Program("V8Test")
+        Engine.Program("TestV8")
             .EnableCodegen("v8")
             .AddMetaHeaders("v8/**.hpp")
             .Depend(Visibility.Private, "SkrTestFramework")

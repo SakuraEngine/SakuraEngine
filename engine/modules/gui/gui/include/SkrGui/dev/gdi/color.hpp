@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>
+#include <SkrBase/math.h>
 
 namespace skr::gui
 {
@@ -20,10 +21,10 @@ inline static float hue(float h, float m1, float m2)
     return m1;
 }
 
-inline static skr_float4_t hsla_to_rgbaf(float h, float s, float l, uint8_t a)
+inline static float4 hsla_to_rgbaf(float h, float s, float l, uint8_t a)
 {
     float        m1, m2;
-    skr_float4_t col;
+    float4 col;
     h = modf(h, 1.0f);
     if (h < 0.0f) h += 1.0f;
     s     = clampf(s, 0.0f, 1.0f);
@@ -37,7 +38,7 @@ inline static skr_float4_t hsla_to_rgbaf(float h, float s, float l, uint8_t a)
     return col;
 }
 
-inline static skr_float4_t hsl_to_rgbaf(float h, float s, float l)
+inline static float4 hsl_to_rgbaf(float h, float s, float l)
 {
     return hsla_to_rgbaf(h, s, l, 255);
 }

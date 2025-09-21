@@ -13,7 +13,8 @@
 
 namespace skr
 {
-struct SKR_V8_API V8Context {
+struct SKR_V8_API V8Context
+{
     SKR_RC_IMPL();
 
     friend struct V8Isolate;
@@ -23,29 +24,29 @@ struct SKR_V8_API V8Context {
     ~V8Context();
 
     // delete copy & move
-    V8Context(const V8Context&)            = delete;
-    V8Context(V8Context&&)                 = delete;
+    V8Context(const V8Context&) = delete;
+    V8Context(V8Context&&) = delete;
     V8Context& operator=(const V8Context&) = delete;
-    V8Context& operator=(V8Context&&)      = delete;
+    V8Context& operator=(V8Context&&) = delete;
 
     // getter
     ::v8::Global<::v8::Context> v8_context() const;
-    inline V8Isolate*           isolate() const { return _isolate; }
-    inline const String&        name() const { return _name; }
+    inline V8Isolate* isolate() const { return _isolate; }
+    inline const String& name() const { return _name; }
 
     // context op
     void enter();
     void exit();
 
     // build export
-    void                          build_export(FunctionRef<void(V8VirtualModule&)> build_func);
-    bool                          is_export_built() const;
-    void                          clear_export();
+    void build_export(FunctionRef<void(V8VirtualModule&)> build_func);
+    bool is_export_built() const;
+    void clear_export();
     inline const V8VirtualModule& virtual_module() const { return _virtual_module; }
 
     // set & get global value
     V8Value get_global(StringView name);
-    bool    set_global_value(StringView name, const V8Value& value);
+    bool set_global_value(StringView name, const V8Value& value);
     template <typename T>
     inline bool set_global(StringView name, const T& value)
     {
@@ -65,45 +66,45 @@ private:
 
     // exec helpers
     v8::MaybeLocal<v8::Script> _compile_script(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context,
-        StringView             script,
-        StringView             path
+        StringView script,
+        StringView path
     );
     v8::MaybeLocal<v8::Module> _compile_module(
         v8::Isolate* isolate,
-        StringView   script,
-        StringView   path
+        StringView script,
+        StringView path
     );
     V8Value _exec_script(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context,
-        v8::Local<v8::Script>  script,
-        bool                   dump_exception
+        v8::Local<v8::Script> script,
+        bool dump_exception
     );
     V8Value _exec_module(
-        v8::Isolate*           isolate,
+        v8::Isolate* isolate,
         v8::Local<v8::Context> context,
-        v8::Local<v8::Module>  module,
-        bool                   dump_exception
+        v8::Local<v8::Module> module,
+        bool dump_exception
     );
 
     // callback
     static v8::MaybeLocal<v8::Module> _resolve_module(
-        v8::Local<v8::Context>    context,
-        v8::Local<v8::String>     specifier,
+        v8::Local<v8::Context> context,
+        v8::Local<v8::String> specifier,
         v8::Local<v8::FixedArray> import_assertions,
-        v8::Local<v8::Module>     referrer
+        v8::Local<v8::Module> referrer
     );
 
 private:
-    V8Isolate*                  _isolate        = nullptr;
-    v8::Persistent<v8::Context> _context        = {};
-    String                      _name           = {};
-    V8VirtualModule             _virtual_module = {};
+    V8Isolate* _isolate = nullptr;
+    v8::Persistent<v8::Context> _context = {};
+    String _name = {};
+    V8VirtualModule _virtual_module = {};
 
     // module/script cache
-    Map<String, v8::Global<v8::Module>> _path_to_module    = {};
-    Map<int, String>                    _module_id_to_path = {};
+    Map<String, v8::Global<v8::Module>> _path_to_module = {};
+    Map<int, String> _module_id_to_path = {};
 };
 } // namespace skr

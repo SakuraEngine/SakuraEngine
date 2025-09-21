@@ -1,2 +1,2 @@
 #pragma once
-#include "SkrRT/sugoi/sugoi.h" // IWYU pragma: export
+#include "SkrRuntime/sugoi/sugoi.h" // IWYU pragma: export

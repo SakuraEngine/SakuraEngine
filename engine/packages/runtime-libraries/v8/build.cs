@@ -15,7 +15,7 @@ public static class V8
                     throw new TaskFatalError("V8 version mismatch!", "V8 version mismatch, only v1.0.0 is supported in source.");
 
                 Target.TargetType(TargetType.HeaderOnly)
-                    .Depend(Visibility.Public, "SkrRT")
+                    .Depend(Visibility.Public, "SkrRuntime")
                     .IncludeDirs(Visibility.Public, "include")
                     .Defines(Visibility.Public, "USING_V8_PLATFORM_SHARED", "USING_V8_SHARED");
 

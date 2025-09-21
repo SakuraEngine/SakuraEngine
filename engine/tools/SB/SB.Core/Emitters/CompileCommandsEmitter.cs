@@ -23,7 +23,7 @@ namespace SB
             if (ArgList is ArgumentList<string> IncludeDirs)
             {
                 // Generate a source file for compile commands
-                var DstDirectory = Path.Combine(Target.GetStorePath(BS.GeneratedSourceStore), "compile_commands");
+                var DstDirectory = Path.Combine(Target.GetBuildGenDir(), "compile_commands");
                 if (!Directory.Exists(DstDirectory))
                     Directory.CreateDirectory(DstDirectory);
                 string SourceFile = Path.Combine(DstDirectory, BS.GetUniqueTempFileName(Target.Name, "compile_commands", "cpp"));
@@ -74,7 +74,7 @@ namespace SB
 
         private void GenerateForFile(Target Target, CFamily Language, string SourceFile, FileOptions? FileOptions)
         {
-            var SourceDependencies = Path.Combine(Target.GetStorePath(BS.DepsStore), BS.GetUniqueTempFileName(SourceFile, Target.Name + this.Name, "source.deps.json"));
+            var SourceDependencies = Path.Combine(Target.GetBuildSrcDepsDir(), BS.GetUniqueTempFileName(SourceFile, Target.Name + this.Name, "source.deps.json"));
             var ObjectFile = GetObjectFilePath(Target, SourceFile);
             var CLDriver = Toolchain.Compiler.CreateArgumentDriver(Language, false)
                 .AddArguments(Target.Arguments)
@@ -87,7 +87,7 @@ namespace SB
             CompileCommands.Add(JSON);
         }
 
-        private static string GetObjectFilePath(Target Target, string SourceFile) => Path.Combine(Target.GetStorePath(BuildSystem.ObjsStore), BuildSystem.GetUniqueTempFileName(SourceFile, Target.Name, "obj"));
+        private static string GetObjectFilePath(Target Target, string SourceFile) => Path.Combine(Target.GetBuildObjsDir(), BuildSystem.GetUniqueTempFileName(SourceFile, Target.Name, "obj"));
 
         private static ConcurrentBag<string> CompileCommands = new();
         private IToolchain Toolchain { get; }

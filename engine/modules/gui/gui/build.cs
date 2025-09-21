@@ -12,7 +12,7 @@ public static class SkrGui
             .Require("icu", new PackageConfig { Version = new Version(72, 1, 0) })
             .Require("harfbuzz", new PackageConfig { Version = new Version(7, 1, 0) })
             .Require("nanovg", new PackageConfig { Version = new Version(0, 1, 0) })
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .Depend(Visibility.Private, "freetype@freetype", "icu@icu", "harfbuzz@harfbuzz", "nanovg@nanovg")
             .IncludeDirs(Visibility.Public, "include")
             .IncludeDirs(Visibility.Private, "src")

@@ -1,115 +1,64 @@
 #pragma once
 #include "SkrContainersDef/hashmap.hpp" // IWYU pragma: export
 
-// bin serde
-#include "SkrSerde/bin_serde.hpp"
+// serialize
+#include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
-// Generic hashmap serialization template
-namespace detail
+template <template <class...> class Map, class K, class V, class Hash, class Eq>
+struct SerializePhMapImpl
 {
-template <template<class...> class Map, class K, class V, class Hash, class Eq>
-struct BinSerdeHashMapImpl {
-    inline static bool read(SBinaryReader* r, Map<K, V, Hash, Eq>& v)
+    inline static void read(ArchiveRead& r, Map<K, V, Hash, Eq>& v)
     {
-        // read size
-        uint32_t size;
-        if (!bin_read(r, size)) return false;
+        Archive::ArrayScope arr_scope{ r };
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // reserve
+        v.clear();
+        uint64_t arr_size;
+        SKR_FAST_CHECK(r.array_size<uint64_t>(arr_size), );
+        v.reserve(arr_size / 2);
 
         // read content
-        Map<K, V, Hash, Eq> temp;
-        for (uint32_t i = 0; i < size; ++i)
-        {
-            K key;
-            V value;
-            if (!bin_read(r, key)) 
-                return false;
-            if (!bin_read(r, value)) 
-                return false;
-            temp.insert({ std::move(key), std::move(value) });
-        }
-
-        // move to target
-        v = std::move(temp);
-        return true;
-    }
-    inline static bool write(SBinaryWriter* w, const Map<K, V, Hash, Eq>& v)
-    {
-        // write size
-        uint32_t size = static_cast<uint32_t>(v.size());
-        if (!bin_write(w, size)) return false;
-
-        // write content
-        for (auto& pair : v)
-        {
-            if (!bin_write(w, pair.first)) return false;
-            if (!bin_write(w, pair.second)) return false;
-        }
-        return true;
-    }
-};
-} // namespace detail
-
-// FlatHashMap specialization
-template <class K, class V, class Hash, class Eq>
-struct BinSerde<skr::FlatHashMap<K, V, Hash, Eq>> 
-    : detail::BinSerdeHashMapImpl<skr::FlatHashMap, K, V, Hash, Eq> {};
-
-// ParallelFlatHashMap specialization
-template <class K, class V, class Hash, class Eq>
-struct BinSerde<skr::ParallelFlatHashMap<K, V, Hash, Eq>> 
-    : detail::BinSerdeHashMapImpl<skr::ParallelFlatHashMap, K, V, Hash, Eq> {};
-} // namespace skr
-
-// json serde
-#include "SkrSerde/json_serde.hpp"
-namespace skr
-{
-// Generic hashmap json serialization template
-namespace detail
-{
-template <template<class...> class Map, class K, class V, class Hash, class Eq>
-struct JsonSerdeHashMapImpl {
-    inline static bool read(skr::archive::JsonReader* r, Map<K, V, Hash, Eq>& v)
-    {
-        size_t count = 0;
-        SKR_EXPECTED_CHECK(r->StartArray(count), false);
-        v.reserve(count / 2);
-        for (size_t i = 0; i < count; i += 2)
+        for (uint64_t i = 0; i < arr_size; i += 2)
         {
             K key;
             V value;
 
-            if (!json_read<K>(r, key))
-                return false;
-            if (!json_read<V>(r, value))
-                return false;
+            SKR_FAST_CHECK(r.value<K>(key), );
+            SKR_FAST_CHECK(r.value<V>(value), );
+
             v.emplace(std::move(key), std::move(value));
         }
-        SKR_EXPECTED_CHECK(r->EndArray(), false);
-        return true;
     }
-    inline static bool write(skr::archive::JsonWriter* w, const Map<K, V, Hash, Eq>& v)
+    inline static void write(ArchiveWrite& w, const Map<K, V, Hash, Eq>& v)
     {
-        SKR_EXPECTED_CHECK(w->StartArray(), false);
+        Archive::ArrayScope arr_scope{ w };
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // write size
+        SKR_FAST_CHECK(w.array_size<uint64_t>(static_cast<uint64_t>(v.size() * 2)), );
+
+        // write content
         for (const auto& pair : v)
         {
-            if (!json_write<K>(w, pair.first)) return false;
-            if (!json_write<V>(w, pair.second)) return false;
+            SKR_FAST_CHECK(w.value<K>(pair.first), );
+            SKR_FAST_CHECK(w.value<V>(pair.second), );
         }
-        SKR_EXPECTED_CHECK(w->EndArray(), false);
-        return true;
     }
 };
-} // namespace detail
 
 // FlatHashMap specialization
 template <class K, class V, class Hash, class Eq>
-struct JsonSerde<skr::FlatHashMap<K, V, Hash, Eq>> 
-    : detail::JsonSerdeHashMapImpl<skr::FlatHashMap, K, V, Hash, Eq> {};
+struct Serialize<skr::FlatHashMap<K, V, Hash, Eq>>
+    : SerializePhMapImpl<skr::FlatHashMap, K, V, Hash, Eq>
+{
+};
 
 // ParallelFlatHashMap specialization
 template <class K, class V, class Hash, class Eq>
-struct JsonSerde<skr::ParallelFlatHashMap<K, V, Hash, Eq>> 
-    : detail::JsonSerdeHashMapImpl<skr::ParallelFlatHashMap, K, V, Hash, Eq> {};
+struct Serialize<skr::ParallelFlatHashMap<K, V, Hash, Eq>>
+    : SerializePhMapImpl<skr::ParallelFlatHashMap, K, V, Hash, Eq>
+{
+};
 } // namespace skr

@@ -25,10 +25,8 @@ void Renderer::create_blit_pipeline()
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = SKR_UTF8("main");
     ppl_shaders[0].library = screen_vs;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = SKR_UTF8("main");
     ppl_shaders[1].library = blit_fs;
     const char8_t* static_sampler_name = SKR_UTF8("texture_sampler");

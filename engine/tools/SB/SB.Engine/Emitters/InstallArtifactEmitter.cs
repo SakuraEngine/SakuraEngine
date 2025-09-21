@@ -48,22 +48,13 @@ namespace SB
                 return null;
             
             // Wait for link result
-            var linkResults = BS.Artifacts.OfType<LinkResult>()
+            var LinkResults = BS.Artifacts.OfType<LinkResult>()
                 .Where(a => a.Target == Target)
                 .ToList();
             
-            if (!linkResults.Any())
+            if (!LinkResults.Any())
             {
                 Log.Verbose("No link result found for target {TargetName}, skipping installation", Target.Name);
-                return null;
-            }
-            
-            var linkResult = linkResults.First();
-            
-            // Don't install if the artifact was restored from cache
-            if (linkResult.IsRestored)
-            {
-                Log.Verbose("Target {TargetName} was restored from cache, skipping installation", Target.Name);
                 return null;
             }
             
@@ -73,49 +64,48 @@ namespace SB
             {
                 installDir = Path.IsPathFullyQualified(attr.InstallDirectory)
                     ? attr.InstallDirectory
-                    : Path.Combine(BS.TempPath, attr.InstallDirectory);
+                    : Path.Combine(BuildDirs.TempDir, attr.InstallDirectory);
             }
             else
             {
                 // Default installation directory based on target category
                 if (Target.IsCategory(TargetCategory.Tool))
-                {
-                    installDir = Path.Combine(BS.TempPath, "tools");
-                }
+                    installDir = Path.Combine(BuildDirs.TempDir, "tools");
                 else
-                {
-                    installDir = Path.Combine(BS.BuildPath, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}");
-                }
+                    installDir = Path.Combine(BuildDirs.BuildDir, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}");
             }
             
             // Ensure installation directory exists
             Directory.CreateDirectory(installDir);
-            
-            // Install main artifact (EXE or DLL)
-            if (File.Exists(linkResult.TargetFile))
+
+            SortedDictionary<string, string> FilesToCopy = new();
+            var LinkResult = LinkResults.First();
+            if (File.Exists(LinkResult.TargetFile))
             {
-                var targetFileName = Path.GetFileName(linkResult.TargetFile);
-                var destinationFile = Path.Combine(installDir, targetFileName);
-                
-                Log.Information("Installing {TargetFile} to {InstallDir}", targetFileName, installDir);
-                File.Copy(linkResult.TargetFile, destinationFile, overwrite: true);
+                var destinationFile = Path.Combine(installDir, Path.GetFileName(LinkResult.TargetFile));
+                FilesToCopy.Add(LinkResult.TargetFile, destinationFile);
             }
-            
-            // Install PDB file if requested and available
-            if (attr.InstallPDB && !string.IsNullOrEmpty(linkResult.PDBFile) && File.Exists(linkResult.PDBFile))
+            if (attr.InstallPDB && !string.IsNullOrEmpty(LinkResult.PDBFile) && File.Exists(LinkResult.PDBFile))
             {
-                var pdbFileName = Path.GetFileName(linkResult.PDBFile);
-                var destinationPDB = Path.Combine(installDir, pdbFileName);
-                
-                Log.Verbose("Installing PDB {PDBFile} to {InstallDir}", pdbFileName, installDir);
-                File.Copy(linkResult.PDBFile, destinationPDB, overwrite: true);
+                var destinationPDB = Path.Combine(installDir, Path.GetFileName(LinkResult.PDBFile));
+                FilesToCopy.Add(LinkResult.PDBFile, destinationPDB);
             }
+
+            bool Changed = BuildDepends.Solve(Target).OnChanged(Target.Name, "InstallArtifact", this.Name,
+                (Depend depend) =>
+                {
+                    foreach (var FilePair in FilesToCopy)
+                    {
+                        File.Copy(FilePair.Key, FilePair.Value, overwrite: true);
+                    }
+                    depend.ExternalFiles.AddRange(FilesToCopy.Values);
+                }, FilesToCopy.Keys, null);
             
             return new InstallResult
             {
                 Target = Target,
                 InstallDirectory = installDir,
-                IsRestored = false
+                IsRestored = !Changed
             };
         }
     }

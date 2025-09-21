@@ -1,20 +1,19 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/framework/render_object/single_child_render_object.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/render_object/render_shifted_box.generated.h"
-#endif
+#include "SkrGui/framework/render_object/render_shifted_box.generated.h"
 
 namespace skr::gui
 {
 // 会对 child 施加布局偏移的 RenderBox
-sreflect_struct(guid = "357e11e8-dbcd-4830-9256-869198ca7bed")
-RenderShiftedBox : public RenderBox,
-                   public ISingleChildRenderObject {
+struct [[sattr(guid = "357e11e8-dbcd-4830-9256-869198ca7bed")]]
+RenderShiftedBox : public RenderBox
+    , public ISingleChildRenderObject
+{
     SKR_GENERATE_BODY(RenderShiftedBox)
 
     inline Offsetf offset() const SKR_NOEXCEPT { return _offset; }
-    inline void    set_offset(Offsetf offset) SKR_NOEXCEPT { _offset = offset; }
+    inline void set_offset(Offsetf offset) SKR_NOEXCEPT { _offset = offset; }
 
 protected:
     // intrinsic size

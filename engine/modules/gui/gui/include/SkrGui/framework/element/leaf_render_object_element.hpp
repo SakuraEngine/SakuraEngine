@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/framework/element/render_object_element.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/element/leaf_render_object_element.generated.h"
-#endif
+#include "SkrGui/framework/element/leaf_render_object_element.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "4e452c55-c545-4602-a9d2-76232f561536")
-LeafRenderObjectElement : public RenderObjectElement {
+struct [[sattr(guid = "4e452c55-c545-4602-a9d2-76232f561536")]]
+LeafRenderObjectElement : public RenderObjectElement
+{
     SKR_GENERATE_BODY(LeafRenderObjectElement)
     using Super = RenderObjectElement;
     using Super::Super;

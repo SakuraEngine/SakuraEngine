@@ -6,32 +6,33 @@
 #include <SkrAnim/ozz/skeleton_utils.h>
 #include <SkrAnim/ozz/local_to_model_job.h>
 
-#ifndef __meta__
-    #include "AnimDebugRuntime/renderer.generated.h" // IWYU pragma: export
-#endif
+#include "AnimDebugRuntime/renderer.generated.h" // IWYU pragma: export
 
 namespace animd
 {
 // Lighting Struct
-sreflect_struct(
-    guid = "0197c86c-31f8-73cf-be27-d2a660396184" serde = @bin | @json)
-LightingPushConstants
+struct [[sattr(
+    guid = "0197c86c-31f8-73cf-be27-d2a660396184"
+    serde = @enable
+)]] LightingPushConstants
 {
     int bFlipUVX;
     int bFlipUVY;
 };
 // Lighting Push Constants
-sreflect_struct(
-    guid = "0197c86e-eb5e-739b-90b4-eda04b70ba5c" serde = @bin | @json)
-LightingCSPushConstants
+struct [[sattr(
+    guid = "0197c86e-eb5e-739b-90b4-eda04b70ba5c"
+    serde = @enable
+)]] LightingCSPushConstants
 {
     skr_float2_t viewportSize;
     skr_float2_t viewportOrigin;
 };
 
-sreflect_struct(
-    guid = "0197ec89-5620-76b9-b08b-14602ca94b24" serde = @bin | @json)
-Camera
+struct [[sattr(
+    guid = "0197ec89-5620-76b9-b08b-14602ca94b24"
+    serde = @enable
+)]] Camera
 {
     skr_float3_t position = {};                   // camera position
     skr_float3_t front = skr_float3_t::forward(); // camera front vector
@@ -44,9 +45,10 @@ Camera
     float far_plane = 1000.0;     // far plane distance
 };
 
-sreflect_struct(
-    guid = "0197ec8b-f8dc-73ec-8635-e20dac02d900" serde = @bin | @json)
-CameraControlState
+struct [[sattr(
+    guid = "0197ec8b-f8dc-73ec-8635-e20dac02d900"
+    serde = @enable
+)]] CameraControlState
 {
     float move_speed = 1.0f;   // camera move speed
     float rotate_speed = 0.1f; // camera rotate speed

@@ -4,7 +4,8 @@
 namespace skr::container
 {
 template <typename T, typename TSize, bool kConst>
-struct RingBufferIt {
+struct RingBufferIt
+{
     using DataPtrType = std::conditional_t<kConst, const T*, T*>;
     using ValueType   = std::conditional_t<kConst, const T, T>;
 
@@ -42,7 +43,8 @@ private:
 namespace skr::container
 {
 template <typename T, typename TSize, bool kConst>
-struct RingBufferCursor {
+struct RingBufferCursor
+{
     using DataType = std::conditional_t<kConst, const T, T>;
     using SizeType = TSize;
 
@@ -145,7 +147,8 @@ private:
 };
 
 template <typename T, typename TSize, bool kConst>
-struct RingBufferIter {
+struct RingBufferIter
+{
     using CursorType = RingBufferCursor<T, TSize, kConst>;
     using DataType   = std::conditional_t<kConst, const T, T>;
     using SizeType   = TSize;
@@ -174,7 +177,8 @@ private:
     CursorType _cursor;
 };
 template <typename T, typename TSize, bool kConst>
-struct RingBufferIterInv {
+struct RingBufferIterInv
+{
     using CursorType = RingBufferCursor<T, TSize, kConst>;
     using DataType   = std::conditional_t<kConst, const T, T>;
     using SizeType   = TSize;

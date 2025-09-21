@@ -18,7 +18,8 @@ struct GenericSparseVector;
 namespace skr::container
 {
 template <typename TSize>
-struct SparseVectorMemoryBase {
+struct SparseVectorMemoryBase
+{
     using SizeType = TSize;
     friend struct ::skr::GenericSparseVector;
 
@@ -79,7 +80,9 @@ protected:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, typename Base, typename Allocator>
-struct SparseVectorMemory : public Base, public Allocator {
+struct SparseVectorMemory : public Base
+    , public Allocator
+{
     // configure
     using SizeType           = typename Base::SizeType;
     using DataType           = T;
@@ -262,16 +265,20 @@ struct SparseVectorMemory : public Base, public Allocator {
 
         if (new_sparse_size > Base::_capacity)
         {
-            auto new_capacity = default_get_grow<DataType>(new_sparse_size, Base::_capacity);
-            SKR_ASSERT(new_capacity >= Base::_capacity);
-            if (new_capacity > Base::_capacity)
-            {
-                realloc(new_capacity);
-            }
+            grow_to(new_sparse_size);
         }
 
         Base::_sparse_size = new_sparse_size;
         return old_size;
+    }
+    inline void grow_to(SizeType new_sparse_size) noexcept
+    {
+        auto new_capacity = default_get_grow<DataType>(new_sparse_size, Base::_capacity);
+        SKR_ASSERT(new_capacity >= Base::_capacity);
+        if (new_capacity > Base::_capacity)
+        {
+            realloc(new_capacity);
+        }
     }
     inline void shrink() noexcept
     {
@@ -336,9 +343,11 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, uint64_t kCount, typename Base>
-struct FixedSparseVectorMemory : public Base {
+struct FixedSparseVectorMemory : public Base
+{
     static_assert(kCount > 0, "FixedSparseVectorMemory must have a capacity larger than 0");
-    struct DummyParam {
+    struct DummyParam
+    {
     };
 
     // configure
@@ -449,6 +458,10 @@ struct FixedSparseVectorMemory : public Base {
         Base::_sparse_size += grow_size;
         return old_size;
     }
+    inline void grow_to(SizeType new_sparse_size) noexcept
+    {
+        SKR_ASSERT(new_sparse_size <= kCount && "FixedSparseVectorMemory can't alloc memory that larger than kCount");
+    }
     inline void shrink() noexcept
     {
         // do noting
@@ -508,7 +521,9 @@ private:
 namespace skr::container
 {
 template <typename T, typename TBitBlock, uint64_t kInlineCount, typename Base, typename Allocator>
-struct InlineSparseVectorMemory : public Base, public Allocator {
+struct InlineSparseVectorMemory : public Base
+    , public Allocator
+{
     // configure
     using SizeType           = typename Base::SizeType;
     using DataType           = T;
@@ -848,16 +863,20 @@ struct InlineSparseVectorMemory : public Base, public Allocator {
 
         if (new_sparse_size > Base::_capacity)
         {
-            auto new_capacity = default_get_grow<DataType>(new_sparse_size, Base::_capacity);
-            SKR_ASSERT(new_capacity >= Base::_capacity);
-            if (new_capacity > Base::_capacity)
-            {
-                realloc(new_capacity);
-            }
+            grow_to(new_sparse_size);
         }
 
         Base::_sparse_size = new_sparse_size;
         return old_size;
+    }
+    inline void grow_to(SizeType new_sparse_size) noexcept
+    {
+        auto new_capacity = default_get_grow<DataType>(new_sparse_size, Base::_capacity);
+        SKR_ASSERT(new_capacity >= Base::_capacity);
+        if (new_capacity > Base::_capacity)
+        {
+            realloc(new_capacity);
+        }
     }
     inline void shrink() noexcept
     {

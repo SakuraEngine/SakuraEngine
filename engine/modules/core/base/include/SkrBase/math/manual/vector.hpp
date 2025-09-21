@@ -1,5 +1,5 @@
 #pragma once
-#include "./rtm_conv.hpp" // IWYU pragma: export
+#include "./rtm_conv.hpp"       // IWYU pragma: export
 #include "../gen/misc/quat.hpp" // IWYU pragma: export
 
 namespace skr
@@ -1339,9 +1339,9 @@ inline uint32_t pack_snorm8(const float4& v)
     const uint32_t z  = static_cast<uint32_t>(sv.z * 127.0f);
     const uint32_t w  = static_cast<uint32_t>(sv.w * 127.0f);
     return (x & 0xff) |
-           ((y & 0xff) << 8) |
-           ((z & 0xff) << 16) |
-           ((w & 0xff) << 24);
+        ((y & 0xff) << 8) |
+        ((z & 0xff) << 16) |
+        ((w & 0xff) << 24);
 }
 inline uint32_t pack_snorm8(const double4& v)
 {
@@ -1351,9 +1351,9 @@ inline uint32_t pack_snorm8(const double4& v)
     const uint32_t z  = static_cast<uint32_t>(sv.z * 127.0);
     const uint32_t w  = static_cast<uint32_t>(sv.w * 127.0);
     return (x & 0xff) |
-           ((y & 0xff) << 8) |
-           ((z & 0xff) << 16) |
-           ((w & 0xff) << 24);
+        ((y & 0xff) << 8) |
+        ((z & 0xff) << 16) |
+        ((w & 0xff) << 24);
 }
 
 // pack to unorm
@@ -1365,9 +1365,9 @@ inline uint32_t pack_unorm8(const float4& v)
     const uint32_t z  = static_cast<uint32_t>(sv.z * 255.0f);
     const uint32_t w  = static_cast<uint32_t>(sv.w * 255.0f);
     return (x & 0xff) |
-           ((y & 0xff) << 8) |
-           ((z & 0xff) << 16) |
-           ((w & 0xff) << 24);
+        ((y & 0xff) << 8) |
+        ((z & 0xff) << 16) |
+        ((w & 0xff) << 24);
 }
 inline uint32_t pack_unorm8(const double4& v)
 {
@@ -1377,9 +1377,9 @@ inline uint32_t pack_unorm8(const double4& v)
     const uint32_t z  = static_cast<uint32_t>(sv.z * 255.0);
     const uint32_t w  = static_cast<uint32_t>(sv.w * 255.0);
     return (x & 0xff) |
-           ((y & 0xff) << 8) |
-           ((z & 0xff) << 16) |
-           ((w & 0xff) << 24);
+        ((y & 0xff) << 8) |
+        ((z & 0xff) << 16) |
+        ((w & 0xff) << 24);
 }
 
 } // namespace math

@@ -53,6 +53,8 @@ typedef struct CGPURenderPassEncoder_Metal {
 typedef struct CGPUComputePassEncoder_Metal {
 	CGPUComputePassEncoder super;
     id<MTLComputeCommandEncoder> mtlComputeEncoder;
+	const struct CGPUComputePipeline_Metal* pBoundPipeline;
+    MTLSize threadgroupSize; // 存储设置的threadgroup size
 } CGPUComputePassEncoder_Metal;
 
 typedef struct CGPUCommandBuffer_Metal {
@@ -72,10 +74,31 @@ typedef struct CGPUShaderLibrary_Metal {
 	id<MTLLibrary> mtlLibrary;
 } CGPUShaderLibrary_Metal;
 
+// 静态采样器信息
+typedef struct CGPUStaticSampler_Metal {
+    id<MTLSamplerState> mtlSamplerState;
+    uint32_t setIndex;     // descriptor set索引
+    uint32_t resourceOffset; // 在argument buffer中的偏移位置
+} CGPUStaticSampler_Metal;
+
+typedef struct CGPUStaticSamplerSet_Metal {
+	uint32_t setIndex;
+	id<MTLBuffer> argBuffer;
+} CGPUStaticSamplerSet_Metal;
+
 typedef struct CGPURootSignature_Metal {
 	CGPURootSignature super;
 	id<MTLFunction> mtlFunctions[CGPU_SHADER_STAGE_COUNT];
 	id<MTLComputePipelineState> mtlPipelineState;
+	// 静态采样器支持
+	CGPUStaticSampler_Metal* staticSamplers;
+	uint32_t staticSamplerCount;
+	// 静态采样器Set和ArgBuffer映射
+	CGPUStaticSamplerSet_Metal* staticSamplerSets;
+	uint32_t staticSamplerSetCount;
+	uint32_t NumThreadsX;
+	uint32_t NumThreadsY;
+	uint32_t NumThreadsZ;
 } CGPURootSignature_Metal;
 
 typedef struct BindSlot_Metal {
@@ -94,6 +117,13 @@ typedef struct CGPUDescriptorSet_Metal {
 	const struct CGPUAccelerationStructure_Metal* pBoundAS;
 } CGPUDescriptorSet_Metal;
 
+typedef struct CGPUDescriptorBuffer_Metal {
+	CGPUDescriptorBuffer super;
+	CGPUBufferId mtlArgumentBuffer;
+	__unsafe_unretained id* mtlArgsCache;
+	__strong id* mtlTexelBufferCache;  // 持有 texel buffer 引用
+} CGPUDescriptorBuffer_Metal;
+
 typedef struct CGPUComputePipeline_Metal {
 	CGPUComputePipeline super;
 	id<MTLComputePipelineState> mtlPipelineState;
@@ -102,10 +132,18 @@ typedef struct CGPUComputePipeline_Metal {
 typedef struct CGPUBuffer_Metal {
 	CGPUBuffer super;
 	struct VmaAllocation_T*      pAllocation;
+	MTLResourceOptions 		 	 mtlResourceOptions;
 	id<MTLBuffer>                mtlBuffer;
 	id<MTLIndirectCommandBuffer> mtlIndirectCommandBuffer;
 	uint64_t                     mOffset;
 } CGPUBuffer_Metal;
+
+typedef struct CGPUBufferView_Metal {
+    CGPUBufferView super;
+    id<MTLBuffer> mtlBuffer;
+	id<MTLTexture> mtlTextureBuffer;
+	uint64_t mOffset;
+} CGPUBufferView_Metal;
 
 typedef struct CGPUTexture_Metal {
     CGPUTexture super;

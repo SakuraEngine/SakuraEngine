@@ -34,15 +34,15 @@ namespace skr::logging {
 struct SKR_CORE_API LogSink
 {
 public:
-    LogSink(skr_guid_t pattern) SKR_NOEXCEPT;
+    LogSink(GUID pattern) SKR_NOEXCEPT;
     virtual ~LogSink() SKR_NOEXCEPT;
 
-    virtual skr_guid_t get_pattern() const SKR_NOEXCEPT { return pattern_; }
+    virtual GUID get_pattern() const SKR_NOEXCEPT { return pattern_; }
     virtual void sink(const LogEvent& event, skr::StringView content) SKR_NOEXCEPT = 0;
     virtual void flush() SKR_NOEXCEPT {}
 
 protected:
-    skr_guid_t pattern_ = LogConstants::kDefaultPatternId;
+    GUID pattern_ = LogConstants::kDefaultPatternId;
 };
 
 struct SKR_CORE_API LogManager
@@ -54,12 +54,12 @@ public:
     virtual void FinalizeAsyncWorker() SKR_NOEXCEPT = 0;
     virtual void FlushAllSinks() SKR_NOEXCEPT = 0;
 
-    virtual skr_guid_t RegisterPattern(const char8_t* pattern) = 0;
-    virtual bool RegisterPattern(skr_guid_t guid, const char8_t* pattern) = 0;
+    virtual GUID RegisterPattern(const char8_t* pattern) = 0;
+    virtual bool RegisterPattern(GUID guid, const char8_t* pattern) = 0;
 
-    virtual skr_guid_t RegisterSink(skr::UPtr<LogSink> init) = 0;
-    virtual bool RegisterSink(skr_guid_t guid, skr::UPtr<LogSink> sink) = 0;
-    virtual LogSink* QuerySink(skr_guid_t guid) = 0;
+    virtual GUID RegisterSink(skr::UPtr<LogSink> init) = 0;
+    virtual bool RegisterSink(GUID guid, skr::UPtr<LogSink> sink) = 0;
+    virtual LogSink* QuerySink(GUID guid) = 0;
     
 protected:
     virtual ~LogManager() = default;

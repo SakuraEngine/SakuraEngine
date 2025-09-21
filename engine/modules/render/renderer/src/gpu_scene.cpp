@@ -1,12 +1,11 @@
 #include "SkrCore/log.h"
-#include "SkrRT/ecs/world.hpp"
-#include "SkrRT/ecs/component.hpp"
+#include "SkrRuntime/ecs/world.hpp"
 #include "SkrRenderGraph/backend/graph_backend.hpp"
 #include "SkrRenderer/gpu_scene.h"
 #include "SkrRenderer/render_device.h"
-#include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/shared/gpu_scene.hpp"
+#include "SkrSceneCore/scene_components.h"
 #include "SkrProfile/profile.h"
 #include <atomic>
 
@@ -27,6 +26,7 @@ struct AddEntityToGPUScene : public GPUSceneInstanceTask
     void build(skr::ecs::AccessBuilder& builder)
     {
         GPUSceneInstanceTask::build(builder);
+        builder.read(&AddEntityToGPUScene::transforms);
         builder.read(&AddEntityToGPUScene::meshes);
         builder.write(&AddEntityToGPUScene::instances);
         builder.write(&AddEntityToGPUScene::gpu_instances);
@@ -51,136 +51,71 @@ struct AddEntityToGPUScene : public GPUSceneInstanceTask
                 }
 
                 auto mesh_resource = mesh.mesh_resource.get_resolved();
-                auto& gpu_inst = gpu_instances[i];
-
-                // 分配 instance id
-                auto& instance_data = instances[i];
-                instance_data.entity = entity;
-                if (pScene->free_insts.try_dequeue(instance_data.instance_index))
-                    pScene->free_inst_count -= 1;
-                else
-                    instance_data.instance_index = pScene->latest_inst_index++;
-
-                // 分配 prim ids
-                for (uint32_t section_id = 0; section_id < mesh_resource->sections.size(); section_id++)
-                {
-                    const auto& section_info = mesh_resource->sections[section_id];
-                    for (auto prim_id : section_info.primitive_indices)
-                    {
-                        instance_data.prim_id_count += 1;
-                    }
-                }
-                instance_data.prim_id_start = pScene->total_prim_count.fetch_add(instance_data.prim_id_count);
-
-                // 分配 mat ids
-                for (auto& mat : mesh_resource->materials)
-                {
-                    instance_data.mat_id_count += 1;
-                }
-                instance_data.mat_id_start = pScene->total_mat_count.fetch_add(instance_data.mat_id_count);
-
                 if (mesh_resource->render_mesh->need_build_blas)
                 {
                     pScene->dirty_blases.enqueue(mesh_resource->render_mesh->blas);
                     mesh_resource->render_mesh->need_build_blas = false;
                 }
 
-                // record index/vertex buffers
-                auto StorePrimitiveToTable = pScene->store_map.find(sugoi_id_of<gpu::Primitive>::get()).value();
-                uint32_t next_prim = 0;
-                for (const auto& section_info : mesh_resource->sections)
+                const auto entity_transform = transforms[i].get().to_matrix();
+                auto& multi_insts = gpu_instances[i];
+                auto& instance_data = instances[i];
+                instance_data.entity = entity;
+                for (auto& gpu_inst : multi_insts)
                 {
-                    for (auto prim_id : section_info.primitive_indices)
-                    {
-                        const auto& prim_info = mesh_resource->primitives[prim_id];
-                        gpu::Primitive prim_data;
-                        prim_data.global_index = instance_data.prim_id_start + next_prim;
-                        prim_data.material_index = prim_info.material_index;
-                        for (const auto& vb : prim_info.vertex_buffers)
-                        {
-                            if (vb.vertex_count == 0)
-                                continue;
+                   // 分配 instance id
+                    if (pScene->free_insts.try_dequeue(gpu_inst.global_index))
+                        pScene->free_inst_count -= 1;
+                    else
+                        gpu_inst.global_index = pScene->latest_inst_index++;
 
-                            const auto buffer_id = mesh_resource->render_mesh->buffer_ids[vb.buffer_index];
-                            if (vb.attribute == EVertexAttribute::POSITION)
-                                prim_data.positions = gpu::Range<float3>(0, vb.vertex_count, vb.offset, buffer_id);
-                            else if (vb.attribute == EVertexAttribute::TEXCOORD)
-                                prim_data.uvs = gpu::Range<float2>(0, vb.vertex_count, vb.offset, buffer_id);
-                            else if (vb.attribute == EVertexAttribute::NORMAL)
-                                prim_data.normals = gpu::Range<float3>(0, vb.vertex_count, vb.offset, buffer_id);
-                            else if (vb.attribute == EVertexAttribute::TANGENT)
-                                prim_data.tangents = gpu::Range<float3>(0, vb.vertex_count, vb.offset, buffer_id);
-                        }
-                        {
-                            const auto& ib = prim_info.index_buffer;
-                            const auto buffer_id = mesh_resource->render_mesh->buffer_ids[ib.buffer_index];
-                            auto mod = ib.index_offset % (ib.stride * 3);
-                            prim_data.triangles = gpu::Range<uint3>(0, ib.index_count / 3, ib.index_offset, buffer_id);
-                        }
-                        auto& table = pScene->primitives_table;
-                        StorePrimitiveToTable(*table, prim_data.global_index, &prim_data);  
+                    // 分配 prim ids
+                    gpu_inst.primitives = gpu::Range<gpu::Primitive>(
+                        mesh_resource->render_mesh->primitive_table_id_start,
+                        (uint32_t)mesh_resource->primitives.size()
+                    );
 
-                        next_prim += 1;
-                    }
+                    // add tlas
+                    gpu_inst.transform = entity_transform * gpu_inst.transform;
+                    const auto& transform = gpu_inst.transform;
+                    auto& tlas_instance = pScene->tlas_instances[gpu_inst.global_index];
+                    tlas_instance.bottom = mesh_resource->render_mesh->blas;
+                    tlas_instance.instance_id = gpu_inst.global_index;
+                    tlas_instance.instance_mask = 255;
+                    float transform34[12] = {
+                        transform.m00, transform.m10, transform.m20, transform.m30, // Row 0: X axis + X translation
+                        transform.m01,
+                        transform.m11,
+                        transform.m21,
+                        transform.m31, // Row 1: Y axis + Y translation
+                        transform.m02,
+                        transform.m12,
+                        transform.m22,
+                        transform.m32 // Row 2: Z axis + Z translation
+                    };
+                    memcpy(tlas_instance.transform, transform34, sizeof(transform34));
+
+                    pScene->tlas_dirty = true;
+                    pScene->total_inst_count += 1;
                 }
-                gpu_inst.primitives = gpu::Range<gpu::Primitive>(instance_data.prim_id_start, (uint32_t)instance_data.prim_id_count);
 
-                auto StoreMaterialToTable = pScene->store_map.find(sugoi_id_of<gpu::Material>::get()).value();
-                for (uint32_t mat_id = 0; mat_id < mesh_resource->materials.size(); mat_id++)
-                {
-                    mesh_resource->materials[mat_id].resolve(true, 1, ESkrRequesterType::SKR_REQUESTER_UNKNOWN);
-                    const auto& mat = mesh_resource->materials[mat_id].get_resolved();
-                    gpu::Material mat_data;
-                    mat_data.global_index = instance_data.mat_id_start + mat_id;
-                    mat_data.basecolor_tex = ~0;
-                    mat_data.metallic_roughness_tex = ~0;
-                    mat_data.emission_tex = ~0;
-                    for (const auto& tex : mat->overrides.textures)
-                    {
-                        if (tex.slot_name == u8"BaseColor")
-                            mat_data.basecolor_tex = tex.bindless_id;
-                        else if (tex.slot_name == u8"MetallicRoughness")
-                            mat_data.metallic_roughness_tex = tex.bindless_id;
-                        else if (tex.slot_name == u8"Emissive")
-                            mat_data.emission_tex = tex.bindless_id;
-                    }
-                    auto& table = pScene->materials_table;
-                    StoreMaterialToTable(*table, mat_data.global_index, &mat_data);
-                }
-                gpu_inst.materials = gpu::Range<gpu::Material>(instance_data.mat_id_start, (uint32_t)instance_data.mat_id_count);
-
-                // add tlas
-                auto& transform = gpu_inst.transform;
-                auto& tlas_instance = pScene->tlas_instances[instance_data.instance_index];
-                tlas_instance.bottom = mesh_resource->render_mesh->blas;
-                tlas_instance.instance_id = instance_data.instance_index;
-                tlas_instance.instance_mask = 255;
-                float transform34[12] = {
-                    transform.m00, transform.m10, transform.m20, transform.m30, // Row 0: X axis + X translation
-                    transform.m01,
-                    transform.m11,
-                    transform.m21,
-                    transform.m31, // Row 1: Y axis + Y translation
-                    transform.m02,
-                    transform.m12,
-                    transform.m22,
-                    transform.m32 // Row 2: Z axis + Z translation
-                };
-                memcpy(tlas_instance.transform, transform34, sizeof(transform34));
-
-                pScene->tlas_dirty = true;
-                pScene->total_inst_count += 1;
-                pScene->entity_ids[entity] = instance_data.instance_index;
+                instance_data._ready_on_gpu = true;
             }
         }
     }
     skr::ecs::ComponentView<const MeshComponent> meshes;
     skr::ecs::ComponentView<GPUSceneInstance> instances;
     skr::ecs::ComponentView<gpu::Instance> gpu_instances;
+    skr::ecs::ComponentView<const skr::scene::TransformComponent> transforms;
 };
 
 struct ScanGPUScene : public GPUSceneInstanceTask
 {
+    void build(skr::ecs::AccessBuilder& builder)
+    {
+        GPUSceneInstanceTask::build(builder);
+        builder.read(&ScanGPUScene::gpu_instances);
+    }
     void run(skr::ecs::TaskContext& Context)
     {
         SkrZoneScopedN("GPUScene::ScanGPUScene");
@@ -188,26 +123,18 @@ struct ScanGPUScene : public GPUSceneInstanceTask
         const auto& Lane = pScene->GetLaneForUpload();
         sugoi_chunk_view_t v = {};
         sugoiS_access(pScene->ecs_world->get_storage(), (sugoi_entity_t)Context.entities()[0], &v);
+        for (auto i = 0; i < Context.size(); i++)
         {
-            for (auto [cpu_type, table] : pScene->table_map)
+            auto entity = Context.entities()[i];
+            const auto& instance_data = instances[i];
+            auto& multi_insts = gpu_instances[i];
+            for (auto& gpu_inst : multi_insts)
             {
-                auto StoreToTable = pScene->store_map.find(cpu_type).value();
-                for (auto i = 0; i < Context.size(); i++)
-                {
-                    auto entity = Context.entities()[i];
-                    const auto& instance_data = instances[i];
-                    if (instance_data.instance_index == ~0)
-                        continue;
-
-                    auto& dirties = Lane.dirties.find(entity).value();
-                    if (!dirties.contains(cpu_type))
-                        continue;
-
-                    if (const auto data = Context.read(cpu_type).at(i))
-                    {
-                        StoreToTable(*table, instance_data.instance_index, data);
-                    }
-                }
+                gpu::GPUDatablock<gpu::Instance>::StoreInstance(
+                    *pScene->instance_table, 
+                    gpu_inst.global_index, 
+                    gpu_inst
+                );
             }
         }
     }
@@ -216,6 +143,7 @@ struct ScanGPUScene : public GPUSceneInstanceTask
     {
     }
     skr::render_graph::RenderGraph* graph;
+    skr::ecs::ComponentView<const gpu::Instance> gpu_instances;
 };
 
 void GPUScene::AdjustDatabase(skr::render_graph::RenderGraph* graph)
@@ -230,14 +158,7 @@ void GPUScene::AdjustDatabase(skr::render_graph::RenderGraph* graph)
         tlas_instances.resize_zeroed(tlas_instances.size() + Lane.add_ents.size());
     }
     const auto required_instances = tlas_instances.size();
-    for (auto& [cpu_type, table] : table_map)
-    {
-        auto& imported = frame_ctx.table_handles.try_add_default(cpu_type).value();
-        imported = table->AdjustDatabase(graph, required_instances);
-    }
-    // TODO: RESIZE MAT AND PRIMS
-    frame_ctx.primitives_handle = primitives_table->AdjustDatabase(graph, 128 * required_instances);
-    frame_ctx.materials_handle = materials_table->AdjustDatabase(graph, 128 * required_instances);
+    frame_ctx.instance_table_handle = instance_table->UpdateTableBuffer(graph, required_instances);
 }
 
 void GPUScene::ExecuteUpload(skr::render_graph::RenderGraph* graph)
@@ -265,7 +186,8 @@ void GPUScene::ExecuteUpload(skr::render_graph::RenderGraph* graph)
                 [&frame_ctx, graph](RenderGraph& rg, class RenderGraph::AccelerationStructureBuilder& builder) {
                     builder.set_name(u8"GPUScene-TLAS")
                         .import(frame_ctx.frame_tlas.get());
-                });
+                }
+            );
         }
     };
     SKR_DEFER({ ImportTLAS(); });
@@ -306,61 +228,53 @@ void GPUScene::ExecuteUpload(skr::render_graph::RenderGraph* graph)
 
             ScanGPUScene scan(graph);
             scan.pScene = this;
-            ecs_world->dispatch_task(scan, get_batchsize(Lane.dirty_ents.size()), Lane.dirty_ents, std::move(options));
+            Lane.tmp_dirty_ents.reserve(Lane.dirty_ents.size());
+            Lane.tmp_dirty_ents.append(Lane.dirty_ents);
+            ecs_world->dispatch_task(scan, get_batchsize(Lane.tmp_dirty_ents.size()), Lane.tmp_dirty_ents, std::move(options));
         }
     }
 
-    for (auto& [cpu_type, gpu_table] : table_map)
-    {
-        if (cpu_type != instance_type)
+    instance_table->DispatchSparseUpload(graph, 
+        [this](skr::render_graph::RenderGraph& g, skr::render_graph::ComputePassContext& ctx) {
+        auto& upload_ctx = upload_ctxs.get(ctx.graph);
+        upload_ctx.add_finish.wait(true);
+        upload_ctx.scan_finish.wait(true);
+
+        // Send BLAS / TLAS requests
         {
-            gpu_table->DispatchSparseUpload(graph, {});
-            continue;
-        }
-
-        gpu_table->DispatchSparseUpload(graph,
-            [this](skr::render_graph::RenderGraph& g, skr::render_graph::ComputePassContext& ctx) {
-            auto& upload_ctx = upload_ctxs.get(ctx.graph);
-            upload_ctx.add_finish.wait(true);
-            upload_ctx.scan_finish.wait(true);
-
-            // Send BLAS / TLAS requests
+            SkrZoneScopedN("GPUScene::UpdateAccelerationStructure");
+            TLASUpdateRequest update_request;
             {
-                SkrZoneScopedN("GPUScene::UpdateAccelerationStructure");
-                TLASUpdateRequest update_request;
+                CGPUAccelerationStructureId blas = nullptr;
+                while (dirty_blases.try_dequeue(blas) && blas)
                 {
-                    CGPUAccelerationStructureId blas = nullptr;
-                    while (dirty_blases.try_dequeue(blas) && blas)
-                    {
-                        update_request.blases_to_build.add_unique(blas);
-                    }
-                }
-                if (tlas_dirty || !update_request.blases_to_build.is_empty())
-                {
-                    if (total_inst_count != 0)
-                    {
-                        CGPUAccelerationStructureDescriptor tlas_desc = {};
-                        tlas_desc.type = CGPU_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-                        tlas_desc.flags = CGPU_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-                        tlas_desc.top.count = total_inst_count;
-                        tlas_desc.top.instances = tlas_instances.data();
-                        update_request.tlas_desc = tlas_desc;
-                    }
-                    tlas_manager->Request(ctx.graph, update_request);
+                    update_request.blases_to_build.add_unique(blas);
                 }
             }
-            auto& Lane = GetLaneForUpload();
+            if (tlas_dirty || !update_request.blases_to_build.is_empty())
             {
-                SkrZoneScopedN("GPUScene::CleanUpLane");
+                if (total_inst_count != 0)
+                {
+                    CGPUAccelerationStructureDescriptor tlas_desc = {};
+                    tlas_desc.type = CGPU_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
+                    tlas_desc.flags = CGPU_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+                    tlas_desc.top.count = total_inst_count;
+                    tlas_desc.top.instances = tlas_instances.data();
+                    update_request.tlas_desc = tlas_desc;
+                }
+                tlas_manager->Request(ctx.graph, update_request);
+                tlas_dirty = false;
+            }
+        }
+        auto& Lane = GetLaneForUpload();
+        {
+            SkrZoneScopedN("GPUScene::CleanUpLane");
 
-                Lane.add_ents.clear();
-                Lane.remove_ents.clear();
-                Lane.dirty_ents.clear();
-                Lane.dirties.clear();
-            } });
-    }
-    materials_table->DispatchSparseUpload(graph, {});
-    primitives_table->DispatchSparseUpload(graph, {});
+            Lane.add_ents.clear();
+            Lane.remove_ents.clear();
+            Lane.dirty_ents.clear();
+            Lane.tmp_dirty_ents.clear();
+        } });
 }
 
 void GPUScene::AddEntity(skr::ecs::Entity entity)
@@ -371,39 +285,34 @@ void GPUScene::AddEntity(skr::ecs::Entity entity)
         Lane.add_ents.add(entity);
         Lane.add_mtx.unlock();
     }
-    for (auto& [cpu_type, table] : table_map)
-    {
-        RequireUpload(entity, cpu_type);
-    }
+    RequireUpload(entity);
 }
 
 bool GPUScene::CanRemoveEntity(skr::ecs::Entity entity)
 {
-    return entity_ids.contains(entity);
+    const auto instance_data = ecs_world->random_readwrite<GPUSceneInstance>().get(entity);
+    return instance_data->_ready_on_gpu;
 }
 
 void GPUScene::RemoveEntity(skr::ecs::Entity entity)
 {
     auto& Lane = GetFrontLane();
-    if (entity_ids.contains(entity))
+    const auto instance_data = ecs_world->random_readwrite<GPUSceneInstance>().get(entity);
+    const auto multi_insts = ecs_world->random_readwrite<skr::gpu::Instance>().get(entity);
+    if (instance_data->_ready_on_gpu)
     {
-        const auto instance_data = ecs_world->random_readwrite<GPUSceneInstance>().get(entity);
         const auto prims = ecs_world->random_readwrite<gpu::Primitive>().get(entity);
         const auto mats = ecs_world->random_readwrite<gpu::Material>().get(entity);
+        for (auto inst : *multi_insts)
+        {
+            free_insts.enqueue(inst.global_index);
+            free_inst_count += 1;
+            total_inst_count -= 1;
 
-        free_insts.enqueue(instance_data->instance_index);
-        free_inst_count += 1;
-        total_inst_count -= 1;
-
-        // TODO: FREE
-        // total_prim_count -= instance_data->prim_ids.size();
-        // total_mat_count -= instance_data->mat_ids.size();
-
-        auto& tlas_instance = tlas_instances[instance_data->instance_index];
-        memset(tlas_instance.transform, 0, sizeof(tlas_instance.transform));
-        tlas_dirty = true;
-
-        entity_ids.erase(entity);
+            auto& tlas_instance = tlas_instances[inst.global_index];
+            memset(tlas_instance.transform, 0, sizeof(tlas_instance.transform));
+            tlas_dirty = true;
+        }
     }
     else
     {
@@ -413,22 +322,11 @@ void GPUScene::RemoveEntity(skr::ecs::Entity entity)
     }
 }
 
-void GPUScene::RequireUpload(skr::ecs::Entity entity, CPUTypeID component)
+void GPUScene::RequireUpload(skr::ecs::Entity entity)
 {
     auto& Lane = GetFrontLane();
     Lane.dirty_mtx.lock();
-    auto cs = Lane.dirties.try_add_default(entity);
-
-    if (!cs.already_exist())
-    {
-        Lane.dirty_ents.add(entity);
-    }
-
-    if (!cs.value().find(component))
-    {
-        cs.value().add(component);
-    }
-
+    Lane.dirty_ents.add(entity);
     Lane.dirty_mtx.unlock();
 }
 
@@ -438,47 +336,14 @@ void GPUScene::Initialize(gpu::TableManager* table_manager, skr::RenderDevice* r
 
     ecs_world = world;
     render_device = render_device;
-    instance_type = sugoi_id_of<gpu::Instance>::get();
 
     tlas_manager = TLASManager::Create(1 + RG_MAX_FRAME_IN_FLIGHT, render_device);
     {
-        auto& instance_table = table_map.try_add_default(instance_type).value();
         gpu::TableConfig table_builder(render_device->get_cgpu_device(), u8"Instances");
-        table_builder.with_page_size(16 * 1024)
-            .with_instances(16 * 1024)
-            .add_component(0, sizeof(gpu::GPUDatablock<gpu::Instance>));
+        table_builder.with_instances(16 * 1024);
+        gpu::GPUDatablock<gpu::Instance>::SetupTableConfig(table_builder);
         instance_table = table_manager->CreateTable(table_builder);
-        store_map.add(sugoi_id_of<gpu::Instance>::get(), +[](gpu::TableInstance& table, uint32_t inst, const void* data){
-            const gpu::Instance* d = (const gpu::Instance*)data;
-            const gpu::GPUDatablock<gpu::Instance> block(*d);
-            table.Store(0, inst, block);
-        });
     }
-    {
-        gpu::TableConfig table_builder(render_device->get_cgpu_device(), u8"Primitives");
-        table_builder.with_page_size(16 * 1024)
-            .with_instances(16 * 1024)
-            .add_component(0, sizeof(gpu::GPUDatablock<gpu::Primitive>));
-        primitives_table = table_manager->CreateTable(table_builder);
-        store_map.add(sugoi_id_of<gpu::Primitive>::get(), +[](gpu::TableInstance& table, uint32_t inst, const void* data){
-            const gpu::Primitive* d = (const gpu::Primitive*)data;
-            const gpu::GPUDatablock<gpu::Primitive> block(*d);
-            table.Store(0, inst, block);
-        });
-    }
-    {
-        gpu::TableConfig table_builder(render_device->get_cgpu_device(), u8"Materials");
-        table_builder.with_page_size(16 * 1024)
-            .with_instances(16 * 1024)
-            .add_component(0, sizeof(gpu::GPUDatablock<gpu::Material>));
-        materials_table = table_manager->CreateTable(table_builder);
-        store_map.add(sugoi_id_of<gpu::Material>::get(), +[](gpu::TableInstance& table, uint32_t inst, const void* data){
-            const gpu::Material* d = (const gpu::Material*)data;
-            const gpu::GPUDatablock<gpu::Material> block(*d);
-            table.Store(0, inst, block);
-        });
-    }
-
     SKR_LOG_INFO(u8"GPUScene initialized successfully");
 }
 
@@ -487,8 +352,7 @@ void GPUScene::Shutdown()
     SKR_LOG_INFO(u8"Shutting down GPUScene...");
 
     // Shutdown allocators (will release buffers)
-    for (auto& [type, gpu_table] : table_map)
-        gpu_table.reset();
+    instance_table.reset();
 
     for (uint32_t i = 0; i < frame_ctxs.max_frames_in_flight(); ++i)
     {

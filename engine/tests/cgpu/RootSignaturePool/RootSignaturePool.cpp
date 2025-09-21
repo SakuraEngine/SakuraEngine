@@ -124,10 +124,8 @@ CGPURootSignatureId create_root_sig_with_shaders(CGPUDeviceId device,
     free(vs_bytes);
     free(fs_bytes);
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = u8"main";
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = u8"main";
     ppl_shaders[1].library = fragment_shader;
     const char8_t* push_const_name = u8"push_constants";

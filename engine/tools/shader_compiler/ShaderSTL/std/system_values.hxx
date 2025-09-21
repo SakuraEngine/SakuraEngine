@@ -9,6 +9,11 @@
 #define vertex_shader(x) clang::annotate("skr-shader", "stage", "vertex", (x))
 #define fragment_shader(x) clang::annotate("skr-shader", "stage", "fragment", (x))
 
+#define raygen_shader(x) clang::annotate("skr-shader", "stage", "raygeneration", (x))
+#define anyhit_shader(x) clang::annotate("skr-shader", "stage", "anyhit", (x))
+#define closesthit_shader(x) clang::annotate("skr-shader", "stage", "closesthit", (x))
+#define miss_shader(x) clang::annotate("skr-shader", "stage", "miss", (x))
+
 #define sv_position builtin("Position")
 #define sv_clip_distance builtin("ClipDistance")
 #define sv_cull_distance builtin("CullDistance")
@@ -19,6 +24,7 @@
 #define sv_stencil builtin("StencilRef")
 #define sv_vertex_id builtin("VertexID")
 #define sv_instance_id builtin("InstanceID")
+#define sv_payload builtin("RayPayload")
 
 #define sv_gs_instance_id builtin("GSInstanceID")
 #define sv_tess_factor builtin("TessFactor")

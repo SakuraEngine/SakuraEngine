@@ -9,7 +9,7 @@ public static class StateBufferTriangle
     {
         Engine.Program("StateBufferTriangle")
             .EnableUnityBuild()
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .Depend(Visibility.Private, "AppSampleCommon")
             .IncludeDirs(Visibility.Private, "./../../common")
             .AddCFiles("triangle/statebuffer_triangle.c")

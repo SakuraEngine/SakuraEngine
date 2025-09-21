@@ -7,22 +7,19 @@ public static class BaseTests
 {
     static BaseTests()
     {
-        Test.UnitTest("OSTest")
+        Test.UnitTest("TestOS")
             .AddCppFiles("os/main.cpp");
 
-        Test.UnitTest("AlgoTest")
+        Test.UnitTest("TestAlgo")
             .AddCppFiles("algo/*.cpp");
 
-        Test.UnitTest("ContainersTest")
+        Test.UnitTest("TestContainers")
             .AddCppFiles("containers/*.cpp");
 
-        Test.UnitTest("MathTest")
+        Test.UnitTest("TestMath")
             .AddCppFiles("math/*.cpp");
 
-        Test.UnitTest("TypeTest")
-            .AddCppFiles("type/*.cpp");
-
-        Test.UnitTest("FileSystemTest")
+        Test.UnitTest("TestFileSystem")
             .AddCppFiles("filesystem/*.cpp");
     }
 }

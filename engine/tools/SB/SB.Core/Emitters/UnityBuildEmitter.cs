@@ -17,7 +17,7 @@ namespace SB
         public override bool EmitTargetTask(Target Target) => true;
         public override IArtifact? PerTargetTask(Target Target)
         {
-            var UnityFileDirectory = Path.Combine(Target.GetStorePath(BS.GeneratedSourceStore), "unity_build");
+            var UnityFileDirectory = Path.Combine(Target.GetBuildGenDir(), "unity_build");
             Directory.CreateDirectory(UnityFileDirectory);
 
             var UnityBuildAttribute = Target.GetAttribute<UnityBuildAttribute>()!;
@@ -25,7 +25,7 @@ namespace SB
 
             var RunBatch = (FileList FileList, string[] Batch, string BatchName, string Postfix) => {
                 var UnityFile = Path.Combine(UnityFileDirectory, $"unity_build.{BatchName}.{Postfix}");
-                Changed |= BS.CppCompileDepends(Target).OnChanged(Target.Name, UnityFile, this.Name, (Depend depend) => {
+                Changed |= BuildDepends.Solve(Target).OnChanged(Target.Name, UnityFile, this.Name, (Depend depend) => {
                     var UnityContent = String.Join("\n", Batch.Select(F => $"#include \"{F}\""));
                     File.WriteAllText(UnityFile, UnityContent);
                     depend.ExternalFiles.Add(UnityFile);

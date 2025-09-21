@@ -55,7 +55,7 @@ typedef struct skr_live2d_vertex_uv_t {
     float v;
 } skr_live2d_vertex_uv_t;
 
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 
 typedef void (*skr_async_live2d_io_callback_t)(struct skr_live2d_ram_io_future_t* request, void* data);
 typedef struct skr_live2d_ram_io_future_t {

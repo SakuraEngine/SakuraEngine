@@ -4,10 +4,11 @@
 
 namespace skr
 {
-struct V8FunctionRefStackProxy {
+struct V8FunctionRefStackProxy
+{
     v8::Local<v8::Function> v8_function;
-    V8Isolate*              isolate;
-    FunctionRefMemory       func_ref;
+    V8Isolate* isolate;
+    FunctionRefMemory func_ref;
 
     static void* custom_mapping(void* obj)
     {
@@ -17,13 +18,13 @@ struct V8FunctionRefStackProxy {
 
     inline void fill_func_ref()
     {
-        func_ref._kind    = EFunctionRefKind::StackProxy;
+        func_ref._kind = EFunctionRefKind::StackProxy;
         func_ref._payload = (void*)this;
         func_ref._caller =
             (void*)+[](
-                        void*                  payload,
-                        span<const StackProxy> params,
-                        StackProxy             return_value
+                        void* payload,
+                        Span<const StackProxy> params,
+                        StackProxy return_value
                     ) {
                 V8FunctionRefStackProxy* typed_payload = reinterpret_cast<V8FunctionRefStackProxy*>(payload);
                 typed_payload->isolate->invoke_v8(
@@ -78,9 +79,9 @@ v8::Local<v8::Value> V8BTFunctionRef::to_v8(
     return {};
 }
 bool V8BTFunctionRef::to_native(
-    void*                native_data,
+    void* native_data,
     v8::Local<v8::Value> v8_value,
-    bool                 is_init
+    bool is_init
 ) const
 {
     SKR_ASSERT(false && "pass FunctionRef to native is not allowed");
@@ -95,7 +96,7 @@ bool V8BTFunctionRef::match_param(
     return v8_param->IsFunction();
 }
 void V8BTFunctionRef::push_param_native(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp,
     v8::Local<v8::Value> v8_value
 ) const
@@ -105,19 +106,19 @@ void V8BTFunctionRef::push_param_native(
         nullptr,
         V8FunctionRefStackProxy::custom_mapping
     );
-    proxy->isolate     = isolate();
+    proxy->isolate = isolate();
     proxy->v8_function = v8_value.As<v8::Function>();
     proxy->fill_func_ref();
 }
 void V8BTFunctionRef::push_param_native_pure_out(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
     SKR_UNREACHABLE_CODE();
 }
 v8::Local<v8::Value> V8BTFunctionRef::read_return_native(
-    DynamicStack&         stack,
+    DynamicStack& stack,
     const V8BTDataReturn& return_bind_tp
 ) const
 {
@@ -125,7 +126,7 @@ v8::Local<v8::Value> V8BTFunctionRef::read_return_native(
     return {};
 }
 v8::Local<v8::Value> V8BTFunctionRef::read_return_from_out_param(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -135,7 +136,7 @@ v8::Local<v8::Value> V8BTFunctionRef::read_return_from_out_param(
 
 // invoke v8 api
 v8::Local<v8::Value> V8BTFunctionRef::make_param_v8(
-    void*                native_data,
+    void* native_data,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -145,8 +146,8 @@ v8::Local<v8::Value> V8BTFunctionRef::make_param_v8(
 
 // field api
 v8::Local<v8::Value> V8BTFunctionRef::get_field(
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -155,8 +156,8 @@ v8::Local<v8::Value> V8BTFunctionRef::get_field(
 }
 void V8BTFunctionRef::set_field(
     v8::Local<v8::Value> v8_value,
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -170,7 +171,7 @@ v8::Local<v8::Value> V8BTFunctionRef::get_static_field(
     return {};
 }
 void V8BTFunctionRef::set_static_field(
-    v8::Local<v8::Value>       v8_value,
+    v8::Local<v8::Value> v8_value,
     const V8BTDataStaticField& field_bind_tp
 ) const
 {
@@ -180,16 +181,16 @@ void V8BTFunctionRef::set_static_field(
 // check api
 void V8BTFunctionRef::solve_invoke_behaviour(
     const V8BTDataParam& param_bind_tp,
-    bool&                appare_in_return,
-    bool&                appare_in_param
+    bool& appare_in_return,
+    bool& appare_in_param
 ) const
 {
     appare_in_return = false;
-    appare_in_param  = true;
+    appare_in_param = true;
 }
 bool V8BTFunctionRef::check_param(
     const V8BTDataParam& param_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     if (flag_any(param_bind_tp.inout_flag, ERTTRParamFlag::Out))
@@ -201,7 +202,7 @@ bool V8BTFunctionRef::check_param(
 }
 bool V8BTFunctionRef::check_return(
     const V8BTDataReturn& return_bind_tp,
-    V8ErrorCache&         errors
+    V8ErrorCache& errors
 ) const
 {
     errors.error(u8"FunctionRef cannot be used on return");
@@ -209,7 +210,7 @@ bool V8BTFunctionRef::check_return(
 }
 bool V8BTFunctionRef::check_field(
     const V8BTDataField& field_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     errors.error(u8"FunctionRef cannot be used on field");
@@ -217,7 +218,7 @@ bool V8BTFunctionRef::check_field(
 }
 bool V8BTFunctionRef::check_static_field(
     const V8BTDataStaticField& field_bind_tp,
-    V8ErrorCache&              errors
+    V8ErrorCache& errors
 ) const
 {
     errors.error(u8"FunctionRef cannot be used on field");
@@ -225,13 +226,11 @@ bool V8BTFunctionRef::check_static_field(
 }
 
 // v8 export
-bool V8BTFunctionRef::has_v8_export_obj(
-) const
+bool V8BTFunctionRef::has_v8_export_obj() const
 {
     return false;
 }
-v8::Local<v8::Value> V8BTFunctionRef::get_v8_export_obj(
-) const
+v8::Local<v8::Value> V8BTFunctionRef::get_v8_export_obj() const
 {
     SKR_UNREACHABLE_CODE();
     return {};
@@ -242,14 +241,13 @@ void V8BTFunctionRef::dump_ts_def(
 {
     SKR_UNREACHABLE_CODE();
 }
-String V8BTFunctionRef::get_ts_type_name(
-) const
+String V8BTFunctionRef::get_ts_type_name() const
 {
     String ret_sig;
     String params_sig;
 
     // build param
-    auto     sig = _func_signature.view();
+    auto sig = _func_signature.view();
     uint32_t param_count;
     sig = sig.read_function_signature(param_count);
 
@@ -258,7 +256,7 @@ String V8BTFunctionRef::get_ts_type_name(
         auto return_sig = sig.jump_next_data();
         return_sig.jump_modifier();
         auto* return_bind_tp = isolate()->solve_bind_tp(return_sig);
-        ret_sig              = return_bind_tp->get_ts_type_name();
+        ret_sig = return_bind_tp->get_ts_type_name();
     }
 
     // build params sig
@@ -292,8 +290,7 @@ String V8BTFunctionRef::get_ts_type_name(
         ret_sig
     );
 }
-bool V8BTFunctionRef::ts_is_nullable(
-) const
+bool V8BTFunctionRef::ts_is_nullable() const
 {
     return true;
 }
@@ -301,7 +298,7 @@ bool V8BTFunctionRef::ts_is_nullable(
 // helper
 bool V8BTFunctionRef::_basic_type_check(
     const V8BTDataModifier& modifiers,
-    V8ErrorCache&           errors
+    V8ErrorCache& errors
 ) const
 {
     if (modifiers.is_decayed_pointer())

@@ -3,24 +3,23 @@
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/math/matrix.hpp"
 #include "SkrGui/math/geometry.hpp"
-#ifndef __meta__
-    #include "SkrGui/system/input/hit_test.generated.h"
-#endif
+#include "SkrGui/system/input/hit_test.generated.h"
 
 namespace skr::gui
 {
 struct PointerEvent;
 struct HitTestEntry;
 
-sreflect_enum_class(guid = "e59baca9-43d6-4368-869b-e122ee58d53d")
-EHitTestBehavior : uint32_t
+enum class [[sattr(guid = "e59baca9-43d6-4368-869b-e122ee58d53d"
+)]] EHitTestBehavior : uint32_t
 {
     defer_to_child, // 如果 child hit 成功则将自身加入 hit result
     opaque,         // 即便 child hit 不成功，也将自身加入 hit result 并返回 true
     transparent,    // 即便 child hit 不成功，也将自身加入 hit result 并返回 false
 };
 
-struct HitTestEntry {
+struct HitTestEntry
+{
     // 通常我们会让 hit_test 为 const，但是 event dispatch 为非 const，这里是为了方便代码书写
     inline HitTestEntry(const RenderObject* target)
         : target(const_cast<RenderObject*>(target))
@@ -32,11 +31,12 @@ struct HitTestEntry {
     {
     }
 
-    RenderObject*     target    = nullptr;
+    RenderObject* target = nullptr;
     Optional<Matrix4> transform = {};
 };
 
-struct HitTestResult {
+struct HitTestResult
+{
     // info
     inline bool is_empty() const SKR_NOEXCEPT { return _path.is_empty(); }
 
@@ -149,8 +149,8 @@ private:
 
 private:
     Array<HitTestEntry> _path;
-    Array<Matrix4>      _transforms;       // global->local
-    Array<Matrix4>      _local_transforms; // global->local
+    Array<Matrix4> _transforms;       // global->local
+    Array<Matrix4> _local_transforms; // global->local
 };
 
 } // namespace skr::gui

@@ -1,10 +1,11 @@
 #pragma once
+#include <SkrBase/config.h>
 #include <array>
 
 namespace skr
 {
 template <class T, size_t Size>
-using Array = std::array<T, Size>;
+using Array [[sfinal_alias]] = std::array<T, Size>;
 
 namespace arrayDetail
 {

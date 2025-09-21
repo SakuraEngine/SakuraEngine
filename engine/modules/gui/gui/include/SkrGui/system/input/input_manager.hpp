@@ -6,9 +6,7 @@
 #include "SkrGui/system/input/event.hpp"
 #include "SkrGui/system/input/gesture/gesture_recognizer.hpp"
 #include "SkrGui/system/input/gesture/gesture_arena_manager.hpp"
-#ifndef __meta__
-    #include "SkrGui/system/input/input_manager.generated.h"
-#endif
+#include "SkrGui/system/input/input_manager.generated.h"
 
 namespace skr::gui
 {
@@ -28,8 +26,9 @@ struct GestureArenaManager;
 //  8. focus & navigation (keyboard)         // ! 可 TODO
 
 // InputManager 管理 Context 提供全局 hit test 支持与事件分发
-sreflect_struct(guid = "5c9d7e26-c2a1-4785-8832-bda746906801")
-SKR_GUI_API InputManager {
+struct [[sattr(guid = "5c9d7e26-c2a1-4785-8832-bda746906801"
+)]] SKR_GUI_API InputManager
+{
 
     // dispatch event
     bool dispatch_event(Event* event);
@@ -52,8 +51,8 @@ private:
     void _dispatch_enter_exit(HitTestResult* result, PointerMoveEvent* event);
 
 private:
-    Array<RenderNativeWindow*> _contexts              = {};
-    GestureArenaManager        _gesture_arena_manager = {};
+    Array<RenderNativeWindow*> _contexts = {};
+    GestureArenaManager _gesture_arena_manager = {};
 
     HitTestResult _last_hover_path = {};
 };

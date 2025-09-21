@@ -1,42 +1,43 @@
+#include "SkrCore/serialize/binary_archive.hpp"
 #include "resource_request_impl.hpp"
 #include "SkrBase/misc/debug.h"
 #include "SkrBase/misc/defer.hpp"
-#include "SkrRT/io/ram_io.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrCore/platform/vfs.h"
-#include "SkrRT/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.h"
 
 namespace skr
 {
 // resource request implementation
-skr_guid_t SResourceRequestImpl::GetGuid() const
+GUID SResourceRequestImpl::GetGuid() const
 {
     return resourceRecord->header.guid;
 }
 
-skr::span<const uint8_t> SResourceRequestImpl::GetData() const
+skr::Span<const uint8_t> SResourceRequestImpl::GetData() const
 {
     if (!dataBlob)
     {
         return {};
     }
-    return skr::span<const uint8_t>(dataBlob->get_data(), dataBlob->get_size());
+    return skr::Span<const uint8_t>(dataBlob->get_data(), dataBlob->get_size());
 }
 
 #ifdef SKR_RESOURCE_DEV_MODE
-skr::span<const uint8_t> SResourceRequestImpl::GetArtifactsData() const
+skr::Span<const uint8_t> SResourceRequestImpl::GetArtifactsData() const
 {
     if (!artifactsBlob)
     {
         return {};
     }
-    return skr::span<const uint8_t>(artifactsBlob->get_data(), artifactsBlob->get_size());
+    return skr::Span<const uint8_t>(artifactsBlob->get_data(), artifactsBlob->get_size());
 }
 #endif
 
-skr::span<const skr_guid_t> SResourceRequestImpl::GetDependencies() const
+skr::Span<const GUID> SResourceRequestImpl::GetDependencies() const
 {
-    return skr::span<const skr_guid_t>(dependencies.data(), dependencies.size());
+    return skr::Span<const GUID>(dependencies.data(), dependencies.size());
 }
 
 void SResourceRequestImpl::UpdateLoad(bool requestInstall)
@@ -170,9 +171,7 @@ void SResourceRequestImpl::OnRequestFileFinished()
         factory = system->FindFactory(resourceRecord->header.type);
         if (factory == nullptr)
         {
-            SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, factory of type {} not found.",
-                resourceRecord->header.guid,
-                resourceRecord->header.type);
+            SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, factory of type {} not found.", resourceRecord->header.guid, resourceRecord->header.type);
             currentPhase = SKR_LOADING_PHASE_FINISHED;
             resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             return;
@@ -350,9 +349,7 @@ void SResourceRequestImpl::Update()
             LoadTask();
             if (serdeResult != 0)
             {
-                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.",
-                    resourceRecord->header.guid,
-                    serdeResult);
+                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.", resourceRecord->header.guid, serdeResult);
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
                 resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             }
@@ -367,9 +364,7 @@ void SResourceRequestImpl::Update()
             serdeEvent.clear();
             if (serdeResult != 0)
             {
-                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.",
-                    resourceRecord->header.guid,
-                    serdeResult);
+                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.", resourceRecord->header.guid, serdeResult);
                 currentPhase = SKR_LOADING_PHASE_FINISHED;
                 resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
             }
@@ -504,16 +499,14 @@ void SResourceRequestImpl::Update()
 
 void SResourceRequestImpl::LoadTask()
 {
-    auto data = GetData();
-    skr::archive::BinSpanReader reader{ data };
-    SBinaryReader archive{ reader };
+    skr::ArReadBin reader;
+    reader.use_buffer(GetData());
 #ifdef SKR_RESOURCE_DEV_MODE
-    auto artifactsData = GetArtifactsData();
-    skr::archive::BinSpanReader artifacstReader = { artifactsData };
-    SBinaryReader artifactsArchive{ artifacstReader };
+    skr::ArReadBin artifacts_reader;
+    artifacts_reader.use_buffer(GetArtifactsData());
 #endif
-    if (factory->Deserialize(resourceRecord, &archive))
-        factory->DerserializeArtifacts(resourceRecord, &artifactsArchive);
+    if (factory->Deserialize(resourceRecord, &reader))
+        factory->DerserializeArtifacts(resourceRecord, &artifacts_reader);
     serdeEvent.signal();
 }
 

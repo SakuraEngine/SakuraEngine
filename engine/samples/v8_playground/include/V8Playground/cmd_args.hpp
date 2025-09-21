@@ -5,22 +5,23 @@
 #include <SkrBase/meta.h>
 #include <SkrCore/cli.hpp>
 #include <V8Playground/app.hpp>
-#ifndef __meta__
-    #include "V8Playground/cmd_args.generated.h"
-#endif
+#include "V8Playground/cmd_args.generated.h"
 
 namespace skr
 {
-sreflect_struct(guid = "c30115c5-4945-468f-a579-523202d4f42b" rttr = @full)
-SubCommandDumpDefine
+struct [[sattr(
+    guid = "c30115c5-4945-468f-a579-523202d4f42b"
+    rttr = @full
+)]] SubCommandDumpDefine
 {
-    srttr_attr(CmdOption{
+    [[srttr_attr(CmdOption{
         .short_name = u8'o',
         .help = u8"where to output .d.ts file",
-    })
-        skr::String outdir = {};
+    })]]
+    skr::String outdir = {};
 
-    srttr_attr(CmdExec{}) void exec()
+    [[srttr_attr(CmdExec{})]]
+    void exec()
     {
         SKR_LOG_FMT_INFO(u8"dump .d.ts into dir '{}'", outdir);
         V8PlaygroundApp::env_init();
@@ -41,25 +42,26 @@ SubCommandDumpDefine
     }
 };
 
-sreflect_struct(guid = "1bfb194d-abcd-42c0-9597-96f359a786aa" rttr = @full)
+struct [[sattr(guid = "1bfb194d-abcd-42c0-9597-96f359a786aa" rttr = @full)]]
 MainCommand
 {
-    srttr_attr(CmdOption{
+    [[srttr_attr(CmdOption{
         .short_name = u8'r',
         .name = u8"root",
         .help = u8"js project root",
         .is_required = true,
-    })
-        skr::String js_root = {};
+    })]]
+    skr::String js_root = {};
 
-    srttr_attr(CmdSub{
+    [[srttr_attr(CmdSub{
         .short_name = u8'd',
         .help = u8"dump .d.ts files",
         .usage = u8"V8Playground dump_def [options]",
-    })
-        SubCommandDumpDefine dump_def = {};
+    })]] 
+    SubCommandDumpDefine dump_def = {};
 
-    srttr_attr(CmdExec{}) void exec()
+    [[srttr_attr(CmdExec{})]] 
+    void exec()
     {
         V8PlaygroundApp::env_init();
 

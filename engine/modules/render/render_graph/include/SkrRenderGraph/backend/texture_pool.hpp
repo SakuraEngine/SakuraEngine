@@ -38,7 +38,8 @@ public:
         ECGPUSampleCount sample_count;
         uint32_t sample_quality;
         CGPUTextureViewUsages usages;
-        bool is_restrict_dedicated = 0;
+        bool is_heap_dedicated = 0;
+        bool is_driver_dedicated = 0;
         operator size_t() const;
         friend class TexturePool;
 

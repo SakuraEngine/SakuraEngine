@@ -9,7 +9,8 @@
 namespace skr::container
 {
 template <typename Memory>
-struct MultiSparseHashMap : protected SparseHashBase<Memory> {
+struct MultiSparseHashMap : protected SparseHashBase<Memory>
+{
     using Super = SparseHashBase<Memory>;
 
     // sparse vector configure
@@ -88,6 +89,7 @@ struct MultiSparseHashMap : protected SparseHashBase<Memory> {
     using Super::clear;
     using Super::release;
     using Super::reserve;
+    using Super::grow_to;
     using Super::shrink;
     using Super::compact;
     using Super::compact_stable;
@@ -752,7 +754,8 @@ SKR_INLINE const MultiSparseHashMap<Memory>& MultiSparseHashMap<Memory>::readonl
 namespace skr::container
 {
 template <typename Memory>
-struct ContainerTraits<MultiSparseHashMap<Memory>> {
+struct ContainerTraits<MultiSparseHashMap<Memory>>
+{
     constexpr static bool is_linear_memory = false; // data(), size()
     constexpr static bool has_size         = true;  // size()
     constexpr static bool is_iterable      = true;  // begin(), end()

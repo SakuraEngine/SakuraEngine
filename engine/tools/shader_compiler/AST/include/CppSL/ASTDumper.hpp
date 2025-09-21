@@ -1,5 +1,5 @@
 #pragma once
-#include "AST.hpp"
+#include "CppSL/CppSLAST.hpp"
 #include "CppSL/SourceBuilder.hpp"
 
 namespace skr::CppSL {

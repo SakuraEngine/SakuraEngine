@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_proxy_box.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/render_object/render_proxy_box_with_hit_test_behavior.generated.h"
-#endif
+#include "SkrGui/framework/render_object/render_proxy_box_with_hit_test_behavior.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "56dbbcf9-bfca-47c3-a75b-94c9a884255e")
-SKR_GUI_API RenderProxyBoxWithHitTestBehavior : public RenderProxyBox {
+struct [[sattr(guid = "56dbbcf9-bfca-47c3-a75b-94c9a884255e"
+)]] SKR_GUI_API RenderProxyBoxWithHitTestBehavior : public RenderProxyBox
+{
     SKR_GENERATE_BODY(RenderProxyBoxWithHitTestBehavior)
     using Super = RenderProxyBox;
 

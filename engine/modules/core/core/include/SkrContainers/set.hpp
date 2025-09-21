@@ -19,81 +19,64 @@ struct TypeSignatureTraits<::skr::Set<T>>
 };
 } // namespace skr
 
-// bin serde
-#include "SkrSerde/bin_serde.hpp"
+// serialize
+#include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
-template <typename T>
-struct BinSerde<skr::Set<T>>
+template <typename Set>
+struct SerializeSkrSetImpl
 {
-    inline static bool read(SBinaryReader* r, skr::Set<T>& v)
+    using DataType = typename Set::SetDataType;
+
+    inline static void read(ArchiveRead& r, Set& v)
     {
-        // read size
-        uint32_t size;
-        if (!bin_read(r, size)) return false;
+        Archive::ArrayScope arr_scope{ r };
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // reserve
+        v.clear();
+        uint64_t arr_size;
+        SKR_FAST_CHECK(r.array_size<uint64_t>(arr_size), );
+        v.reserve(arr_size);
 
         // read content
-        skr::Set<T> temp;
-        for (uint32_t i = 0; i < size; ++i)
+        for (uint64_t i = 0; i < arr_size; ++i)
         {
-            T value;
-            if (!bin_read(r, value))
-                return false;
-            temp.add(std::move(value));
+            DataType value;
+            SKR_FAST_CHECK(r.value<DataType>(value), );
+            v.add(std::move(value));
         }
-
-        // move to target
-        v = std::move(temp);
-        return true;
     }
-    inline static bool write(SBinaryWriter* w, const skr::Set<T>& v)
+    inline static void write(ArchiveWrite& w, const Set& v)
     {
-        // write size
-        uint32_t size = static_cast<uint32_t>(v.size());
-        if (!bin_write(w, size)) return false;
+
+        Archive::ArrayScope arr_scope{ w };
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // write count
+        SKR_FAST_CHECK(w.array_size<uint64_t>(v.size()), );
 
         // write content
         for (const auto& value : v)
         {
-            if (!bin_write(w, value))
-                return false;
+            SKR_FAST_CHECK(w.value<DataType>(value), );
         }
-        return true;
     }
 };
-} // namespace skr
 
-// json serde
-#include "SkrSerde/json_serde.hpp"
-namespace skr
+template <typename T, typename HashTraits, typename Allocator>
+struct Serialize<skr::Set<T, HashTraits, Allocator>>
+    : public SerializeSkrSetImpl<skr::Set<T, HashTraits, Allocator>>
 {
-template <typename T>
-struct JsonSerde<skr::Set<T>>
+};
+template <typename T, uint64_t kCount, typename HashTraits>
+struct Serialize<skr::FixedSet<T, kCount, HashTraits>>
+    : public SerializeSkrSetImpl<skr::FixedSet<T, kCount, HashTraits>>
 {
-    inline static bool read(skr::archive::JsonReader* r, skr::Set<T>& v)
-    {
-        size_t count;
-        SKR_EXPECTED_CHECK(r->StartArray(count), false);
-        for (size_t i = 0; i < count; ++i)
-        {
-            T value;
-            if (!json_read<T>(r, value))
-                return false;
-            v.add(std::move(value));
-        }
-        SKR_EXPECTED_CHECK(r->EndArray(), false);
-        return true;
-    }
-    inline static bool write(skr::archive::JsonWriter* w, const skr::Set<T>& v)
-    {
-        SKR_EXPECTED_CHECK(w->StartArray(), false);
-        for (const auto& value : v)
-        {
-            if (!json_write<T>(w, value))
-                return false;
-        }
-        SKR_EXPECTED_CHECK(w->EndArray(), false);
-        return true;
-    }
+};
+template <typename T, uint64_t kInlineCount, typename HashTraits, typename Allocator>
+struct Serialize<skr::InlineSet<T, kInlineCount, HashTraits, Allocator>>
+    : public SerializeSkrSetImpl<skr::InlineSet<T, kInlineCount, HashTraits, Allocator>>
+{
 };
 } // namespace skr

@@ -24,7 +24,7 @@ struct SKR_IMAGE_CODER_API BaseImageEncoder : public skr::IImageEncoder {
 
     virtual bool initialize(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT override;
 
-    skr::span<const uint8_t> decoded_view;
+    skr::Span<const uint8_t> decoded_view;
 
     virtual uint8_t* get_data() const SKR_NOEXCEPT override { return encoded_data; }
     virtual uint64_t get_size() const SKR_NOEXCEPT override { return encoded_size; }
@@ -69,7 +69,7 @@ struct SKR_IMAGE_CODER_API BaseImageDecoder : public skr::IImageDecoder {
 
     virtual bool initialize(const uint8_t* data, uint64_t size) SKR_NOEXCEPT override;
 
-    skr::span<const uint8_t> encoded_view;
+    skr::Span<const uint8_t> encoded_view;
 
     virtual uint8_t* get_data() const SKR_NOEXCEPT override { return decoded_data; }
     virtual uint64_t get_size() const SKR_NOEXCEPT override { return decoded_size; }

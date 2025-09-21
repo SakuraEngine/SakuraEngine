@@ -82,28 +82,29 @@ public static class Harfbuzz
                     .AddCppFiles("harfbuzz/hb-icu.cc")
                     .Defines(Visibility.Private, "HAVE_ICU", "HAVE_ICU_BUILTIN")
                     .Defines(Visibility.Private, "HAVE_OT", "HB_NO_MT")
-                    .Clang_CXFlags(Visibility.Public, "-Wno-nontrivial-memcall");
+                    .Clang_CXFlags(Visibility.Public, "-Wno-nontrivial-memcall")
+                    .MSVC_CXFlags(Visibility.Private, "/wd5105");
                     // CoreText integration
-                    /*
-                    if (is_plat("macosx")) then
-                        print("harfbuzz: use macosx CoreText in ApplicationServices framework!")
+                /*
+                if (is_plat("macosx")) then
+                    print("harfbuzz: use macosx CoreText in ApplicationServices framework!")
 
-                        add_defines("HAVE_CORETEXT", {public= false})
-                        add_files("harfbuzz/src/hb-coretext.cc")
-                        add_frameworks("ApplicationServices", {public= false})
-                    elseif(is_plat("iphoneos")) then
-                        print("harfbuzz: use iphoneos CoreText framework!")
+                    add_defines("HAVE_CORETEXT", {public= false})
+                    add_files("harfbuzz/src/hb-coretext.cc")
+                    add_frameworks("ApplicationServices", {public= false})
+                elseif(is_plat("iphoneos")) then
+                    print("harfbuzz: use iphoneos CoreText framework!")
 
-                        add_defines("HAVE_CORETEXT", {public= false})
-                        add_files("harfbuzz/src/hb-coretext.cc")
-                        add_frameworks("CoreGraphics", "CoreText", {public= false})
-                    end
-                    */
-                    if (BuildSystem.TargetOS == OSPlatform.Windows)
-                    {
-                        Target.CXFlags(Visibility.Private, "/wd4267", "/wd4244", "/utf-8")
-                            .Defines(Visibility.Private, "_CRT_SECURE_NO_WARNINGS");
-                    }
+                    add_defines("HAVE_CORETEXT", {public= false})
+                    add_files("harfbuzz/src/hb-coretext.cc")
+                    add_frameworks("CoreGraphics", "CoreText", {public= false})
+                end
+                */
+                if (BuildSystem.TargetOS == OSPlatform.Windows)
+                {
+                    Target.CXFlags(Visibility.Private, "/wd4267", "/wd4244", "/utf-8")
+                        .Defines(Visibility.Private, "_CRT_SECURE_NO_WARNINGS");
+                }
             });
 
     }

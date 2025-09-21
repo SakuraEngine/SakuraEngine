@@ -1,5 +1,6 @@
 #include "AnimSampleCore/project.h"
 #include "SkrContainers/hashmap.hpp"
+#include <SkrCore/serialize/json_archive.hpp>
 
 namespace skr
 {
@@ -37,13 +38,15 @@ bool AnimSampleProject::ExistImportedAsset(const skd::URI& uri)
 
 void AnimSampleProject::SaveToDisk()
 {
-    skr::archive::JsonWriter writer(4);
-    writer.StartObject();
-    writer.Key(u8"assets");
-    skr::json_write(&writer, MetaDatabase);
-    writer.EndObject();
-
-    auto json_str = writer.Write();
+    auto writer = skr::ArWriteJson::Create();
+    {
+        skr::Archive::ObjectScope obj_scope(writer);
+        SKR_FAST_CHECK(obj_scope.is_success(), );
+        SKR_FAST_CHECK(writer.key_value(u8"assets", MetaDatabase), );
+    }
+    
+    skr::String json_str;
+    writer.write_to_string(json_str);
 
     if (skr::fs::File::write_all_text(proj_f_path, json_str.view()))
         SKR_LOG_INFO(u8"[AnimSampleProject] Project saved to: %s", proj_f_path.c_str());
@@ -53,28 +56,19 @@ void AnimSampleProject::SaveToDisk()
 
 void AnimSampleProject::LoadFromDisk()
 {
-
-    skr::String json_content;
-    if (skr::fs::File::read_all_text(proj_f_path, json_content))
-    {
-        // Parse JSON
-        skr::archive::JsonReader reader(json_content.view());
-        reader.StartObject();
-        reader.Key(u8"assets");
-        {
-            skr::json_read(&reader, MetaDatabase);
-            SKR_LOG_INFO(u8"[AnimSampleProject] Project loaded from: %s, %zu assets",
-                proj_f_path.c_str(),
-                MetaDatabase.size());
-        }
-        reader.EndObject();
-    }
-    else
+    auto reader = skr::ArReadJson::ReadFile(proj_f_path);
+    if (reader.is_failed())
     {
         // File doesn't exist, which is fine - just means empty project
         MetaDatabase.clear();
         SKR_LOG_INFO(u8"[AnimSampleProject] No existing project file found at: %s, starting with empty project", proj_f_path.c_str());
     }
+
+    skr::Archive::ObjectScope obj_scope(reader);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    SKR_FAST_CHECK(reader.key_value(u8"assets", MetaDatabase), );
+    SKR_LOG_INFO(u8"[AnimSampleProject] Project loaded from: %s, %zu assets", proj_f_path.c_str(), MetaDatabase.size());
 }
 
 } // namespace skr

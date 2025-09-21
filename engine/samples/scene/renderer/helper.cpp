@@ -22,7 +22,7 @@ void CameraController::imgui_control_frame()
     const float camera_pan_speed = 0.0025f * io.DeltaTime;
     const float camera_sensitivity = 0.05f;
 
-    skr_float3_t world_up = { 0.0f, 1.0f, 0.0f };
+    skr::float3 world_up = { 0.0f, 1.0f, 0.0f };
 
     // Rotation
     if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
@@ -38,7 +38,7 @@ void CameraController::imgui_control_frame()
         if (pitch > 89.0f) pitch = 89.0f;
         if (pitch < -89.0f) pitch = -89.0f;
 
-        skr_float3_t direction;
+        skr::float3 direction;
         direction.x = cosf(yaw * (float)kPi / 180.f) * cosf(pitch * (float)kPi / 180.f);
         direction.y = sinf(pitch * (float)kPi / 180.f);
         direction.z = sinf(yaw * (float)kPi / 180.f) * cosf(pitch * (float)kPi / 180.f);

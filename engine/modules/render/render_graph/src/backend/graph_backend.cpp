@@ -282,6 +282,7 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
     // Wait for executor to be available
     {
         SkrZoneScopedN("AcquireExecutor");
+        cgpu_wait_fences(&executors[executor_index].exec_fence, 1);
         if (profiler) profiler->on_acquire_executor(*this, executors[executor_index]);
     }
     
@@ -365,12 +366,6 @@ uint64_t RenderGraphBackend::execute(RenderGraphProfiler* profiler) SKR_NOEXCEPT
         imported_acceleration_structures.clear();
     }
 
-    // early acquire then CPU logics will not race with GPU resource (N - MAX_FRAMES_IN_FLIGHT)
-    {
-        SkrZoneScopedN("AcquireNextExecutor");
-        const auto next_executor = (frame_index + 1) % RG_MAX_FRAME_IN_FLIGHT;
-        cgpu_wait_fences(&executors[next_executor].exec_fence, 1);
-    }
     return frame_index++;
 }
 

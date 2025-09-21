@@ -21,8 +21,9 @@ public static class SceneSamples
 
         Engine.Program("SceneSample_Serde")
             .AddCppFiles("serde/*.cpp")
-            .Depend(Visibility.Private, "SkrScene")
-            .Depend(Visibility.Private, "SkrSystem");
+            .Depend(Visibility.Private, "SceneRenderer")
+            .Depend(Visibility.Private, "SkrTextureCompiler")
+            .Depend(Visibility.Private, "SkrMeshTool");
 
         Engine.Program("SceneSample_Mesh")
             .AddCppFiles("mesh/*.cpp")
@@ -35,6 +36,13 @@ public static class SceneSamples
                 "assets/*.gltf",
                 "assets/*.bin"
             );
+
+        Engine.Program("SceneSample_SerdeResource")
+            .AddCppFiles("serde_resource/*.cpp")
+            .Depend(Visibility.Private, "SceneRenderer")
+            .Depend(Visibility.Private, "SkrTextureCompiler")
+            .Depend(Visibility.Private, "SkrMeshTool");
+
         Engine.Program("SceneSample_SkelMesh")
             .AddCppFiles("skelmesh/*.cpp")
             .Depend(Visibility.Private, "SceneRenderer")

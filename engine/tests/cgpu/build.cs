@@ -12,7 +12,7 @@ public static class CGPUTests
         {
             var CGPUTests = Test.UnitTest("CGPUTests")
                 .EnableUnityBuild()
-                .Depend(Visibility.Public, "SkrRT")
+                .Depend(Visibility.Public, "SkrRuntime")
 
                 .AddCppFiles(
                     "Common.cpp",

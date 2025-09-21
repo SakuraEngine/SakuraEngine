@@ -89,7 +89,7 @@ Input::~Input() SKR_NOEXCEPT
 {
 }
 
-skr::span<InputLayer*> Input::GetLayers() SKR_NOEXCEPT
+skr::Span<InputLayer*> Input::GetLayers() SKR_NOEXCEPT
 {
     auto instance = static_cast<InputImplementation*>(Input::GetInstance());
     return { instance->layers_.data(), instance->layers_.size() };

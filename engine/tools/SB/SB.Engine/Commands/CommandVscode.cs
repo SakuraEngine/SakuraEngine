@@ -10,7 +10,10 @@ public class VSCodeCommand : CommandBase
     public string Debugger { get; set; } = "";
 
     [Cli.Option(Name = "workspace", Help = "Workspace root directory", IsRequired = false)]
-    public string WorkspaceRoot { get; set; } = ".";
+    public string WorkspaceRoot { get; set; } = BuildDirs.ProjectRoot;
+
+    [Cli.Option(Name = "temp-output", Help = "Temp files output dir", IsRequired = false)]
+    public string TempFilesDir { get; set; } = Path.Combine(BuildDirs.TempDir, "vscode");
 
     [Cli.Option(Name = "preserve-user", Help = "Preserve user-created debug configurations", IsRequired = false)]
     public bool PreserveUser { get; set; } = true;
@@ -26,9 +29,9 @@ public class VSCodeCommand : CommandBase
         {
             var emitter = new VSCodeDebugEmitter();
             emitter.WorkspaceRoot = !string.IsNullOrEmpty(WorkspaceRoot) ? WorkspaceRoot :
-                                    (!string.IsNullOrEmpty(Engine.EngineDirectory) ? Engine.EngineDirectory : Directory.GetCurrentDirectory());
-            emitter.CmdFilesOutputDir = Path.Combine(emitter.WorkspaceRoot, ".sb", "vscode", "task_cmds");
-            emitter.MergedNatvisOutputDir = Path.Combine(emitter.WorkspaceRoot, ".sb", "vscode", "natvis");
+                                    (!string.IsNullOrEmpty(BuildDirs.EngineDir) ? BuildDirs.EngineDir : Directory.GetCurrentDirectory());
+            emitter.CmdFilesOutputDir = Path.Combine(TempFilesDir, "task_cmds");
+            emitter.MergedNatvisOutputDir = Path.Combine(TempFilesDir, "natvis");
             // emitter.Debugger = Debugger.ToLower();
             emitter.Mode = Mode;
             emitter.Toolchain = Toolchain;
@@ -41,9 +44,9 @@ public class VSCodeCommand : CommandBase
             // Add VSCode emitter
             var emitter = new VSCodeDebugEmitter();
             emitter.WorkspaceRoot = !string.IsNullOrEmpty(WorkspaceRoot) ? WorkspaceRoot :
-                                    (!string.IsNullOrEmpty(Engine.EngineDirectory) ? Engine.EngineDirectory : Directory.GetCurrentDirectory());
-            emitter.CmdFilesOutputDir = Path.Combine(emitter.WorkspaceRoot, ".sb", "vscode", "task_cmds");
-            emitter.MergedNatvisOutputDir = Path.Combine(emitter.WorkspaceRoot, ".sb", "vscode", "natvis");
+                                    (!string.IsNullOrEmpty(BuildDirs.EngineDir) ? BuildDirs.EngineDir : Directory.GetCurrentDirectory());
+            emitter.CmdFilesOutputDir = Path.Combine(TempFilesDir, "task_cmds");
+            emitter.MergedNatvisOutputDir = Path.Combine(TempFilesDir, "natvis");
             emitter.Debugger = Debugger;
             emitter.Mode = Mode;
             emitter.Toolchain = Toolchain;

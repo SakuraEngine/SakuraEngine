@@ -80,7 +80,7 @@ void bind_pointer_event(skr::input::InputSystem* system, RC<input::InputMappingC
         auto action  = system->create_input_action(skr::input::EValueType::kFloat2);
         auto trigger = system->create_trigger<skr::input::InputTriggerChanged>();
         action->add_trigger(trigger);
-        action->bind_event<skr_float2_t>([sandbox](const skr_float2_t& delta) {
+        action->bind_event<float2>([sandbox](const float2& delta) {
             PointerMoveEvent event;
             _fill_pointer_event(&event);
             event.global_delta = { delta.x, delta.y };
@@ -96,7 +96,7 @@ void bind_pointer_event(skr::input::InputSystem* system, RC<input::InputMappingC
         auto action  = system->create_input_action(skr::input::EValueType::kFloat2);
         auto trigger = system->create_trigger<skr::input::InputTriggerChanged>();
         // action->add_trigger(trigger);
-        action->bind_event<skr_float2_t>([sandbox](const skr_float2_t& delta) {
+        action->bind_event<float2>([sandbox](const float2& delta) {
             PointerScrollEvent event;
             _fill_pointer_event(&event);
             event.scroll_delta = { delta.x, delta.y };

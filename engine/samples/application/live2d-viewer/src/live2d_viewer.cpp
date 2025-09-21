@@ -9,10 +9,10 @@
 #include <SkrCore/memory/sp.hpp>
 #include "SkrCore/async/thread_job.hpp"
 #include "SkrCore/module/module_manager.hpp"
-#include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/io/vram_io.hpp"
-#include "SkrRT/ecs/world.hpp"
-#include "SkrRT/runtime_module.h"
+#include "SkrRuntime/io/ram_io.hpp"
+#include "SkrRuntime/io/vram_io.hpp"
+#include "SkrRuntime/ecs/world.hpp"
+#include "SkrRuntime/runtime_module.h"
 #include "SkrSystem/advanced_input.h"
 #include <SkrImGui/imgui_app.hpp>
 #include "SkrRenderer/skr_renderer.h"
@@ -134,7 +134,7 @@ void SLive2DViewerModule::on_unload()
     skr_log_finalize_async_worker();
 }
 
-#include "SkrRT/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/sugoi.h"
 
 void create_test_scene(skr_vfs_t* resource_vfs, skr_io_ram_service_t* ram_service, bool bUseCVV)
 {

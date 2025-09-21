@@ -13,9 +13,7 @@
 #include <v8-isolate.h>
 #include <v8-platform.h>
 #include <v8-primitive.h>
-#ifndef __meta__
-    #include "SkrV8/v8_isolate.generated.h"
-#endif
+#include "SkrV8/v8_isolate.generated.h"
 
 // About JS AOT, just remark here, in mostly time it's useless
 // see: https://mp2.dk/techblog/chowjs/
@@ -26,7 +24,8 @@
 
 namespace skr
 {
-struct V8BindProxyPool {
+struct V8BindProxyPool
+{
     inline V8BindProxyPool() = default;
     inline ~V8BindProxyPool()
     {
@@ -75,12 +74,10 @@ private:
     Vector<V8BindProxy*> _used_proxies = {};
 };
 
-// clang-format off
-sreflect_struct(
+struct [[sattr(
     guid = "921187d2-4d38-42b5-81b1-cc79d5739cef"
-)
-SKR_V8_API V8Isolate : IScriptMixinCore {
-    // clang-format on
+)]] SKR_V8_API V8Isolate : IScriptMixinCore
+{
     SKR_GENERATE_BODY(V8Isolate)
     SKR_DELETE_COPY_MOVE(V8Isolate)
 
@@ -100,17 +97,17 @@ SKR_V8_API V8Isolate : IScriptMixinCore {
     // context management
     V8Context* main_context() const;
     V8Context* create_context(String name = {});
-    void       destroy_context(V8Context* context);
+    void destroy_context(V8Context* context);
 
     // getter
     inline v8::Isolate* v8_isolate() const { return _isolate; }
 
     // invoke helper
     bool invoke_v8(
-        v8::Local<v8::Value>    v8_this,
+        v8::Local<v8::Value> v8_this,
         v8::Local<v8::Function> v8_func,
-        span<const StackProxy>  params,
-        StackProxy              return_value
+        Span<const StackProxy> params,
+        StackProxy return_value
     );
 
     //==> IScriptMixinCore API
@@ -118,10 +115,10 @@ SKR_V8_API V8Isolate : IScriptMixinCore {
         ScriptbleObject* obj
     ) override;
     bool try_invoke_mixin(
-        ScriptbleObject*             obj,
-        StringView                   name,
-        const span<const StackProxy> args,
-        StackProxy                   result
+        ScriptbleObject* obj,
+        StringView name,
+        const Span<const StackProxy> args,
+        StackProxy result
     ) override;
     //==> IScriptMixinCore API
 
@@ -155,11 +152,11 @@ SKR_V8_API V8Isolate : IScriptMixinCore {
 
     // bind proxy management
     void register_bind_proxy(
-        void*        native_ptr,
+        void* native_ptr,
         V8BindProxy* bind_proxy
     );
     void unregister_bind_proxy(
-        void*        native_ptr,
+        void* native_ptr,
         V8BindProxy* bind_proxy
     );
     V8BindProxy* map_bind_proxy(
@@ -186,11 +183,11 @@ public:
 
 private:
     // isolate data
-    v8::Isolate*              _isolate               = nullptr;
+    v8::Isolate* _isolate = nullptr;
     v8::Isolate::CreateParams _isolate_create_params = {};
 
     // bind tp cache
-    Map<GUID, V8BindTemplate*>          _bind_tp_map         = {};
+    Map<GUID, V8BindTemplate*> _bind_tp_map = {};
     Map<TypeSignature, V8BindTemplate*> _bind_tp_map_generic = {};
 
     // bind proxy pool
@@ -200,12 +197,12 @@ private:
     Map<void*, V8BindProxy*> _bind_proxy_map = {};
 
     // context manage
-    V8Context*              _main_context = nullptr;
-    Map<String, V8Context*> _contexts     = {};
+    V8Context* _main_context = nullptr;
+    Map<String, V8Context*> _contexts = {};
 
     // call v8 bind proxy manage
-    Vector<V8BindProxy*> _call_v8_param_proxy       = {};
-    Vector<uint64_t>     _call_v8_param_proxy_stack = {};
+    Vector<V8BindProxy*> _call_v8_param_proxy = {};
+    Vector<uint64_t> _call_v8_param_proxy_stack = {};
 
     // debugger
     V8WebSocketServer _websocket_server = {};

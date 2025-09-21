@@ -1,7 +1,7 @@
 #include "SkrBase/misc/debug.h"
-#include "SkrRT/resource/resource_handle.h"
-#include "SkrRT/resource/resource_header.hpp"
-#include "SkrRT/resource/resource_system.h"
+#include "SkrRuntime/resource/resource_handle.h"
+#include "SkrRuntime/resource/resource_header.hpp"
+#include "SkrRuntime/resource/resource_system.h"
 
 static constexpr uint64_t kResourceHandleRecordMask        = ~(alignof(SResourceRecord) - 1);
 static constexpr uint64_t kResourceHandleRequesterTypeMask = alignof(SResourceRecord) - 1;
@@ -17,7 +17,7 @@ SResourceHandle::~SResourceHandle()
     reset();
 }
 
-SResourceHandle::SResourceHandle(const skr_guid_t& other)
+SResourceHandle::SResourceHandle(const skr::GUID& other)
 {
     guid = other;
     SKR_ASSERT(padding != 0 || is_null());
@@ -53,7 +53,7 @@ SResourceHandle::SResourceHandle(const SResourceHandle& other, uint64_t inReques
     pointer     = (uint64_t)record | (uint64_t(requesterType) & kResourceHandleRequesterTypeMask);
 }
 
-SResourceHandle& SResourceHandle::operator=(const skr_guid_t& other)
+SResourceHandle& SResourceHandle::operator=(const skr::GUID& other)
 {
     set_guid(other);
     return *this;
@@ -76,7 +76,7 @@ void SResourceHandle::set_ptr(void* ptr)
     set_record(record);
 }
 
-void SResourceHandle::set_guid(const skr_guid_t& inGUID)
+void SResourceHandle::set_guid(const skr::GUID& inGUID)
 {
     reset();
     guid = inGUID;
@@ -95,17 +95,17 @@ void* SResourceHandle::get_ptr() const
     return record != nullptr ? record->resource : nullptr;
 }
 
-skr_guid_t SResourceHandle::get_guid() const
+skr::GUID SResourceHandle::get_guid() const
 {
     SKR_ASSERT(padding != 0);
     return guid;
 }
 
-skr_guid_t SResourceHandle::get_type() const
+skr::GUID SResourceHandle::get_type() const
 {
     SKR_ASSERT(padding == 0);
     const auto record = get_record();
-    return record != nullptr ? record->header.type : skr_guid_t();
+    return record != nullptr ? record->header.type : skr::GUID();
 }
 
 void* SResourceHandle::get_resolved(bool requireInstalled) const
@@ -123,7 +123,7 @@ void* SResourceHandle::get_resolved(bool requireInstalled) const
     return nullptr;
 }
 
-skr_guid_t SResourceHandle::get_serialized() const
+skr::GUID SResourceHandle::get_serialized() const
 {
     if (is_null())
         return guid;

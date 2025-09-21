@@ -21,7 +21,7 @@ struct [[stage_inout]] VSOut
 };
 
 ConstantBuffer<Constants> Constants;
-Texture2D<float> texture0;
+Texture2D texture0;
 Sampler sampler0;
 
 [[vertex_shader("vs")]]

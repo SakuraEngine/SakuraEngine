@@ -18,7 +18,8 @@ enum class ERTTRTypeCategory
     Record,
     Enum,
 };
-struct RTTRTypeCaster {
+struct RTTRTypeCaster
+{
     using CastFunc = void* (*)(void*);
 
     inline void* cast(void* p)
@@ -35,54 +36,59 @@ struct RTTRTypeCaster {
         return p;
     }
 
-    bool                      is_valid   = true;
+    bool is_valid = true;
     InlineVector<CastFunc, 8> cast_funcs = {};
 };
-struct RTTRTypeEachConfig {
+struct RTTRTypeEachConfig
+{
     // should each bases to find
     bool include_bases = true;
 };
-struct RTTRTypeFindConfig {
+struct RTTRTypeFindConfig
+{
     // if setted, will filter by name
     Optional<StringView> name = {};
 
     // if setted, will filter by signature
-    Optional<TypeSignatureView> signature              = {};
-    ETypeSignatureCompareFlag   signature_compare_flag = ETypeSignatureCompareFlag::Strict;
+    Optional<TypeSignatureView> signature = {};
+    ETypeSignatureCompareFlag signature_compare_flag = ETypeSignatureCompareFlag::Strict;
 
     // should each bases to find
     bool include_bases = true;
 };
 
 using RTTRInvokerDefaultCtor = ExportCtorInvoker<void()>;
-using RTTRInvokerCopyCtor    = ExportCtorInvoker<void(const void*)>;
-using RTTRInvokerMoveCtor    = ExportCtorInvoker<void(void*)>;
-using RTTRInvokerAssign      = ExportExternMethodInvoker<void(void*, const void*)>;
-using RTTRInvokerMoveAssign  = ExportExternMethodInvoker<void(void*, void*)>;
-using RTTRInvokerEqual       = ExportExternMethodInvoker<bool(const void*, const void*)>;
-using RTTRInvokerHash        = ExportExternMethodInvoker<skr_hash(const void*)>;
-using RTTRInvokerSwap        = ExportExternMethodInvoker<void(void*, void*)>;
+using RTTRInvokerCopyCtor = ExportCtorInvoker<void(const void*)>;
+using RTTRInvokerMoveCtor = ExportCtorInvoker<void(void*)>;
+using RTTRInvokerAssign = ExportExternMethodInvoker<void(void*, const void*)>;
+using RTTRInvokerMoveAssign = ExportExternMethodInvoker<void(void*, void*)>;
+using RTTRInvokerEqual = ExportExternMethodInvoker<bool(const void*, const void*)>;
+using RTTRInvokerHash = ExportExternMethodInvoker<skr_hash(const void*)>;
+using RTTRInvokerSwap = ExportExternMethodInvoker<void(void*, void*)>;
+using RTTRInvokerSerdeRead = ExportExternMethodInvoker<void(ArchiveRead&, void*)>;
+using RTTRInvokerSerdeWrite = ExportExternMethodInvoker<void(ArchiveWrite&, const void*)>;
 
-struct SKR_CORE_API RTTRType final {
+struct SKR_CORE_API RTTRType final
+{
     // ctor & dtor
     RTTRType();
     ~RTTRType();
 
     // module
-    void   set_module(String module);
+    void set_module(String module);
     String module() const;
 
     // basic getter
-    ERTTRTypeCategory  type_category() const;
+    ERTTRTypeCategory type_category() const;
     const skr::String& name() const;
-    Vector<String>     name_space() const;
-    String             name_space_str() const;
-    String             full_name() const;
-    GUID               type_id() const;
-    size_t             size() const;
-    size_t             alignment() const;
-    void               each_name_space(FunctionRef<void(StringView)> each_func) const;
-    MemoryTraitsData   memory_traits_data() const;
+    Vector<String> name_space() const;
+    String name_space_str() const;
+    String full_name() const;
+    GUID type_id() const;
+    size_t size() const;
+    size_t alignment() const;
+    void each_name_space(FunctionRef<void(StringView)> each_func) const;
+    MemoryTraitsData memory_traits_data() const;
 
     // kind getter
     bool is_primitive() const;
@@ -103,8 +109,8 @@ struct SKR_CORE_API RTTRType final {
     // void validate_export_data() const;
 
     // caster
-    bool           based_on(GUID type_id, uint32_t* out_cast_count = 0) const;
-    void*          cast_to_base(GUID type_id, void* p) const;
+    bool based_on(GUID type_id, uint32_t* out_cast_count = 0) const;
+    void* cast_to_base(GUID type_id, void* p) const;
     RTTRTypeCaster caster_to_base(GUID type_id) const;
 
     // enum getter
@@ -113,8 +119,8 @@ struct SKR_CORE_API RTTRType final {
 
     // get dtor
     Optional<RTTRDtorData> dtor_data() const;
-    DtorInvoker            dtor_invoker() const;
-    void                   invoke_dtor(void* p) const;
+    DtorInvoker dtor_invoker() const;
+    void invoke_dtor(void* p) const;
 
     // each method & field
     void each_bases(FunctionRef<void(const RTTRBaseData* base_data, const RTTRType* owner)> each_func, RTTRTypeEachConfig config = {}) const;
@@ -126,11 +132,11 @@ struct SKR_CORE_API RTTRType final {
     void each_extern_method(FunctionRef<void(const RTTRExternMethodData* method, const RTTRType* owner)> each_func, RTTRTypeEachConfig config = {}) const;
 
     // find method & field
-    const RTTRCtorData*         find_ctor(RTTRTypeFindConfig config) const; // ignore [config.name/config.include_bases]
-    const RTTRMethodData*       find_method(RTTRTypeFindConfig config) const;
-    const RTTRFieldData*        find_field(RTTRTypeFindConfig config) const;
+    const RTTRCtorData* find_ctor(RTTRTypeFindConfig config) const; // ignore [config.name/config.include_bases]
+    const RTTRMethodData* find_method(RTTRTypeFindConfig config) const;
+    const RTTRFieldData* find_field(RTTRTypeFindConfig config) const;
     const RTTRStaticMethodData* find_static_method(RTTRTypeFindConfig config) const;
-    const RTTRStaticFieldData*  find_static_field(RTTRTypeFindConfig config) const;
+    const RTTRStaticFieldData* find_static_field(RTTRTypeFindConfig config) const;
     const RTTRExternMethodData* find_extern_method(RTTRTypeFindConfig config) const;
 
     // template find method & field
@@ -150,24 +156,26 @@ struct SKR_CORE_API RTTRType final {
 
     // find basic functions
     RTTRInvokerDefaultCtor find_default_ctor() const;
-    RTTRInvokerCopyCtor    find_copy_ctor() const;
-    RTTRInvokerMoveCtor    find_move_ctor() const;
-    RTTRInvokerAssign      find_assign() const;
-    RTTRInvokerMoveAssign  find_move_assign() const;
-    RTTRInvokerEqual       find_equal() const;
-    RTTRInvokerHash        find_hash() const;
-    RTTRInvokerSwap        find_swap() const;
+    RTTRInvokerCopyCtor find_copy_ctor() const;
+    RTTRInvokerMoveCtor find_move_ctor() const;
+    RTTRInvokerAssign find_assign() const;
+    RTTRInvokerMoveAssign find_move_assign() const;
+    RTTRInvokerEqual find_equal() const;
+    RTTRInvokerHash find_hash() const;
+    RTTRInvokerSwap find_swap() const;
+    RTTRInvokerSerdeRead find_serde_read() const;
+    RTTRInvokerSerdeWrite find_serde_write() const;
 
     // flag & attribute
     ERTTRRecordFlag record_flag() const;
-    ERTTREnumFlag   enum_flag() const;
-    const Any*      find_attribute(TypeSignatureView signature) const;
-    void            each_attribute(FunctionRef<void(const Any&)> each_func) const;
-    void            each_attribute(FunctionRef<void(const Any&)> each_func, TypeSignatureView signature) const;
+    ERTTREnumFlag enum_flag() const;
+    const Any* find_attribute(TypeSignatureView signature) const;
+    void each_attribute(FunctionRef<void(const Any&)> each_func) const;
+    void each_attribute(FunctionRef<void(const Any&)> each_func, TypeSignatureView signature) const;
 
     // alloc
     void* alloc(uint64_t count = 1) const;
-    void  free(void* p) const;
+    void free(void* p) const;
 
 private:
     // helpers
@@ -175,12 +183,12 @@ private:
 
 private:
     ERTTRTypeCategory _type_category = ERTTRTypeCategory::Invalid;
-    String            _module        = {};
+    String _module = {};
     union
     {
         RTTRPrimitiveTable _primitive_data;
-        RTTRRecordData    _record_data;
-        RTTREnumData      _enum_data;
+        RTTRRecordData _record_data;
+        RTTREnumData _enum_data;
     };
 };
 } // namespace skr
@@ -362,7 +370,7 @@ inline ExportCtorInvoker<Func> RTTRType::find_ctor_t(ETypeSignatureCompareFlag f
 {
     TypeSignatureTyped<Func> signature;
     return find_ctor(RTTRTypeFindConfig{
-        .signature              = signature.view(),
+        .signature = signature.view(),
         .signature_compare_flag = flag,
     });
 }
@@ -371,10 +379,10 @@ inline ExportMethodInvoker<Func> RTTRType::find_method_t(StringView name, ETypeS
 {
     TypeSignatureTyped<Func> signature;
     return find_method(RTTRTypeFindConfig{
-        .signature              = signature.view(),
+        .signature = signature.view(),
         .signature_compare_flag = flag,
-        .name                   = name,
-        .include_bases          = include_base,
+        .name = name,
+        .include_bases = include_base,
     });
 }
 template <typename Field>
@@ -382,10 +390,10 @@ inline const RTTRFieldData* RTTRType::find_field_t(StringView name, ETypeSignatu
 {
     TypeSignatureTyped<Field> signature;
     return find_field(RTTRTypeFindConfig{
-        .signature              = signature.view(),
+        .signature = signature.view(),
         .signature_compare_flag = flag,
-        .name                   = name,
-        .include_bases          = include_base,
+        .name = name,
+        .include_bases = include_base,
     });
 }
 template <typename Func>
@@ -393,10 +401,10 @@ inline ExportStaticMethodInvoker<Func> RTTRType::find_static_method_t(StringView
 {
     TypeSignatureTyped<Func> signature;
     return find_static_method(RTTRTypeFindConfig{
-        .signature              = signature.view(),
+        .signature = signature.view(),
         .signature_compare_flag = flag,
-        .name                   = name,
-        .include_bases          = include_base,
+        .name = name,
+        .include_bases = include_base,
     });
 }
 template <typename Field>
@@ -404,10 +412,10 @@ inline const RTTRStaticFieldData* RTTRType::find_static_field_t(StringView name,
 {
     TypeSignatureTyped<Field> signature;
     return find_static_field(RTTRTypeFindConfig{
-        .name                   = name,
-        .signature              = signature.view(),
+        .name = name,
+        .signature = signature.view(),
         .signature_compare_flag = flag,
-        .include_bases          = include_base,
+        .include_bases = include_base,
     });
 }
 template <typename Func>
@@ -415,10 +423,10 @@ inline ExportExternMethodInvoker<Func> RTTRType::find_extern_method_t(StringView
 {
     TypeSignatureTyped<Func> signature;
     return find_extern_method(RTTRTypeFindConfig{
-        .name                   = name,
-        .signature              = signature.view(),
+        .name = name,
+        .signature = signature.view(),
         .signature_compare_flag = flag,
-        .include_bases          = include_base,
+        .include_bases = include_base,
     });
 }
 } // namespace skr

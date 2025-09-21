@@ -1,51 +1,50 @@
 #pragma once
-#include "SkrSerde/json_serde.hpp"
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/cook_system/importer.hpp"
-#ifndef __meta__
-    #include "SkrToolCore/cook_system/asset_meta.generated.h"
-#endif
+#include "SkrToolCore/cook_system/asset_meta.generated.h"
 
 namespace skd::asset
 {
 
-sreflect_struct(guid = "8e78354d-acf9-40e2-8175-1ad40654360d" serde = @json)
-TOOL_CORE_API AssetMetadata
+struct [[sattr(
+    guid = "8e78354d-acf9-40e2-8175-1ad40654360d"
+    serde = @enable
+)]] TOOL_CORE_API AssetMetadata
 {
 public:
-    using LoadFromJson = bool (*)(skr::archive::JsonReader* reader, skr::RC<AssetMetadata> object);
-    using StoreToJson = bool (*)(skr::archive::JsonWriter* writer, skr::RC<AssetMetadata> object);
+    using LoadFromJson = void (*)(skr::ArReadJson* reader, skr::RC<AssetMetadata> object);
+    using StoreToJson = void (*)(skr::ArWriteJson* writer, skr::RC<AssetMetadata> object);
     virtual ~AssetMetadata();
 
     template <typename T>
     inline static skr::RC<T> Create()
     {
         auto m = skr::RC<T>::New();
-        m->Load = +[](skr::archive::JsonReader* reader, skr::RC<AssetMetadata> object) {
+        m->Load = +[](skr::ArReadJson* reader, skr::RC<AssetMetadata> object) {
             auto derived = object.cast_static<T>();
-            return skr::json_read<T>(reader, *derived);
+            reader->value(*derived);
         };
-        m->Store = +[](skr::archive::JsonWriter* writer, skr::RC<AssetMetadata> object) {
+        m->Store = +[](skr::ArWriteJson* writer, skr::RC<AssetMetadata> object) {
             auto derived = object.cast_static<T>();
-            return skr::json_write<T>(writer, *derived);
+            writer->value(*derived);
         };
         return m;
     }
 
 protected:
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     LoadFromJson Load;
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     StoreToJson Store;
 
-    friend struct JsonSerde<skd::asset::AssetMetaFile>;
     AssetMetadata();
     SKR_RC_IMPL();
 };
 
-sreflect_struct(guid = "6c429147-d680-4345-a4a3-e8aefd671e6a")
-TOOL_CORE_API AssetMetaFile final
+struct [[sattr(
+    guid = "6c429147-d680-4345-a4a3-e8aefd671e6a"
+)]] TOOL_CORE_API AssetMetaFile final
 {
 public:
     AssetMetaFile(const URI& uri);
@@ -61,7 +60,7 @@ public:
     inline auto GetImporter() const { return importer; }
 
 private:
-    inline void SetContent(skr::String && content)
+    inline void SetContent(skr::String&& content)
     {
         meta_content = std::move(content);
     }
@@ -71,20 +70,20 @@ private:
     skr::GUID resource_type;
     skr::GUID cooker;
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::RC<AssetMetadata> metadata = nullptr;
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::RC<Importer> importer = nullptr;
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     SProject* project = nullptr;
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     skr::String meta_content;
 
     friend struct CookSystemImpl;
-    friend struct JsonSerde<skd::asset::AssetMetaFile>;
+    friend struct Serialize<skd::asset::AssetMetaFile>;
     SKR_RC_IMPL();
 };
 
@@ -93,98 +92,91 @@ inline skr::RC<T> AssetMetaFile::GetMetadata()
 {
     if (metadata != nullptr)
     {
-        return metadata;
+        return metadata.cast_static<T>();
     }
     else if (!meta_content.is_empty())
     {
         auto METADATA = AssetMetadata::Create<T>();
-        skr::archive::JsonReader reader(meta_content.view());
-        reader.StartObject();
-        reader.Key(u8"metadata");
-        skr::json_read(&reader, *METADATA);
-        reader.EndObject();
+        auto reader = skr::ArReadJson::ReadBuffer(meta_content.data(), meta_content.size());
+        {
+            skr::Archive::ObjectScope scope(reader);
+            SKR_FAST_CHECK(scope.is_success(), nullptr);
+
+            SKR_FAST_CHECK(reader.key(u8"metadata"), nullptr);
+            reader.value(*METADATA);
+        }
         metadata = METADATA;
-        return METADATA;
+        return METADATA.template cast_static<T>();
     }
     return nullptr;
 }
 
 } // namespace skd::asset
 
+// serialize
+#include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
 template <>
-struct JsonSerde<skd::asset::AssetMetaFile>
+struct Serialize<skd::asset::AssetMetaFile>
 {
-    inline static bool Parse(skr::archive::JsonReader& reader, const char8_t* key, bool required = true)
+    inline static void read(ArchiveRead& r, skd::asset::AssetMetaFile& v)
     {
-        bool exist = true;
-        auto parse = reader.Key(key);
-        parse.error_then([&](skr::archive::JsonReadError e) {
-            exist = false;
-            if (!required && (e == skr::archive::JsonReadError::KeyNotFound))
-                return;
-            SKR_LOG_FATAL(u8"Parse asset meta file failed, error code %d");
-        });
-        return exist;
+        Archive::ObjectScope scope(r);
+        SKR_FAST_CHECK(scope.is_success(), );
+        read_fields(r, v);
     }
 
-    inline static bool read(skr::archive::JsonReader* r, skd::asset::AssetMetaFile& v)
+    inline static void write(ArchiveWrite& w, const skd::asset::AssetMetaFile& v)
     {
-        r->StartObject();
-        bool _ = read_fields(r, v);
-        r->EndObject();
-        return _;
+        Archive::ObjectScope scope(w);
+        SKR_FAST_CHECK(scope.is_success(), );
+        write_fields(w, v);
     }
 
-    inline static bool write(skr::archive::JsonWriter* w, const skd::asset::AssetMetaFile& v)
+    inline static void read_fields(ArchiveRead& r, skd::asset::AssetMetaFile& v)
     {
-        w->StartObject();
-        bool _ = write_fields(w, v);
-        w->EndObject();
-        return _;
+        if (!r.is_structured()) [[unlikely]]
+        {
+            r.error(u8"Non-structured ArchiveRead is not supported for skd::asset::AssetMetaFile");
+            return;
+        }
+
+        SKR_FAST_CHECK(r.key_value_required(u8"guid", v.guid), );
+        SKR_FAST_CHECK(r.key_value_required(u8"resource_type", v.resource_type), );
+        SKR_FAST_CHECK(r.key_value(u8"cooker", v.cooker), );
+        // TODO. load importer
+        // if (r.key(u8"importer"))
+        // {
+        //     v.importer = skd::asset::GetImporterRegistry()->LoadImporter(&r);
+        // }
     }
 
-    inline static bool read_fields(skr::archive::JsonReader* r, skd::asset::AssetMetaFile& v)
+    inline static void write_fields(ArchiveWrite& w, const skd::asset::AssetMetaFile& v)
     {
-        // Parse guid and type first
-        auto& reader = *r;
-        if (Parse(reader, u8"guid"))
-            skr::json_read(&reader, v.guid);
-        if (Parse(reader, u8"resource_type"))
-            skr::json_read(&reader, v.resource_type);
-        if (Parse(reader, u8"cooker", false))
-            skr::json_read(&reader, v.cooker);
-        // construct importer
-        if (Parse(reader, u8"importer", false))
-            v.importer = skd::asset::GetImporterRegistry()->LoadImporter(&reader);
-        return true;
-    }
+        if (!w.is_structured()) [[unlikely]]
+        {
+            w.error(u8"Non-structured ArchiveWrite is not supported for skd::asset::AssetMetaFile");
+            return;
+        }
 
-    inline static bool write_fields(skr::archive::JsonWriter* w, const skd::asset::AssetMetaFile& v)
-    {
-        w->Key(u8"guid");
-        skr::json_write(w, v.guid);
-
-        w->Key(u8"resource_type");
-        skr::json_write(w, v.resource_type);
-
-        w->Key(u8"cooker");
-        skr::json_write(w, v.cooker);
+        SKR_FAST_CHECK(w.key_value(u8"guid", v.guid), );
+        SKR_FAST_CHECK(w.key_value(u8"resource_type", v.resource_type), );
+        SKR_FAST_CHECK(w.key_value(u8"cooker", v.cooker), );
 
         if (v.importer != nullptr)
         {
-            w->Key(u8"importer");
-            skd::asset::GetImporterRegistry()->StoreImporter(w, v.importer);
+            // TODO. store importer
+            // w.key(u8"importer");
+            // skd::asset::GetImporterRegistry()->StoreImporter(w, v.importer);
         }
 
         if (v.metadata != nullptr)
         {
-            w->Key(u8"metadata");
-            v.metadata->Store(w, v.metadata);
+            // TODO. store metadata
+            // w.key(u8"metadata");
+            // v.metadata->Store(w, v.metadata);
         }
-
-        return true;
     }
 };
 } // namespace skr

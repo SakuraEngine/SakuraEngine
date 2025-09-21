@@ -9,7 +9,7 @@ public static class SkrToolCore
     {
         Engine.Module("SkrToolCore", "TOOL_CORE")
             .EnableUnityBuild()
-            .Depend(Visibility.Public, "SkrRT")
+            .Depend(Visibility.Public, "SkrRuntime")
             .IncludeDirs(Visibility.Public, "include")
             .AddCppFiles("src/**.cpp")
             .UsePrivatePCH("src/pch.hpp")

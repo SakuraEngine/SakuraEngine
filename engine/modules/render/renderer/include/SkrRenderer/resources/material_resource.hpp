@@ -1,12 +1,10 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrRenderer/resources/shader_resource.hpp"
-#include "SkrRT/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.h"
 #include "SkrGraphics/cgpux.h"
-
-#ifndef __meta__
-    #include "SkrRenderer/resources/material_resource.generated.h" // IWYU pragma: export
-#endif
+#include "SkrRenderer/graphics/gpu_table.hpp"
+#include "SkrRenderer/resources/material_resource.generated.h" // IWYU pragma: export
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
 
@@ -14,66 +12,66 @@ namespace skr
 {
 using MaterialPropertyNameView = skr::SerializeConstString;
 
-sreflect_struct(guid = "e2c14489-3223-489a-8e30-95d2014e99f2" serde = @bin)
+struct [[sattr(guid = "e2c14489-3223-489a-8e30-95d2014e99f2" serde = @enable)]]
 MaterialValueBool
 {
     MaterialPropertyNameView slot_name;
     bool value;
 };
 
-sreflect_struct(guid = "bb5b5c8e-367c-4ec8-b4ee-60c14c212160" serde = @bin)
+struct [[sattr(guid = "bb5b5c8e-367c-4ec8-b4ee-60c14c212160" serde = @enable)]]
 MaterialValueFloat
 {
     MaterialPropertyNameView slot_name;
     float value;
 };
 
-sreflect_struct(guid = "ce285a7f-0713-4e55-b960-be4b8022a620" serde = @bin)
+struct [[sattr(guid = "ce285a7f-0713-4e55-b960-be4b8022a620" serde = @enable)]]
 MaterialValueDouble
 {
     MaterialPropertyNameView slot_name;
     double value;
 };
 
-sreflect_struct(guid = "7b9c85a6-292f-4bd0-85bf-6fd3dec8410a" serde = @bin)
+struct [[sattr(guid = "7b9c85a6-292f-4bd0-85bf-6fd3dec8410a" serde = @enable)]]
 MaterialValueFloat2
 {
     MaterialPropertyNameView slot_name;
-    skr_float2_t value;
+    float2 value;
 };
 
-sreflect_struct(guid = "d788b57b-65f6-490d-9fc6-4f7bc32c18ed" serde = @bin)
+struct [[sattr(guid = "d788b57b-65f6-490d-9fc6-4f7bc32c18ed" serde = @enable)]]
 MaterialValueFloat3
 {
     MaterialPropertyNameView slot_name;
-    skr_float3_t value;
+    float3 value;
 };
 
-sreflect_struct(guid = "7b26477e-caa7-4aa6-8fb0-76f2976e23e2" serde = @bin)
+struct [[sattr(guid = "7b26477e-caa7-4aa6-8fb0-76f2976e23e2" serde = @enable)]]
 MaterialValueFloat4
 {
     MaterialPropertyNameView slot_name;
-    skr_float4_t value;
+    float4 value;
 };
 
-sreflect_struct(guid = "31c522ce-7124-45c6-8d2d-5430aaf17e8a" serde = @bin)
+struct [[sattr(guid = "31c522ce-7124-45c6-8d2d-5430aaf17e8a" serde = @enable)]]
 MaterialValueTexture
 {
     MaterialPropertyNameView slot_name;
     skr::GUID value;
 
-    sattr(serde = @disable)
+    [[sattr(serde = @disable)]]
     mutable uint32_t bindless_id;
 };
 
-sreflect_struct(guid = "760d78ba-c42c-49fa-9164-6968e7693461" serde = @bin)
+struct [[sattr(guid = "760d78ba-c42c-49fa-9164-6968e7693461" serde = @enable)]]
 MaterialValueSampler
 {
     MaterialPropertyNameView slot_name;
     skr::GUID value;
 };
 
-sreflect_struct(guid = "7cbbb808-20d9-4bff-b72d-3c23d5b00f2b" serde = @bin)
+struct [[sattr(guid = "7cbbb808-20d9-4bff-b72d-3c23d5b00f2b" serde = @enable)]]
 MaterialShaderVariant
 {
     // refers to a ShaderCollectionResource
@@ -88,7 +86,7 @@ MaterialShaderVariant
     skr::SerializeConstVector<uint32_t> option_indices;
 };
 
-sreflect_struct(guid = "e81946ee-fb88-4cde-abd5-b4ae56dbaa89" serde = @bin)
+struct [[sattr(guid = "e81946ee-fb88-4cde-abd5-b4ae56dbaa89" serde = @enable)]]
 MaterialOverrides
 {
     skr::SerializeConstVector<MaterialShaderVariant> switch_variants;
@@ -102,7 +100,7 @@ MaterialOverrides
     skr::SerializeConstVector<MaterialValueSampler> samplers;
 };
 
-sreflect_struct(guid = "2efad635-b331-4fc6-8c52-2f8ca954823e" serde = @bin)
+struct [[sattr(guid = "2efad635-b331-4fc6-8c52-2f8ca954823e" serde = @enable)]]
 MaterialResource
 {
     uint32_t material_type_version;
@@ -128,9 +126,10 @@ MaterialResource
         CGPUXBindTableId bind_table;
     } installed_pass;
 
-    sattr(serde = @disable)
-    skr::Vector<installed_pass>
-        installed_passes;
+    [[sattr(serde = @disable)]]
+    skr::Vector<installed_pass> installed_passes;
+    [[sattr(serde = @disable)]]
+    uint64_t mat_id;
 };
 
 struct SKR_RENDERER_API MaterialFactory : public ResourceFactory
@@ -139,14 +138,17 @@ struct SKR_RENDERER_API MaterialFactory : public ResourceFactory
 
     struct Root
     {
-        CGPUDeviceId device = nullptr;
+        const RenderDevice* render_device = nullptr;
         ShaderMap* shader_map = nullptr;
         skr_vfs_t* bytecode_vfs = nullptr;
         skr_io_ram_service_t* ram_service = nullptr;
         skr_job_queue_id job_queue = nullptr;
+        skr::RC<gpu::TableManager> table_manager = nullptr;
     };
 
     virtual CGPUDescriptorBufferId descriptor_buffer() = 0;
+    virtual skr::RC<gpu::TableInstance> material_table() = 0;
+    virtual skr::render_graph::BufferHandle UpdateGPUTable(skr::render_graph::RenderGraph* graph) = 0;
 
     [[nodiscard]] static MaterialFactory* Create(const Root& root);
     static void Destroy(MaterialFactory* factory);

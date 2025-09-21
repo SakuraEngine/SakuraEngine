@@ -15,7 +15,8 @@ struct GenericVector;
 namespace skr::container
 {
 template <typename TSize>
-struct VectorMemoryBase {
+struct VectorMemoryBase
+{
     using SizeType = TSize;
 
     friend struct ::skr::GenericVector;
@@ -59,7 +60,9 @@ protected:
 namespace skr::container
 {
 template <typename T, typename Base, typename Allocator>
-struct VectorMemory : public Base, public Allocator {
+struct VectorMemory : public Base
+    , public Allocator
+{
     using DataType           = T;
     using SizeType           = typename Base::SizeType;
     using AllocatorCtorParam = typename Allocator::CtorParam;
@@ -192,16 +195,20 @@ struct VectorMemory : public Base, public Allocator {
 
         if (new_size > Base::_capacity)
         {
-            SizeType new_capacity = default_get_grow<DataType>(new_size, Base::_capacity);
-            SKR_ASSERT(new_capacity >= Base::_capacity);
-            if (new_capacity >= Base::_capacity)
-            {
-                realloc(new_capacity);
-            }
+            grow_to(new_size);
         }
 
         Base::_size = new_size;
         return old_size;
+    }
+    inline void grow_to(SizeType new_size) noexcept
+    {
+        SizeType new_capacity = default_get_grow<DataType>(new_size, Base::_capacity);
+        SKR_ASSERT(new_capacity >= Base::_capacity);
+        if (new_capacity >= Base::_capacity)
+        {
+            realloc(new_capacity);
+        }
     }
     inline void shrink() noexcept
     {
@@ -247,9 +254,11 @@ private:
 namespace skr::container
 {
 template <typename T, uint64_t kCount, typename Base>
-struct FixedVectorMemory : public Base {
+struct FixedVectorMemory : public Base
+{
     static_assert(kCount > 0, "FixedVectorMemory must have a capacity larger than 0");
-    struct DummyParam {
+    struct DummyParam
+    {
     };
     using DataType           = T;
     using SizeType           = typename Base::SizeType;
@@ -340,6 +349,10 @@ struct FixedVectorMemory : public Base {
         Base::_size += grow_size;
         return old_size;
     }
+    inline SizeType grow_to(SizeType new_size) noexcept
+    {
+        SKR_ASSERT(new_size <= kCount && "FixedVectorMemory can't alloc memory that larger than kCount");
+    }
     inline void shrink() noexcept
     {
         // do noting
@@ -377,7 +390,9 @@ private:
 namespace skr::container
 {
 template <typename T, uint64_t kInlineCount, typename Base, typename Allocator>
-struct InlineVectorMemory : public Base, public Allocator {
+struct InlineVectorMemory : public Base
+    , public Allocator
+{
     using DataType           = T;
     using SizeType           = typename Base::SizeType;
     using AllocatorCtorParam = typename Allocator::CtorParam;
@@ -581,16 +596,20 @@ struct InlineVectorMemory : public Base, public Allocator {
 
         if (new_size > Base::_capacity)
         {
-            SizeType new_capacity = default_get_grow<DataType>(new_size, Base::_capacity);
-            SKR_ASSERT(new_capacity >= Base::_capacity);
-            if (new_capacity >= Base::_capacity)
-            {
-                realloc(new_capacity);
-            }
+            grow_to(new_size);
         }
 
         Base::_size = new_size;
         return old_size;
+    }
+    inline void grow_to(SizeType new_size) noexcept
+    {
+        SizeType new_capacity = default_get_grow<DataType>(new_size, Base::_capacity);
+        SKR_ASSERT(new_capacity >= Base::_capacity);
+        if (new_capacity >= Base::_capacity)
+        {
+            realloc(new_capacity);
+        }
     }
     inline void shrink() noexcept
     {

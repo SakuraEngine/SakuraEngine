@@ -1,16 +1,17 @@
+#include "SkrProfile/profile.h"
 #include "SkrOS/thread.h"
 #include "SkrCore/memory/sp.hpp"
+#include "SkrCore/id_range_allocator.hpp"
 #include "SkrGraphics/cgpux.hpp"
 #include "SkrGraphics/raytracing.h"
-#include "SkrContainersDef/sparse_vector.hpp"
-#include "SkrRT/io/vram_io.hpp"
-#include "SkrRT/resource/resource_system.h"
-#include "SkrRT/resource/resource_factory.h"
+#include "SkrRuntime/io/vram_io.hpp"
+#include "SkrRuntime/resource/resource_system.h"
+#include "SkrRuntime/resource/resource_factory.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/render_device.h"
+#include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
-
-#include "SkrProfile/profile.h"
+#include "SkrRenderer/shared/gpu_scene.hpp"
 
 using namespace skr;
 
@@ -30,7 +31,7 @@ static struct SkrMeshResourceUtil
         uint64_t hash;
     };
 
-    using VertexLayoutIdMap = skr::FlatHashMap<VertexLayoutId, skr::SP<RegisteredVertexLayout>, skr::Hash<skr_guid_t>>;
+    using VertexLayoutIdMap = skr::FlatHashMap<VertexLayoutId, skr::SP<RegisteredVertexLayout>, skr::Hash<GUID>>;
     using VertexLayoutHashMap = skr::FlatHashMap<uint64_t, RegisteredVertexLayout*>;
 
     SkrMeshResourceUtil()
@@ -168,14 +169,24 @@ struct SKR_RENDERER_API MeshFactoryImpl : public MeshFactory
         desc_buffer.count = 512;
         CGPUDescriptorBufferDescriptor bdls_desc = { .count = desc_buffer.count };
         desc_buffer.descriptor_buffer = cgpu_create_descriptor_buffer(cgpu_device, &bdls_desc);
+
+        if (auto TableManager = root.table_manager)
+        {
+            gpu::TableConfig table_builder(root.render_device->get_cgpu_device(), u8"Primitives");
+            table_builder.with_instances(16 * 1024);
+            gpu::GPUDatablock<gpu::Primitive>::SetupTableConfig(table_builder);
+            mPrimitiveTable = TableManager->CreateTable(table_builder);
+            mPrimitiveIdRangeAllocator.resize(mPrimitiveTable->GetInstanceCapacity());
+        }
     }
 
     ~MeshFactoryImpl() noexcept
     {
         cgpu_free_descriptor_buffer(desc_buffer.descriptor_buffer);
+        mPrimitiveTable.reset();
     }
 
-    skr_guid_t GetResourceType() override;
+    GUID GetResourceType() override;
     bool AsyncIO() override { return true; }
     bool Unload(SResourceRecord* record) override;
     ESkrInstallStatus Install(SResourceRecord* record) override;
@@ -208,8 +219,8 @@ struct SKR_RENDERER_API MeshFactoryImpl : public MeshFactory
     {
         UploadRequest() SKR_NOEXCEPT = default;
         UploadRequest(MeshFactoryImpl* factory, MeshResource* mesh_resource) SKR_NOEXCEPT
-            : factory(factory),
-              mesh_resource(mesh_resource)
+            : factory(factory)
+            , mesh_resource(mesh_resource)
         {
         }
         ~UploadRequest() SKR_NOEXCEPT = default;
@@ -234,11 +245,25 @@ struct SKR_RENDERER_API MeshFactoryImpl : public MeshFactory
     skr::FlatHashMap<MeshResource*, InstallType> mInstallTypes;
     skr::FlatHashMap<MeshResource*, SP<BufferRequest>> mRequests;
 
+    skr::RC<gpu::TableInstance> primitive_table() override
+    {
+        return mPrimitiveTable;
+    }
+
     CGPUDescriptorBufferId descriptor_buffer() override
     {
         return desc_buffer.descriptor_buffer;
     }
 
+    skr::render_graph::BufferHandle UpdateGPUTable(skr::render_graph::RenderGraph* graph) override
+    {
+        auto handle = mPrimitiveTable->UpdateTableBuffer(graph, mPrimitiveIdRangeAllocator.getMaxIds());
+        mPrimitiveTable->DispatchSparseUpload(graph, {});
+        return handle;
+    }
+
+    skr::IdRangeAllocator mPrimitiveIdRangeAllocator;
+    skr::RC<gpu::TableInstance> mPrimitiveTable;
     struct
     {
         CGPUDescriptorBufferId descriptor_buffer = nullptr;
@@ -259,7 +284,7 @@ void MeshFactory::Destroy(MeshFactory* factory)
     SkrDelete(factory);
 }
 
-skr_guid_t MeshFactoryImpl::GetResourceType()
+GUID MeshFactoryImpl::GetResourceType()
 {
     const auto resource_type = ::skr::type_id_of<MeshResource>();
     return resource_type;
@@ -419,8 +444,7 @@ void MeshFactoryImpl::IniitializeRenderMesh(RenderMesh* render_mesh, MeshResourc
     render_mesh->vertex_buffer_views.reserve(vbv_c);
 
     // 3. fill sections
-    // for (uint32_t prim_idx = 0; prim_idx < mesh_resource->primitives.size(); prim_idx++)
-    // {
+    uint32_t geometry_count = 0;
     for (uint32_t i = 0; i < mesh_resource->sections.size(); i++)
     {
         const auto& section = mesh_resource->sections[i];
@@ -459,8 +483,11 @@ void MeshFactoryImpl::IniitializeRenderMesh(RenderMesh* render_mesh, MeshResourc
             draw_cmd.vbvs = { render_mesh->vertex_buffer_views.data() + vbv_start, prim.vertex_buffers.size() };
             draw_cmd.primitive_index = prim_idx;
             draw_cmd.material_index = prim.material_index;
+
+            geometry_count += 1;
         }
     }
+
     // 4. construct blas
     if (UseRayTracing && (mesh_resource->primitives.size() > 0))
     {
@@ -472,7 +499,7 @@ void MeshFactoryImpl::IniitializeRenderMesh(RenderMesh* render_mesh, MeshResourc
             float transform34[12] = {
                 transform.m00, transform.m10, transform.m20, transform.m30, // Row 0: X axis + X translation
                 transform.m01, transform.m11, transform.m21, transform.m31, // Row 1: Y axis + Y translation
-                transform.m02, transform.m12, transform.m22, transform.m32 // Row 2: Z axis + Z translation
+                transform.m02, transform.m12, transform.m22, transform.m32  // Row 2: Z axis + Z translation
             };
 
             for (const auto& prim_id : section.primitive_indices)
@@ -480,8 +507,8 @@ void MeshFactoryImpl::IniitializeRenderMesh(RenderMesh* render_mesh, MeshResourc
                 const auto& primitive = mesh_resource->primitives[prim_id];
 
                 if (auto pos_vb = primitive.vertex_buffers.find_if(
-                    [](auto prim) { return prim.attribute == EVertexAttribute::POSITION; } 
-                ).ptr())
+                                                              [](auto prim) { return prim.attribute == EVertexAttribute::POSITION; }
+                    ).ptr())
                 {
                     CGPUAccelerationStructureGeometryDesc geom = {};
                     geom.flags = CGPU_ACCELERATION_STRUCTURE_GEOMETRY_FLAG_OPAQUE;
@@ -510,38 +537,123 @@ void MeshFactoryImpl::IniitializeRenderMesh(RenderMesh* render_mesh, MeshResourc
     }
 
     // 5. add to bindless array
-    if (UseRayTracing)
     {
-        render_mesh->buffers.reserve(render_mesh->buffers.size());
         for (auto buffer : render_mesh->buffers)
         {
-            uint32_t free_id = 0;
+            uint32_t vbv_id = 0;
             if (!desc_buffer.free_list.is_empty())
-                free_id = desc_buffer.free_list.pop_back_get();
+                vbv_id = desc_buffer.free_list.pop_back_get();
             else
-                free_id = desc_buffer.next++;
-            render_mesh->buffer_ids.add(free_id);
+                vbv_id = desc_buffer.next++;
+            render_mesh->vbuffer_ids.add(vbv_id);
 
-            CGPUBufferViewDescriptor ibv_desc = {
-                .name = u8"IB/VB",
+            auto device = buffer->device;
+            CGPUBufferViewDescriptor vbv_desc = {
+                .name = u8"VertexBuffer",
                 .buffer = buffer,
                 .view_usages = CGPU_BUFFER_VIEW_USAGE_SRV_RAW,
                 .offset = 0,
                 .size = (uint32_t)buffer->info->size
             };
-            auto device = buffer->device;
-            CGPUDescriptorBufferElement elem = {};
-            elem.index = free_id;
-            elem.resource_type = CGPU_RESOURCE_TYPE2_BUFFER;
-            elem.buffer = ibv_desc;
-            cgpu_update_descriptor_buffer(desc_buffer.descriptor_buffer, &elem, 1);
+            CGPUDescriptorBufferElement vbv_elem = {};
+            vbv_elem.index = vbv_id;
+            vbv_elem.resource_type = CGPU_RESOURCE_TYPE2_BUFFER;
+            vbv_elem.buffer = vbv_desc;
+            cgpu_update_descriptor_buffer(desc_buffer.descriptor_buffer, &vbv_elem, 1);
+        }
+        for (auto buffer : render_mesh->buffers)
+        {
+            uint32_t ibv_id = 0;
+            if (!desc_buffer.free_list.is_empty())
+                ibv_id = desc_buffer.free_list.pop_back_get();
+            else
+                ibv_id = desc_buffer.next++;
+            render_mesh->ibuffer_ids.add(ibv_id);
+
+            ECGPUFormat texel_format = CGPU_FORMAT_R16_UINT;
+            if (render_mesh->index_buffer_views[0].stride == 1)
+                texel_format = CGPU_FORMAT_R8_UINT;
+            if (render_mesh->index_buffer_views[0].stride == 2)
+                texel_format = CGPU_FORMAT_R16_UINT;
+            if (render_mesh->index_buffer_views[0].stride == 4)
+                texel_format = CGPU_FORMAT_R32_UINT;
+
+            CGPUBufferViewDescriptor ibv_desc = {
+                .name = u8"IndexBuffer",
+                .buffer = buffer,
+                .view_usages = CGPU_BUFFER_VIEW_USAGE_SRV_TEXEL,
+                .offset = 0,
+                .size = (uint32_t)buffer->info->size,
+                .texel = {
+                    .format = texel_format }
+            };
+            CGPUDescriptorBufferElement ibv_elem = {};
+            ibv_elem.index = ibv_id;
+            ibv_elem.resource_type = CGPU_RESOURCE_TYPE2_BUFFER;
+            ibv_elem.buffer = ibv_desc;
+            cgpu_update_descriptor_buffer(desc_buffer.descriptor_buffer, &ibv_elem, 1);
+        }
+    }
+
+    // 6. add to primitives array
+    {
+        auto id_range = mPrimitiveIdRangeAllocator.allocate(geometry_count);
+        if (id_range.empty())
+        {
+            auto neededCount = geometry_count + mPrimitiveIdRangeAllocator.getMaxIds();
+            mPrimitiveIdRangeAllocator.resize(neededCount * 1.2);
+            id_range = mPrimitiveIdRangeAllocator.allocate(geometry_count);
+        }
+        render_mesh->primitive_table_id_start = id_range.start;
+
+        uint32_t next_geom = 0;
+        for (const auto& section : mesh_resource->sections)
+        {
+            for (const auto& prim_id : section.primitive_indices)
+            {
+                const auto& prim_info = mesh_resource->primitives[prim_id];
+                mesh_resource->materials[prim_info.material_index].resolve(true, 1, ESkrRequesterType::SKR_REQUESTER_UNKNOWN);
+                auto mat = mesh_resource->materials[prim_info.material_index].get_resolved(true);
+
+                gpu::Primitive prim_data;
+                prim_data.global_index = id_range.start + next_geom;
+                prim_data.material = gpu::Row<gpu::Material>(mat->mat_id);
+                for (const auto& vb : prim_info.vertex_buffers)
+                {
+                    if (vb.vertex_count == 0)
+                        continue;
+
+                    const auto buffer_id = mesh_resource->render_mesh->vbuffer_ids[vb.buffer_index];
+                    if (vb.attribute == EVertexAttribute::POSITION)
+                        prim_data.positions = gpu::Range<float3>(0, vb.vertex_count, vb.offset, buffer_id);
+                    else if (vb.attribute == EVertexAttribute::TEXCOORD)
+                        prim_data.uvs = gpu::Range<float2>(0, vb.vertex_count, vb.offset, buffer_id);
+                    else if (vb.attribute == EVertexAttribute::NORMAL)
+                        prim_data.normals = gpu::Range<float3>(0, vb.vertex_count, vb.offset, buffer_id);
+                    else if (vb.attribute == EVertexAttribute::TANGENT)
+                        prim_data.tangents = gpu::Range<float3>(0, vb.vertex_count, vb.offset, buffer_id);
+                }
+                {
+                    const auto& ib = prim_info.index_buffer;
+                    const auto buffer_id = mesh_resource->render_mesh->ibuffer_ids[ib.buffer_index];
+                    auto mod = ib.index_offset % (ib.stride * 3);
+                    prim_data.indices = gpu::Range<uint32_t>(ib.index_offset / ib.stride, ib.index_count, 0, buffer_id);
+                }
+                gpu::GPUDatablock<gpu::Primitive>::StoreInstance(*mPrimitiveTable, prim_data.global_index, prim_data);
+                next_geom += 1;
+            }
         }
     }
 }
 
 void MeshFactoryImpl::FreeRenderMesh(RenderMesh* render_mesh)
 {
-    for (auto id : render_mesh->buffer_ids)
+    for (auto id : render_mesh->vbuffer_ids)
+    {
+        desc_buffer.free_list.add(id);
+    }
+
+    for (auto id : render_mesh->ibuffer_ids)
     {
         desc_buffer.free_list.add(id);
     }
@@ -574,6 +686,7 @@ bool MeshFactoryImpl::Uninstall(SResourceRecord* record)
         mesh_resource->bins.clear();
     }
     FreeRenderMesh(mesh_resource->render_mesh);
+    mPrimitiveIdRangeAllocator.deallocate(mesh_resource->render_mesh->primitive_table_id_start);
     mesh_resource->render_mesh = nullptr;
     return true;
 }

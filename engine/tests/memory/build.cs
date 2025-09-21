@@ -7,7 +7,7 @@ public static class MemoryTests
 {
     static MemoryTests()
     {
-        Test.UnitTest("SSMTest")
+        Test.UnitTest("TestSSM")
             .AddCppFiles("SSM/*.cpp");
     }
 }

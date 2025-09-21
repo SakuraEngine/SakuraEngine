@@ -22,7 +22,7 @@ namespace SB
                 "--target=host",
                 "--opt=fast-math"
             };
-            bool Changed = Engine.CppCompileDepends(false).OnChanged(Target.Name, SourceFile, Name, (Depend depend) => {
+            bool Changed = BuildDepends.Solve(false).OnChanged(Target.Name, SourceFile, Name, (Depend depend) => {
                 int ExitCode = BuildSystem.RunProcess(ISPCSetup.ISPC!, string.Join(" ", Arguments), out var Output, out var Error);
                 if (ExitCode != 0)
                 {
@@ -33,9 +33,9 @@ namespace SB
             }, new string [] { SourceFile }, Arguments);
             return new PlainArtifact { IsRestored = !Changed };
         }
-        public static string GetObjectDirectory(Target Target) => Path.Combine(Target.GetStorePath(BS.ObjsStore));
+        public static string GetObjectDirectory(Target Target) => Path.Combine(Target.GetBuildObjsDir());
         public static string GetObjectFile(string SourceFile) => Path.GetFileNameWithoutExtension(SourceFile) + ".o";
-        public static string GetGeneratedHeadersDir(Target Target) => Path.Combine(Target.GetStorePath(BuildSystem.GeneratedSourceStore), "ispc-includes");
+        public static string GetGeneratedHeadersDir(Target Target) => Path.Combine(Target.GetBuildGenDir(), "ispc-includes");
         public static string GetGeneratedHeaderFile(Target Target, string SourceFile) => Path.Combine(GetGeneratedHeadersDir(Target), Path.GetFileName(SourceFile) + ".h");
     }
 
@@ -51,7 +51,7 @@ namespace SB
             var ResolvedFiles = EarlyResolveList.Files;
 
             var HeadersDir = ISPCEmitter.GetGeneratedHeadersDir(@this);
-            var ObjectsDir = @this.GetStorePath(BS.ObjsStore);
+            var ObjectsDir = @this.GetBuildObjsDir();
             Directory.CreateDirectory(HeadersDir);
             @this.IncludeDirs(Visibility.Private, HeadersDir);
             @this.FileList<ISPCFileList>().AddFiles(ResolvedFiles.ToArray());

@@ -40,12 +40,10 @@ void create_shaders()
     CGPUShaderLibraryId fragment_shader = cgpu_create_shader_library(device, &shader_libs[1]);
     CGPUShaderEntryDescriptor ppl_shaders[2] = {
         {
-            .stage = CGPU_SHADER_STAGE_VERT,
             .entry = "main",
             .library = vertex_shader,
         },
         {
-            .stage = CGPU_SHADER_STAGE_FRAG,
             .entry = "main",
             .library = fragment_shader,
         }

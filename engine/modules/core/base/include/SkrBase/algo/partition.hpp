@@ -30,7 +30,8 @@ SKR_INLINE T partition(T begin, T end, TP&& p = TP())
             {
                 break;
             }
-        } while (!p(*end));
+        }
+        while (!p(*end));
 
         // swap bad point
         Swapper::call(*begin, *end);

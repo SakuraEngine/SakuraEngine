@@ -44,7 +44,7 @@ namespace SB.Core
             SIMDArchitecture.AVX => "-mavx",
             SIMDArchitecture.AVX512 => "-mavx512f -mavx512dq -mavx512bw -mavx512vl",
             SIMDArchitecture.AVX10_1 => "-mavx10.1",
-            SIMDArchitecture.Neon => "-mfpu=neon",
+            SIMDArchitecture.Neon => "", // -mfpu=neon is no longer needed from MacOS 11.0+ because Apple Silicon has arm64/Neon by default.
             _ => throw new TaskFatalError($"Invalid argument \"{simd}\" for SIMD!")
         };
 

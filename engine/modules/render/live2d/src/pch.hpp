@@ -14,7 +14,7 @@
 #include "rtm/camera_utilsf.h" // IWYU pragma: export
 #include "SkrBase/misc/make_zeroed.hpp" // IWYU pragma: export
 
-#include "SkrRT/sugoi/sugoi.h" // IWYU pragma: export
+#include "SkrRuntime/sugoi/sugoi.h" // IWYU pragma: export
 
 #include "SkrCore/log.h" // IWYU pragma: export
 #include "SkrCore/log.hpp" // IWYU pragma: export

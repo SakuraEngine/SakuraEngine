@@ -118,6 +118,7 @@ const CGPUProcTable tbl_vk = {
     .compute_encoder_bind_descriptor_set = &cgpu_compute_encoder_bind_descriptor_set_vulkan,
     .compute_encoder_push_constants = &cgpu_compute_encoder_push_constants_vulkan,
     .compute_encoder_bind_pipeline = &cgpu_compute_encoder_bind_pipeline_vulkan,
+    .compute_encoder_set_threadgroup_size = &cgpu_compute_encoder_set_threadgroup_size_vulkan,
     .compute_encoder_dispatch = &cgpu_compute_encoder_dispatch_vulkan,
     .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_vulkan,
 

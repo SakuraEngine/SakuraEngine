@@ -1,12 +1,12 @@
 #pragma once
 #include "SkrBase/config.h"
 #include "SkrSceneCore/transform_system.h"
-#ifndef __meta__
-    #include "SkrRenderer/render_viewport.generated.h" // IWYU pragma: export
-#endif
+#include "SkrRenderer/render_viewport.generated.h" // IWYU pragma: export
 
-sreflect_struct(guid = "96fd4826-cb03-4286-8d14-8a86c9f96ee4"; ecs.comp = @enable;)
-skr_render_viewport_t
+struct [[sattr(
+    guid = "96fd4826-cb03-4286-8d14-8a86c9f96ee4";
+    ecs.comp = @enable;
+)]] skr_render_viewport_t
 {
     // index registered in renderer
     uint32_t index;

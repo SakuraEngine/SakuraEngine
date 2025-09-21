@@ -1,8 +1,8 @@
 #include "SkrBase/atomic/atomic.h"
 #include "SkrTask/parallel_for.hpp"
-#include "SkrRT/sugoi/sugoi.h"
-#include "SkrRT/sugoi/set.hpp"
-#include "SkrRT/sugoi/type_registry.hpp"
+#include "SkrRuntime/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/set.hpp"
+#include "SkrRuntime/sugoi/type_registry.hpp"
 
 #include "./impl/query.hpp"
 #include "./impl/storage.hpp"
@@ -30,10 +30,7 @@ sugoi_storage_t::~sugoi_storage_t()
 {
     pimpl->queries.read_versioned([&](auto& queries) {
         for (auto q : queries)
-            sugoiQ_release(q); },
-        [&]() {
-            return pimpl->queries_timestamp;
-        });
+            sugoiQ_release(q); }, [&]() { return pimpl->queries_timestamp; });
     reset();
 }
 
@@ -41,10 +38,7 @@ void sugoi_storage_t::reset()
 {
     pimpl->groups.read_versioned([&](auto& groups) {
         for (auto iter : groups)
-            iter.second->clear(); },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+            iter.second->clear(); }, [&]() { return pimpl->groups_timestamp; });
 }
 
 void sugoi_storage_t::allocate_unsafe(sugoi_group_t* group, EIndex count, sugoi_view_callback_t callback, void* u)
@@ -316,10 +310,7 @@ void sugoi_storage_t::all(bool includeDisabled, bool includeDead, sugoi_view_cal
                 sugoi_chunk_view_t view{ c, 0, c->count };
                 callback(u, &view);
             }
-        } },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+        } }, [&]() { return pimpl->groups_timestamp; });
 }
 
 bool sugoi_storage_t::components_enabled(const sugoi_entity_t src, const sugoi_type_set_t& type)
@@ -370,10 +361,7 @@ void sugoi_storage_t::validate_meta()
             validate(type.meta);
             groups.insert({ type, g });
         }
-        pimpl->groups_timestamp += 1; },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+        pimpl->groups_timestamp += 1; }, [&]() { return pimpl->groups_timestamp; });
 }
 
 void sugoi_storage_t::validate(sugoi_entity_set_t& meta)
@@ -381,7 +369,8 @@ void sugoi_storage_t::validate(sugoi_entity_set_t& meta)
     auto end = std::remove_if(
         (sugoi_entity_t*)meta.data, (sugoi_entity_t*)meta.data + meta.length, [&](const sugoi_entity_t e) {
             return !exist(e);
-        });
+        }
+    );
     meta.length = (SIndex)(end - meta.data);
 }
 
@@ -480,10 +469,7 @@ void sugoi_storage_t::defragment()
             // step 4 : rebuild group chunk data
             for (auto chunk : newChunks)
                 g->add_chunk(chunk);
-        } },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+        } }, [&]() { return pimpl->groups_timestamp; });
 }
 
 void sugoi_storage_t::pack_entities()
@@ -522,10 +508,7 @@ void sugoi_storage_t::pack_entities()
             std::sort((sugoi_entity_t*)meta.data, (sugoi_entity_t*)meta.data + meta.length);
             groups.insert({ g->type, g });
         }
-        pimpl->groups_timestamp += 1; },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+        pimpl->groups_timestamp += 1; }, [&]() { return pimpl->groups_timestamp; });
 }
 
 void sugoi_storage_t::redirect(sugoi_entity_t* ents, sugoi_entity_t* newEnts, EIndex n)
@@ -559,10 +542,7 @@ void sugoi_storage_t::redirect(sugoi_entity_t* ents, sugoi_entity_t* newEnts, EI
                 chunks.push_back(c);
             }
         }
-        pimpl->groups_timestamp += 1; },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+        pimpl->groups_timestamp += 1; }, [&]() { return pimpl->groups_timestamp; });
     using iter_t = decltype(chunks)::iterator;
     skr::parallel_for(chunks.begin(), chunks.end(), 1, [&](iter_t begin, iter_t end) {
         for (auto i = begin; i != end; ++i)
@@ -774,10 +754,7 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
                 else
                     sizeRemain -= sizeToPatch;
             }
-        } },
-        [&]() {
-            return src.pimpl->groups_timestamp;
-        });
+        } }, [&]() { return src.pimpl->groups_timestamp; });
     if (payload.end != chunks.size())
     {
         payload.end = (uint32_t)chunks.size();
@@ -816,24 +793,15 @@ void sugoi_storage_t::merge(sugoi_storage_t& src)
                 dstG->add_chunk(c);
             }
             src.destructGroup(g);
-        } },
-        [&]() {
-            return src.pimpl->groups_timestamp;
-        });
+        } }, [&]() { return src.pimpl->groups_timestamp; });
 
     src.pimpl->groups.update_versioned([&](auto& groups) {
         groups.clear();
-        src.pimpl->groups_timestamp += 1; },
-        [&]() {
-            return src.pimpl->groups_timestamp;
-        });
+        src.pimpl->groups_timestamp += 1; }, [&]() { return src.pimpl->groups_timestamp; });
 
     src.pimpl->queries.update_versioned([&](auto& queries) {
         queries.clear();
-        src.pimpl->queries_timestamp += 1; },
-        [&]() {
-            return src.pimpl->queries_timestamp;
-        });
+        src.pimpl->queries_timestamp += 1; }, [&]() { return src.pimpl->queries_timestamp; });
 }
 
 sugoi_storage_t* sugoi_storage_t::clone()
@@ -857,19 +825,13 @@ sugoi_storage_t* sugoi_storage_t::clone()
                     count -= v.count;
                 }
             }
-        } },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+        } }, [&]() { return pimpl->groups_timestamp; });
 
     pimpl->queries.read_versioned([&](auto& queries) {
         for (auto q : queries)
         {
             dst->make_query(q->pimpl->filter, q->pimpl->parameters);
-        } },
-        [&]() {
-            return pimpl->queries_timestamp;
-        });
+        } }, [&]() { return pimpl->queries_timestamp; });
 
     return dst;
 }
@@ -894,10 +856,7 @@ EIndex sugoi_storage_t::count(bool includeDisabled, bool includeDead)
             if (group->disabled && !includeDisabled)
                 continue;
             result += group->size;
-        } },
-        [&]() {
-            return pimpl->groups_timestamp;
-        });
+        } }, [&]() { return pimpl->groups_timestamp; });
     return result;
 }
 
@@ -1061,16 +1020,6 @@ void sugoiS_merge(sugoi_storage_t* storage, sugoi_storage_t* source)
     storage->merge(*source);
 }
 
-void sugoiS_serialize(sugoi_storage_t* storage, SBinaryWriter* v)
-{
-    storage->serialize(v);
-}
-
-void sugoiS_deserialize(sugoi_storage_t* storage, SBinaryReader* v)
-{
-    storage->deserialize(v);
-}
-
 int sugoiS_exist(sugoi_storage_t* storage, sugoi_entity_t ent)
 {
     return storage->exist(ent);
@@ -1081,25 +1030,20 @@ int sugoiS_alive(sugoi_storage_t* storage, sugoi_entity_t ent)
     return storage->alive(ent);
 }
 
+void sugoiS_serialize(sugoi_storage_t* storage, skr::ArchiveWrite* w)
+{
+    storage->serialize(w);
+}
+
+void sugoiS_deserialize(sugoi_storage_t* storage, skr::ArchiveRead* r)
+{
+    storage->deserialize(r);
+}
+
 int sugoiS_components_enabled(sugoi_storage_t* storage, sugoi_entity_t ent, const sugoi_type_set_t* types)
 {
     SKR_ASSERT(sugoi::ordered(*types));
     return storage->components_enabled(ent, *types);
-}
-
-sugoi_entity_t sugoiS_deserialize_entity(sugoi_storage_t* storage, SBinaryReader* v)
-{
-    return storage->deserialize_prefab(v);
-}
-
-void sugoiS_serialize_entity(sugoi_storage_t* storage, sugoi_entity_t ent, SBinaryWriter* v)
-{
-    storage->serialize_prefab(ent, v);
-}
-
-void sugoiS_serialize_entities(sugoi_storage_t* storage, sugoi_entity_t* ents, EIndex n, SBinaryWriter* v)
-{
-    storage->serialize_prefab(ents, n, v);
 }
 
 void sugoiS_reset(sugoi_storage_t* storage)
@@ -1222,7 +1166,8 @@ void sugoiQ_in_group(const sugoi_query_t* q, sugoi_group_t* group, sugoi_view_ca
     if (!q->pimpl->storage->match_group(q->pimpl->filter, q->pimpl->meta, group))
         return;
     q->pimpl->storage->filter_in_single_group(
-        &q->pimpl->parameters, group, q->pimpl->filter, q->pimpl->meta, q->pimpl->customFilter, q->pimpl->customFilterUserData, callback, u);
+        &q->pimpl->parameters, group, q->pimpl->filter, q->pimpl->meta, q->pimpl->customFilter, q->pimpl->customFilterUserData, callback, u
+    );
 }
 
 int sugoiQ_match_entity(const sugoi_query_t* query, sugoi_entity_t ent)

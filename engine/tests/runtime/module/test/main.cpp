@@ -19,7 +19,7 @@ TEST_CASE_METHOD(ModuleTest, "single")
     auto moduleManager = skr_get_module_manager();
     auto path = skr::fs::current_directory();
     moduleManager->mount(path.string().c_str());
-    EXPECT_NE(moduleManager->make_module_graph(u8"SkrRT", true), nullptr);
+    EXPECT_NE(moduleManager->make_module_graph(u8"SkrRuntime", true), nullptr);
     REQUIRE(moduleManager->init_module_graph(0, (char8_t**)nullptr));
     REQUIRE(moduleManager->destroy_module_graph());
 }

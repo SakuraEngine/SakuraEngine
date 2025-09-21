@@ -26,6 +26,7 @@ public:
     const AST& ast() const { return *_ast; }
     std::span<Attr* const> attrs() const { return _attrs; }
     void add_attr(Attr* attr);
+    void add_attrs(std::span<Attr* const> attrs) { for (auto attr : attrs) add_attr(attr); }
 
 protected:
     friend struct AST;
@@ -83,6 +84,7 @@ public:
     bool is_vector() const;
     bool is_matrix() const;
     bool is_resource() const;
+    bool is_empty() const { return _fields.size() == 0 && _methods.size() == 0 && _ctors.size() == 0; }
 
     const Size size() const  { return _size; }
     const Size alignment() const { return _alignment; }
@@ -263,6 +265,19 @@ protected:
     ByteBufferTypeDecl(AST& ast, BufferFlags flags);
 };
 
+struct TexelBufferTypeDecl : public BufferTypeDecl
+{
+public:
+    const TypeDecl& element_type() const { return *_element; }
+    const Size element_size() const { return _element->size(); }
+    const Size element_alignment() const { return _element->alignment(); }
+
+protected:
+    friend struct AST;
+    TexelBufferTypeDecl(AST& ast, const TypeDecl* element, BufferFlags flags);
+    const TypeDecl* _element = nullptr; // the type of elements in the buffer
+};
+
 struct StructuredBufferTypeDecl : public BufferTypeDecl
 {
 public:
@@ -281,11 +296,20 @@ struct TextureTypeDecl : public ResourceTypeDecl
 public:
     const TypeDecl& element_type() const { return *_element; }
     const auto flags() const { return _flags; }
+    bool is_array() const { return _is_array; }
 
 protected:
     TextureTypeDecl(AST& ast, const String& name, const TypeDecl* element, TextureFlags flags);
     const TypeDecl* _element = nullptr; // the type of elements in the buffer
     TextureFlags _flags;
+    bool _is_array = false;
+};
+
+struct Texture1DTypeDecl : public TextureTypeDecl
+{
+protected:
+    friend struct AST;
+    Texture1DTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags);
 };
 
 struct Texture2DTypeDecl : public TextureTypeDecl
@@ -293,6 +317,13 @@ struct Texture2DTypeDecl : public TextureTypeDecl
 protected:
     friend struct AST;
     Texture2DTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags);
+};
+
+struct Texture1DArrayTypeDecl : public TextureTypeDecl
+{
+protected:
+    friend struct AST;
+    Texture1DArrayTypeDecl(AST& ast, const TypeDecl* element, TextureFlags flags);
 };
 
 struct Texture2DArrayTypeDecl : public TextureTypeDecl
@@ -379,10 +410,14 @@ struct MethodDecl : public FunctionDecl
 public:
     const TypeDecl* owner_type() const { return _owner; }
 
+    void set_const(bool is_const) { _const = is_const; }
+    bool is_const() const { return _const; }
+
 protected:
     friend struct AST;
     MethodDecl(AST& ast, TypeDecl* owner, const Name& name, const TypeDecl* return_type, std::span<const ParamVarDecl* const> params, const CompoundStmt* body);
     const TypeDecl* _owner = nullptr; // the type that owns this method
+    bool _const = false;
 };
 
 struct ConstructorDecl : public MethodDecl

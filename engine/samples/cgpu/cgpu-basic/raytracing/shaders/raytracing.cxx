@@ -1,12 +1,7 @@
-#include "std/std.hxx"
-
-
-
-RWBuffer<float4> buf;
-Accel AS;
+#include "raytracing_bindings.hxx"
 
 // 常量定义
-trait RayTracingConstants {
+struct RayTracingConstants {
     static constexpr uint32 WIDTH = 3200;
     static constexpr uint32 HEIGHT = 2400;
 };
@@ -31,7 +26,7 @@ float4 trace(uint2 tid, uint2 tsize) {
     query.Proceed();
 
     // 检查交点状态
-    if (query.CommittedStatus() == HitType::HitTriangle) {
+    if (query.CommittedStatus() == HitStatus::HitTriangle) {
         // 返回重心坐标作为颜色
         float2 barycentrics = query.CommittedTriangleBarycentrics();
         return float4(barycentrics.x, barycentrics.y, 1.0f, 1.0f);
@@ -43,7 +38,7 @@ float4 trace(uint2 tid, uint2 tsize) {
 
 // 计算着色器入口点
 [[compute_shader("compute_main")]]
-[[kernel_2d(32, 32)]]
+[[numthreads(32, 32, 1)]]
 void compute_main([[builtin("ThreadID")]] uint3 tid) 
 {
     uint2 tsize = uint2(RayTracingConstants::WIDTH, RayTracingConstants::HEIGHT);
@@ -51,5 +46,5 @@ void compute_main([[builtin("ThreadID")]] uint3 tid)
     
     // 计算线性索引并写入结果
     uint32 index = tid.x + (tid.y * row_pitch);
-    buf.Store(index, trace(tid.xy, tsize));
+    OutputColor.Store(index, trace(tid.xy, tsize));
 }

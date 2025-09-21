@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrGraphics/api.h"
-#include "SkrRT/io/io.h"
-#include "SkrRT/io/vram_io.hpp"
+#include "SkrRuntime/io/io.h"
+#include "SkrRuntime/io/vram_io.hpp"
 #include "./../vram/components.hpp"
 #include "./../common/io_request.hpp"
 
@@ -13,7 +13,7 @@ namespace io {
 template <>
 struct CID<struct VRAMIOStatusComponent> 
 {
-    static constexpr skr_guid_t Get() { return CID<IOStatusComponent>::Get(); } 
+    static constexpr GUID Get() { return CID<IOStatusComponent>::Get(); } 
 };
 struct VRAMIOStatusComponent final : public IOStatusComponent
 {

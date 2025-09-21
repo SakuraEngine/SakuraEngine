@@ -1,7 +1,7 @@
-#include "SkrRT/goap/config.hpp"
-#include "SkrRT/goap/dynamic/state.hpp"
-#include "SkrRT/goap/action.hpp"
-#include "SkrRT/goap/planner.hpp"
+#include "SkrRuntime/goap/config.hpp"
+#include "SkrRuntime/goap/dynamic/state.hpp"
+#include "SkrRuntime/goap/action.hpp"
+#include "SkrRuntime/goap/planner.hpp"
 
 namespace skr::goap
 {

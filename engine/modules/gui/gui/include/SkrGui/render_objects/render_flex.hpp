@@ -2,15 +2,14 @@
 #include "SkrGui/framework/render_object/render_box.hpp"
 #include "SkrGui/framework/render_object/multi_child_render_object.hpp"
 #include "SkrGui/math/layout.hpp"
-#ifndef __meta__
-    #include "SkrGui/render_objects/render_flex.generated.h"
-#endif
+#include "SkrGui/render_objects/render_flex.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "1bc957ef-1203-489d-911d-94ba3fb81080")
-SKR_GUI_API RenderFlex : public RenderBox,
-                         public IMultiChildRenderObject {
+struct [[sattr(guid = "1bc957ef-1203-489d-911d-94ba3fb81080"
+)]] SKR_GUI_API RenderFlex : public RenderBox
+    , public IMultiChildRenderObject
+{
 public:
     SKR_GENERATE_BODY(RenderFlex)
     using Super = RenderBox;
@@ -42,9 +41,10 @@ public:
     // transform
     void apply_paint_transform(NotNull<const RenderObject*> child, Matrix4& transform) const SKR_NOEXCEPT override;
 
-    struct SlotData {
+    struct SlotData
+    {
         // slot data
-        float    flex     = 1;
+        float flex = 1;
         EFlexFit flex_fit = EFlexFit::Loose;
 
         // child data
@@ -53,10 +53,10 @@ public:
 
 private:
     friend struct _FlexHelper;
-    EFlexDirection      _flex_direction       = EFlexDirection::Row;
-    EMainAxisAlignment  _main_axis_alignment  = EMainAxisAlignment::Start;
+    EFlexDirection _flex_direction = EFlexDirection::Row;
+    EMainAxisAlignment _main_axis_alignment = EMainAxisAlignment::Start;
     ECrossAxisAlignment _cross_axis_alignment = ECrossAxisAlignment::Start;
-    EMainAxisSize       _main_axis_size       = EMainAxisSize::Max;
+    EMainAxisSize _main_axis_size = EMainAxisSize::Max;
 
     float _overflow = 0.0f;
 

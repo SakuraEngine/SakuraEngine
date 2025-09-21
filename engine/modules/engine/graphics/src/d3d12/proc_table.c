@@ -1,4 +1,5 @@
 #include "SkrGraphics/backend/d3d12/cgpu_d3d12.h"
+#include "SkrGraphics/backend/d3d12/cgpu_d3d12_raytracing.h"
 #include "SkrGraphics/backend/d3d12/cgpu_d3d12_surfaces.h"
 
 const CGPUProcTable tbl_d3d12 = {
@@ -37,6 +38,12 @@ const CGPUProcTable tbl_d3d12 = {
     .free_query_pool = &cgpu_free_query_pool_d3d12,
     .create_memory_pool = &cgpu_create_memory_pool_d3d12,
     .free_memory_pool = &cgpu_free_memory_pool_d3d12,
+
+    // Ray Pipeline APIs
+    .create_ray_pipeline = &cgpu_create_ray_pipeline_d3d12,
+    .free_ray_pipeline = &cgpu_free_ray_pipeline_d3d12,
+    .bind_ray_pipeline = &cgpu_compute_encoder_bind_ray_pipeline_d3d12,
+    .dispatch_rays = &cgpu_compute_encoder_dispatch_rays_d3d12,
 
     // Descriptor Set/Buffer
     .create_descriptor_set = &cgpu_create_descriptor_set_d3d12,
@@ -124,6 +131,7 @@ const CGPUProcTable tbl_d3d12 = {
     .compute_encoder_bind_descriptor_buffer = &cgpu_compute_encoder_bind_descriptor_buffer_d3d12,
     .compute_encoder_push_constants = &cgpu_compute_encoder_push_constants_d3d12,
     .compute_encoder_bind_pipeline = &cgpu_compute_encoder_bind_pipeline_d3d12,
+    .compute_encoder_set_threadgroup_size = &cgpu_compute_encoder_set_threadgroup_size_d3d12,
     .compute_encoder_dispatch = &cgpu_compute_encoder_dispatch_d3d12,
     .cmd_end_compute_pass = &cgpu_cmd_end_compute_pass_d3d12,
 

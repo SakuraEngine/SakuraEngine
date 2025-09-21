@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <SkrContainers/optional.hpp>
 #include <SkrRTTR/script/stack_proxy.hpp>
+#include <SkrContainersDef/span.hpp>
 
 // TODO. 添加基类以支持反射
 // TODO. 添加类型擦除的调用 core 来支持脚本绑定
@@ -146,7 +147,7 @@ struct StackProxyDelegateCore
 {
     using ThisType = StackProxyDelegateCore;
     using SizeType = uint64_t;
-    using InvokeFunc = void (*)(ThisType* self, span<const StackProxy> params, StackProxy return_value);
+    using InvokeFunc = void (*)(ThisType* self, Span<const StackProxy> params, StackProxy return_value);
     using DeleteFunc = void (*)(ThisType* self);
 
     InvokeFunc invoke = nullptr;

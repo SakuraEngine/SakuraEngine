@@ -19,18 +19,18 @@ static typename copy_dim<float, T>::type uint_unpack_to_float(T val) {
 	return bit_cast<typename copy_dim<float, T>::type>(uvalue);
 }
 
-static float float_atomic_min(RWBuffer<uint>& buffer, uint index, float value) {
+static float float_atomic_min(RWStructuredBuffer<uint>& buffer, uint index, float value) {
 	uint prev;
 	InterlockedMin(buffer[index], float_pack_to_uint(value), prev);
 	return uint_unpack_to_float(prev);
 }
-static float float_atomic_max(RWBuffer<uint>& buffer, uint index, float value) {
+static float float_atomic_max(RWStructuredBuffer<uint>& buffer, uint index, float value) {
 	uint prev;
 	InterlockedMax(buffer[index], float_pack_to_uint(value), prev);
 	return uint_unpack_to_float(prev);
 }
 static float float_atomic_add(
-	RWBuffer<uint>& buffer,
+	RWStructuredBuffer<uint>& buffer,
 	uint index,
 	float value) {
 	uint old = buffer.Load(index);

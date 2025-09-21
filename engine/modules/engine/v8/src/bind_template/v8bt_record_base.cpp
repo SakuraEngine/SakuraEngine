@@ -19,7 +19,7 @@ void V8BTRecordBase::_setup(V8Isolate* isolate, const RTTRType* type)
 {
     // get basic data
     set_isolate(isolate);
-    _rttr_type    = type;
+    _rttr_type = type;
     _default_ctor = type->find_default_ctor();
     if (!_default_ctor)
     {
@@ -49,10 +49,10 @@ void V8BTRecordBase::_setup(V8Isolate* isolate, const RTTRType* type)
         mixin_consumed_methods.add(method);
 
         // find mixin impl
-        String impl_method_name  = String::Build(method->name, u8"_impl");
-        auto   found_impl_method = owner_type->find_method({
-              .name          = impl_method_name,
-              .include_bases = false,
+        String impl_method_name = String::Build(method->name, u8"_impl");
+        auto found_impl_method = owner_type->find_method({
+            .name = impl_method_name,
+            .include_bases = false,
         });
         if (!found_impl_method)
         {
@@ -69,7 +69,7 @@ void V8BTRecordBase::_setup(V8Isolate* isolate, const RTTRType* type)
         }
 
         // add method
-        auto& mixin_method_data                = _methods.try_add_default(method->name).value();
+        auto& mixin_method_data = _methods.try_add_default(method->name).value();
         mixin_method_data.rttr_data_mixin_impl = found_impl_method;
         mixin_method_data.setup(
             isolate,
@@ -146,7 +146,7 @@ void V8BTRecordBase::_setup(V8Isolate* isolate, const RTTRType* type)
         if (find_getter_result)
         { // getter case
             String prop_name = find_getter_result.ref().cast<skr::attr::ScriptGetter>()->prop_name;
-            auto&  prop_data = _properties.try_add_default(prop_name).value();
+            auto& prop_data = _properties.try_add_default(prop_name).value();
             if (prop_data.getter.is_valid())
             {
                 _errors.error(u8"overload is not supported yet for property '{}'", prop_name);
@@ -163,7 +163,7 @@ void V8BTRecordBase::_setup(V8Isolate* isolate, const RTTRType* type)
         else if (find_setter_result)
         { // setter case
             String prop_name = find_setter_result.ref().cast<skr::attr::ScriptSetter>()->prop_name;
-            auto&  prop_data = _properties.try_add_default(prop_name).value();
+            auto& prop_data = _properties.try_add_default(prop_name).value();
             if (prop_data.setter.is_valid())
             {
                 _errors.error(u8"overload is not supported yet for property '{}'", prop_name);
@@ -220,7 +220,7 @@ void V8BTRecordBase::_setup(V8Isolate* isolate, const RTTRType* type)
         if (find_getter_result)
         { // getter case
             String prop_name = find_getter_result.ref().cast<skr::attr::ScriptGetter>()->prop_name;
-            auto&  prop_data = _static_properties.try_add_default(prop_name).value();
+            auto& prop_data = _static_properties.try_add_default(prop_name).value();
             if (prop_data.getter.is_valid())
             {
                 _errors.error(u8"overload is not supported yet for static property '{}'", prop_name);
@@ -237,7 +237,7 @@ void V8BTRecordBase::_setup(V8Isolate* isolate, const RTTRType* type)
         else if (find_setter_result)
         { // setter case
             String prop_name = find_setter_result.ref().cast<skr::attr::ScriptSetter>()->prop_name;
-            auto&  prop_data = _static_properties.try_add_default(prop_name).value();
+            auto& prop_data = _static_properties.try_add_default(prop_name).value();
             if (prop_data.setter.is_valid())
             {
                 _errors.error(u8"overload is not supported yet for static property '{}'", prop_name);
@@ -709,7 +709,7 @@ void V8BTRecordBase::_call_method(const ::v8::FunctionCallbackInfo<::v8::Value>&
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // block ctor call
@@ -721,7 +721,7 @@ void V8BTRecordBase::_call_method(const ::v8::FunctionCallbackInfo<::v8::Value>&
 
     // get external data
     auto* bind_proxy = get_bind_proxy<V8BPRecord>(info);
-    auto* bind_data  = get_bind_data<V8BTDataMethod>(info);
+    auto* bind_data = get_bind_data<V8BTDataMethod>(info);
 
     // check bind proxy
     if (!bind_proxy->is_valid())
@@ -748,7 +748,7 @@ void V8BTRecordBase::_call_static_method(const ::v8::FunctionCallbackInfo<::v8::
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // block ctor call
@@ -777,12 +777,12 @@ void V8BTRecordBase::_get_field(const ::v8::FunctionCallbackInfo<::v8::Value>& i
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get external data
     auto* bind_proxy = get_bind_proxy<V8BPRecord>(info);
-    auto* bind_data  = get_bind_data<V8BTDataField>(info);
+    auto* bind_data = get_bind_data<V8BTDataField>(info);
 
     // check bind proxy
     if (!bind_proxy->is_valid())
@@ -803,12 +803,12 @@ void V8BTRecordBase::_set_field(const ::v8::FunctionCallbackInfo<::v8::Value>& i
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get external data
     auto* bind_proxy = get_bind_proxy<V8BPRecord>(info);
-    auto* bind_data  = get_bind_data<V8BTDataField>(info);
+    auto* bind_data = get_bind_data<V8BTDataField>(info);
 
     // check bind proxy
     if (!bind_proxy->is_valid())
@@ -829,7 +829,7 @@ void V8BTRecordBase::_get_static_field(const ::v8::FunctionCallbackInfo<::v8::Va
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get external data
@@ -845,7 +845,7 @@ void V8BTRecordBase::_set_static_field(const ::v8::FunctionCallbackInfo<::v8::Va
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get external data
@@ -861,12 +861,12 @@ void V8BTRecordBase::_get_prop(const ::v8::FunctionCallbackInfo<::v8::Value>& in
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get external data
     auto* bind_proxy = get_bind_proxy<V8BPRecord>(info);
-    auto* bind_data  = get_bind_data<V8BTDataProperty>(info);
+    auto* bind_data = get_bind_data<V8BTDataProperty>(info);
 
     // check bind proxy
     if (!bind_proxy->is_valid())
@@ -893,12 +893,12 @@ void V8BTRecordBase::_set_prop(const ::v8::FunctionCallbackInfo<::v8::Value>& in
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get external data
     auto* bind_proxy = get_bind_proxy<V8BPRecord>(info);
-    auto* bind_data  = get_bind_data<V8BTDataProperty>(info);
+    auto* bind_data = get_bind_data<V8BTDataProperty>(info);
 
     // check bind proxy
     if (!bind_proxy->is_valid())
@@ -925,7 +925,7 @@ void V8BTRecordBase::_get_static_prop(const ::v8::FunctionCallbackInfo<::v8::Val
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get external data
@@ -947,7 +947,7 @@ void V8BTRecordBase::_set_static_prop(const ::v8::FunctionCallbackInfo<::v8::Val
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get external data

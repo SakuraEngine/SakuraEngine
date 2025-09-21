@@ -75,10 +75,12 @@ SKR_INLINE void merge_sort(T begin, T end, TP&& p = TP())
                         }
                     }
                     --group_end;
-                } while (group_end - subgroup_start > 1);
+                }
+                while (group_end - subgroup_start > 1);
 
                 subgroup_start += MinMergeSubgroupSize;
-            } while (subgroup_start < count);
+            }
+            while (subgroup_start < count);
         }
         else
         {
@@ -103,7 +105,8 @@ SKR_INLINE void merge_sort(T begin, T end, TP&& p = TP())
             auto cur_start = begin + subgroup_start;
             __help::merge(cur_start, cur_start + subgroup_size, cur_start + std::min(next_group_size, count - subgroup_start), std::forward<TP>(p));
             subgroup_start += next_group_size;
-        } while (subgroup_start < count);
+        }
+        while (subgroup_start < count);
 
         subgroup_size = next_group_size;
     }

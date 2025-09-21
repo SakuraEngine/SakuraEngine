@@ -174,15 +174,15 @@ struct LightingPushConstants
 static LightingPushConstants lighting_data = {};
 struct LightingCSPushConstants
 {
-    skr_float2_t viewportSize = { BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT };
-    skr_float2_t viewportOrigin = { 0, 0 };
+    skr::float2 viewportSize = { BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT };
+    skr::float2 viewportOrigin = { 0, 0 };
 };
 static LightingCSPushConstants lighting_cs_data = {};
 bool fragmentLightingPass = false;
 bool lockFPS = true;
 bool DPIAware = false;
 
-#include "SkrRT/runtime_module.h"
+#include "SkrRuntime/runtime_module.h"
 
 struct RenderGraphDeferredModule : public skr::IDynamicModule
 {
@@ -312,7 +312,7 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                     builder.set_name(u8"composite_buffer")
                         .extent(back_desc->width, back_desc->height)
                         .format(CGPU_FORMAT_R8G8B8A8_UNORM)
-                        .allocate_dedicated()
+                        .heap_dedicated()
                         .allow_render_target();
                 });
             auto gbuffer_color = graph->create_texture(
@@ -320,7 +320,7 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                     builder.set_name(u8"gbuffer_color")
                         .extent(back_desc->width, back_desc->height)
                         .format(gbuffer_formats[0])
-                        .allocate_dedicated()
+                        .heap_dedicated()
                         .allow_render_target();
                 });
             auto gbuffer_depth = graph->create_texture(
@@ -328,7 +328,7 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                     builder.set_name(u8"gbuffer_depth")
                         .extent(back_desc->width, back_desc->height)
                         .format(gbuffer_depth_format)
-                        .allocate_dedicated()
+                        .heap_dedicated()
                         .allow_depth_stencil();
                 });
             auto gbuffer_normal = graph->create_texture(
@@ -336,7 +336,7 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                     builder.set_name(u8"gbuffer_normal")
                         .extent(back_desc->width, back_desc->height)
                         .format(gbuffer_formats[1])
-                        .allocate_dedicated()
+                        .heap_dedicated()
                         .allow_render_target();
                 });
             auto lighting_buffer = graph->create_texture(
@@ -344,7 +344,7 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                     builder.set_name(u8"lighting_buffer")
                         .extent(back_desc->width, back_desc->height)
                         .format(lighting_buffer_format)
-                        .allocate_dedicated()
+                        .heap_dedicated()
                         .allow_readwrite();
                 });
             // camera
@@ -373,7 +373,7 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                         vertex_buffer, vertex_buffer, vertex_buffer, vertex_buffer, instance_buffer
                     };
                     const uint32_t strides[5] = {
-                        sizeof(skr_float3_t), sizeof(skr_float2_t), sizeof(uint32_t), sizeof(uint32_t), sizeof(CubeGeometry::InstanceData::world)
+                        sizeof(skr::float3), sizeof(skr::float2), sizeof(uint32_t), sizeof(uint32_t), sizeof(CubeGeometry::InstanceData::world)
                     };
                     const uint32_t offsets[5] = {
                         offsetof(CubeGeometry, g_Positions), offsetof(CubeGeometry, g_TexCoords), offsetof(CubeGeometry, g_Normals), offsetof(CubeGeometry, g_Tangents), offsetof(CubeGeometry::InstanceData, world)
@@ -412,9 +412,10 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                             .read(u8"gbuffer_depth", gbuffer_depth)
                             .readwrite(u8"lighting_output", lighting_buffer);
                     },
-                    [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& stack) {
-                        cgpu_compute_encoder_push_constants(stack.encoder, lighting_cs_pipeline->root_signature, u8"push_constants", &lighting_cs_data);
-                        cgpu_compute_encoder_dispatch(stack.encoder, (uint32_t)ceil(BACK_BUFFER_WIDTH / (float)16), (uint32_t)ceil(BACK_BUFFER_HEIGHT / (float)16), 1);
+                    [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& ctx) {
+                        cgpu_compute_encoder_push_constants(ctx.encoder, lighting_cs_pipeline->root_signature, u8"push_constants", &lighting_cs_data);
+                        cgpu_compute_encoder_set_threadgroup_size(ctx.encoder, 16, 16, 1);
+                        cgpu_compute_encoder_dispatch(ctx.encoder, BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT, 1);
                     });
                 graph->add_render_pass(
                     [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {

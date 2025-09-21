@@ -48,7 +48,7 @@ template <typename K, typename V>
 using Map = skr::Map<K, V>;
 
 template <typename T>
-using span = skr::span<T>;
+using span = skr::Span<T>;
 
 template <typename T>
 using Vector = skr::Vector<T>;

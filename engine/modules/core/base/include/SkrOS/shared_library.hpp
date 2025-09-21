@@ -34,7 +34,7 @@ public:
     }
     ~SharedLibrary() = default;
 
-    SharedLibrary(const SharedLibrary& rhs) = delete;
+    SharedLibrary(const SharedLibrary& rhs)                  = delete;
     const SharedLibrary& operator=(const SharedLibrary& rhs) = delete;
 
     static const char8_t* GetPlatformFilePrefixName();
@@ -99,20 +99,21 @@ public:
      * @author: SaeruHikari
      */
     NativeLibHandle handle() const;
+
 private:
-    std::u8string _lastError;
+    std::u8string   _lastError;
     NativeLibHandle _handle = nullptr;
     // Linux implementation
 #if SKR_PLAT_UNIX
-    bool loadImpl(const char8_t* path);
-    bool unloadImpl();
+    bool  loadImpl(const char8_t* path);
+    bool  unloadImpl();
     void* getImpl(const char8_t* symbolName);
 #elif SKR_PLAT_WINDOWS // Windows implementation
     // Return a string explaining the last error
     std::u8string getWindowsError();
-    bool loadImpl(const char8_t* path);
-    bool unloadImpl();
-    void* getImpl(const char8_t* symbolName);
+    bool          loadImpl(const char8_t* path);
+    bool          unloadImpl();
+    void*         getImpl(const char8_t* symbolName);
 #endif
 };
 

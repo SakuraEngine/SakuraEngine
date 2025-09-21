@@ -1,45 +1,48 @@
 #pragma once
 #include "SkrContainersDef/btree.hpp"
 
-// bin serde
-#include "SkrSerde/bin_serde.hpp"
+// serialize
+#include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
 template <class K, class V, class Eq>
-struct BinSerde<skr::BTreeMap<K, V, Eq>> {
-    inline static bool read(SBinaryReader* r, skr::BTreeMap<K, V, Eq>& v)
+struct Serialize<skr::BTreeMap<K, V, Eq>>
+{
+    inline static void read(ArchiveRead& r, skr::BTreeMap<K, V, Eq>& v)
     {
+        Archive::ObjectScope arr_scope(r);
+        SKR_ASSERT(arr_scope.is_success());
+
         // read size
-        uint32_t size;
-        if (!bin_read(r, size)) return false;
+        v.clear();
+        uint64_t arr_size = 0;
+        SKR_ASSERT(r.array_size<uint64_t>(arr_size));
+        v.reserve(arr_size);
 
         // read content
-        skr::BTreeMap<K, V, Eq> temp;
-        for (int i = 0; i < size; ++i)
+        for (uint64_t i = 0; i < arr_size; i += 2)
         {
             K key;
-            if (!bin_read(r, key)) return false;
+            SKR_ASSERT(r.value<K>(key));
             V value;
-            if (!bin_read(r, value)) return false;
-            temp.insert({ std::move(key), std::move(value) });
+            SKR_ASSERT(r.value<V>(value));
+            v.insert({ std::move(key), std::move(value) });
         }
-
-        // move to target
-        v = std::move(temp);
-        return true;
     }
-    inline static bool write(SBinaryWriter* w, const skr::BTreeMap<K, V, Eq>& v)
+    inline static void write(ArchiveWrite& w, const skr::BTreeMap<K, V, Eq>& v)
     {
+        Archive::ObjectScope arr_scope(w);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
         // write size
-        if (!bin_write(w, v.size())) return false;
+        SKR_FAST_CHECK(w.array_size<uint64_t>(uint64_t(v.size() * 2)), );
 
         // write content
         for (const auto& pair : v)
         {
-            if (!bin_write(w, pair.first)) return false;
-            if (!bin_write(w, pair.second)) return false;
+            SKR_FAST_CHECK(w.value<K>(pair.first), );
+            SKR_FAST_CHECK(w.value<V>(pair.second), );
         }
-        return true;
     }
 };
 } // namespace skr

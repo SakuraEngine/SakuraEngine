@@ -10,7 +10,8 @@
 namespace skr::algo
 {
 template <typename T>
-struct BitAlgo {
+struct BitAlgo
+{
 private:
     static inline constexpr T _per_block_size_log2()
     {

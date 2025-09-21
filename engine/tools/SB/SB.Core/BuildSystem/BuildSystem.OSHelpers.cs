@@ -23,8 +23,9 @@ namespace SB
         public static string GetUniqueTempFileName(string File, string Hint, string Extension, IEnumerable<string>? Args = null)
         {
             string FullIdentifier = File + (Args is null ? "" : String.Join("", Args));
-            var SHA = SHA256.HashData(Encoding.UTF8.GetBytes(FullIdentifier));
-            return $"{Hint}.{Path.GetFileName(File)}.{Convert.ToHexString(SHA)}.{Extension}";
+            // var SHA = SHA256.HashData(Encoding.UTF8.GetBytes(FullIdentifier));
+            var MD5Code = MD5.HashData(Encoding.UTF8.GetBytes(FullIdentifier));
+            return $"{Hint}_{Path.GetFileName(File)}_{Convert.ToHexString(MD5Code)}.{Extension}";
         }
 
         public static bool CheckPath(string P, bool MustExist) => Path.IsPathFullyQualified(P) && (!MustExist || Directory.Exists(P));
@@ -110,21 +111,6 @@ namespace SB
                 }
             }
         }
-
-        public static string DepsStore = ".deps";
-        public static string ObjsStore = ".objs";
-        public static string GeneratedSourceStore = ".gens";
-        public static string TempPath { get; set; } = Directory.CreateDirectory(Path.Join(Directory.GetCurrentDirectory(), ".sb")).FullName;
-        public static string BuildPath { get; set; } = TempPath!;
-        public static string PackageBuildPath { get; set; } = TempPath!;
-    }
-
-    public static class BuildPathExtensions
-    {
-        public static string GetStorePath(this Target Target, string StoreName) => Directory.CreateDirectory(Path.Combine(Target.GetBuildPath(), StoreName, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}", Target.Name)).FullName;
-        public static string GetBinaryPath(this Target Target) => Directory.CreateDirectory(Path.Combine(Target.GetBuildPath(), $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}")).FullName;
-        public static string GetBinaryPath(this Target Target, string Configure) => Directory.CreateDirectory(Path.Combine(Target.GetBuildPath(), $"{BS.TargetOS}-{BS.TargetArch}-{Configure}")).FullName;
-        public static string GetBuildPath(this Target Target) => Target.IsFromPackage ? BS.PackageBuildPath : BS.BuildPath;
     }
 
     public static class StringExtensions

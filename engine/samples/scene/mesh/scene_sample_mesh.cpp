@@ -6,19 +6,19 @@
 #include <SkrCore/time.h>
 #include <SkrCore/async/thread_job.hpp>
 #include "SkrCore/memory/impl/skr_new_delete.hpp"
-#include <SkrRT/io/vram_io.hpp>
+#include <SkrRuntime/io/vram_io.hpp>
 #include "SkrOS/thread.h"
 #include "SkrProfile/profile.h"
-#include "SkrRT/ecs/scheduler.hpp"
-#include "SkrRT/io/ram_io.hpp"
-#include "SkrRT/misc/cmd_parser.hpp"
-#include "SkrRTTR/rttr_traits.hpp"
+#include "SkrRuntime/ecs/scheduler.hpp"
+#include "SkrRuntime/io/ram_io.hpp"
+#include "SkrRuntime/misc/cmd_parser.hpp"
+#include <SkrBase/type_info.hpp>
 
 #include <SkrOS/filesystem.hpp>
 #include "SkrSystem/advanced_input.h"
-#include <SkrRT/ecs/world.hpp>
-#include <SkrRT/resource/resource_system.h>
-#include <SkrRT/resource/local_resource_registry.hpp>
+#include <SkrRuntime/ecs/world.hpp>
+#include <SkrRuntime/resource/resource_system.h>
+#include <SkrRuntime/resource/local_resource_registry.hpp>
 #include <cmath>
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrImGui/imgui_app.hpp"
@@ -58,8 +58,8 @@ const auto FloorID = u8"0198cfc4-9bfd-77fd-a9a0-553938b10314"_guid;
 
 struct BuiltInMeshAsset
 {
-    skr_guid_t built_in_mesh_tid;
-    skr_guid_t asset_id;
+    skr::GUID built_in_mesh_tid;
+    skr::GUID asset_id;
 };
 
 skr::Vector<BuiltInMeshAsset> g_built_in_mesh_assets = {
@@ -79,7 +79,7 @@ struct SceneSampleMeshModule : public skr::IDynamicModule
     void DestroyAssetSystem();
     void DestroyResourceSystem();
 
-    void CookAndLoadGLTF();
+    void CookAndLoadTestGLTF();
 
     skr::task::scheduler_t scheduler;
     skr::Scene scene;
@@ -194,7 +194,7 @@ void SceneSampleMeshModule::InitializeResourceSystem()
     // material factory
     {
         skr::MaterialFactory::Root factoryRoot = {};
-        factoryRoot.device = render_device->get_cgpu_device();
+        factoryRoot.render_device = render_device;
         factoryRoot.job_queue = job_queue.get();
         factoryRoot.ram_service = ram_service;
         matFactory = skr::MaterialFactory::Create(factoryRoot);
@@ -302,7 +302,7 @@ void SceneSampleMeshModule::on_unload()
     SKR_LOG_INFO(u8"Scene Sample Mesh Module Unloaded");
 }
 
-void SceneSampleMeshModule::CookAndLoadGLTF()
+void SceneSampleMeshModule::CookAndLoadTestGLTF()
 {
     auto& cook_system = *skd::asset::GetCookSystem();
     auto grid_metadata = skd::asset::SimpleGridMeshAsset::Create<skd::asset::SimpleGridMeshAsset>();
@@ -358,7 +358,7 @@ void SceneSampleMeshModule::CookAndLoadGLTF()
 
     {
         cook_system.ParallelForEachAsset(1,
-            [&](skr::span<skr::RC<skd::asset::AssetMetaFile>> assets) {
+            [&](skr::Span<skr::RC<skd::asset::AssetMetaFile>> assets) {
                 SkrZoneScopedN("Cook");
                 for (auto asset : assets)
                 {
@@ -447,7 +447,7 @@ int SceneSampleMeshModule::main_module_exec(int argc, char8_t** argv)
     //    builtin_actors[i].lock()->GetComponent<skr::MeshComponent>()->mesh_resource = g_built_in_mesh_assets[i].asset_id;
     //}
 
-    CookAndLoadGLTF();
+    CookAndLoadTestGLTF();
 
     {
         skr::render_graph::RenderGraphBuilder graph_builder;
@@ -520,7 +520,7 @@ int SceneSampleMeshModule::main_module_exec(int argc, char8_t** argv)
                         .format(CGPU_FORMAT_D32_SFLOAT)
                         .sample_count(CGPU_SAMPLE_COUNT_1)
                         .allow_depth_stencil();
-                    if (back_desc->width > 2048) builder.allocate_dedicated();
+                    if (back_desc->width > 2048) builder.heap_dedicated();
                 });
 
             scene_renderer->draw_primitives(

@@ -12,7 +12,6 @@ using Name = String;
 
 struct AST;
 struct Attr;
-struct ASTDatabase;
 struct Decl;
 struct DeclRefExpr;
 struct CaseStmt;
@@ -25,12 +24,12 @@ public:
 
     std::span<Attr* const> attrs() const { return _attrs; }
     void add_attr(Attr* attr);
+    void add_attrs(std::span<Attr* const> attrs) { for (auto attr : attrs) add_attr(attr); }
 
     String dump() const;
 
 protected:
     friend struct AST;
-    friend struct ASTDatabase;
     Stmt(AST& ast);
     virtual ~Stmt() = default;
 
@@ -65,6 +64,8 @@ struct CompoundStmt final : Stmt
 {
 public:
     void add_statement(Stmt* statement);
+    template <typename... Stmts>
+    void add_statements(Stmts... stmts) { (add_statement(stmts), ...); }
     
 protected:
     friend struct AST;

@@ -6,6 +6,9 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace SB
 {
+    [JsonSerializable(typeof(CppSLMacroType))]
+    [JsonSerializable(typeof(CppSLVariantOption))]
+    [JsonSerializable(typeof(CppSLVariantTemplate))]
     [JsonSerializable(typeof(CodegenRenderConfig))]
     [JsonSerializable(typeof(CodegenGenerator))]
     [JsonSerializable(typeof(CodegenModuleInfo))]

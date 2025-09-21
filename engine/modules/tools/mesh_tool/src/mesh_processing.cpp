@@ -2,6 +2,7 @@
 #include "SkrGraphics/api.h"
 #include "SkrCore/platform/vfs.h"
 #include "SkrContainersDef/path.hpp"
+#include "SkrContainersDef/map.hpp"
 #include "SkrTask/fib_task.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrMeshCore/mesh_processing.hpp"
@@ -50,7 +51,7 @@ inline static SRawMesh GenerateRawMeshForGLTFMesh(cgltf_mesh* mesh)
             const auto buffer_data = static_cast<const uint8_t*>(buffer_view->data ? buffer_view->data : buffer_view->buffer->data);
             const auto view_data = buffer_data + buffer_view->offset;
             const auto indices_count = gltf_primitive->indices->count;
-            primitive.index_stream.buffer_view = skr::span<const uint8_t>(view_data + gltf_primitive->indices->offset, gltf_primitive->indices->stride * indices_count);
+            primitive.index_stream.buffer_view = skr::Span<const uint8_t>(view_data + gltf_primitive->indices->offset, gltf_primitive->indices->stride * indices_count);
             primitive.index_stream.offset = 0;
             primitive.index_stream.count = indices_count;
             primitive.index_stream.stride = gltf_primitive->indices->stride;
@@ -65,7 +66,7 @@ inline static SRawMesh GenerateRawMeshForGLTFMesh(cgltf_mesh* mesh)
             const auto view_data = buffer_data + buffer_view->offset;
             const auto vertex_count = attribute.data->count;
             SRawVertexStream& vertex_stream = primitive.vertex_streams.add_default().ref();
-            vertex_stream.buffer_view = skr::span<const uint8_t>(view_data + attribute.data->offset, attribute.data->stride * vertex_count);
+            vertex_stream.buffer_view = skr::Span<const uint8_t>(view_data + attribute.data->offset, attribute.data->stride * vertex_count);
             vertex_stream.offset = 0;
             vertex_stream.count = vertex_count;
             vertex_stream.stride = attribute.data->stride;
@@ -126,7 +127,7 @@ cgltf_data* ImportGLTFWithData(skr::StringView assetPath, skr_io_ram_service_t* 
     return gltf_data_;
 }
 
-void GetGLTFNodeTransform(const cgltf_node* node, skr_float3_t& translation, skr_float3_t& scale, skr_float4_t& rotation)
+void GetGLTFNodeTransform(const cgltf_node* node, float3& translation, float3& scale, skr::float4& rotation)
 {
     if (node->has_translation)
     {
@@ -161,8 +162,7 @@ void GetGLTFNodeTransform(const cgltf_node* node, skr_float3_t& translation, skr
 void CookGLTFMeshData(const cgltf_data* gltf_data, MeshAsset* cfg, MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins)
 {
     skr::Vector<uint8_t> buffer0 = {};
-    skr::Vector<uint8_t> buffer1 = {};
-    skr_guid_t shuffle_layout_id = cfg->vertexType;
+    GUID shuffle_layout_id = cfg->vertexType;
     CGPUVertexLayout shuffle_layout = {};
     const char* shuffle_layout_name = nullptr;
     if (!shuffle_layout_id.is_zero())
@@ -173,7 +173,39 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, MeshAsset* cfg, MeshResource&
     // FIXME: select mesh to cook
     out_resource.name = gltf_data->meshes[0].name ? (const char8_t*)gltf_data->meshes[0].name : u8"";
     if (out_resource.name.is_empty()) out_resource.name = u8"gltfMesh";
-    // record primitvies
+    
+    // 1. extract raw meshes
+    skr::Map<uint32_t, SRawMesh> raw_meshes;
+    {
+        for (uint32_t i = 0; i < gltf_data->meshes_count; i++)
+            raw_meshes.try_add_default(i);
+        for (uint32_t i = 0; i < gltf_data->meshes_count; i++)
+            raw_meshes.add(i, std::move(GenerateRawMeshForGLTFMesh(&gltf_data->meshes[i])));
+    }
+    // 2. extract indices and vertices
+    skr::Vector<skr::Vector<MeshPrimitive>> primitive_arrays;
+    primitive_arrays.resize_default(gltf_data->nodes_count);
+    {
+        // 2.1 indices
+        for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
+        {
+            if (!gltf_data->nodes[i].mesh) continue;
+            auto mesh_index = cgltf_mesh_index(gltf_data, gltf_data->nodes[i].mesh);
+            auto& raw_mesh = raw_meshes.find(mesh_index).value();
+            auto& new_primitives = primitive_arrays[i]; 
+            EmplaceAllRawMeshIndices(&raw_mesh, buffer0, new_primitives);
+        }
+        // 2.2 vertices
+        for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
+        {
+            if (!gltf_data->nodes[i].mesh) continue;
+            auto mesh_index = cgltf_mesh_index(gltf_data, gltf_data->nodes[i].mesh);
+            auto& raw_mesh = raw_meshes.find(mesh_index).value();
+            auto& new_primitives = primitive_arrays[i]; 
+            EmplaceAllRawMeshVertices(&raw_mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, new_primitives);
+        }
+    }
+    // 3. record primitvies
     for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
     {
         const auto node_ = gltf_data->nodes + i;
@@ -182,21 +214,16 @@ void CookGLTFMeshData(const cgltf_data* gltf_data, MeshAsset* cfg, MeshResource&
         GetGLTFNodeTransform(node_, mesh_section.translation, mesh_section.scale, mesh_section.rotation);
         if (node_->mesh != nullptr)
         {
-            SRawMesh raw_mesh = GenerateRawMeshForGLTFMesh(node_->mesh);
-            skr::Vector<MeshPrimitive> new_primitives;
-            // record all indices
-            EmplaceAllRawMeshIndices(&raw_mesh, buffer0, new_primitives);
-            EmplaceAllRawMeshVertices(&raw_mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, new_primitives);
             for (uint32_t j = 0; j < node_->mesh->primitives_count; j++)
             {
                 const auto& gltf_prim = node_->mesh->primitives[j];
-                auto& prim = new_primitives[j];
+                auto& prim = primitive_arrays[i][j];
                 prim.vertex_layout = shuffle_layout_id;
                 prim.material_index = static_cast<uint32_t>(gltf_prim.material - gltf_data->materials);
                 mesh_section.primitive_indices.add(out_resource.primitives.size() + j);
             }
-            out_resource.primitives.reserve(out_resource.primitives.size() + new_primitives.size());
-            out_resource.primitives += new_primitives;
+            out_resource.primitives.reserve(out_resource.primitives.size() + primitive_arrays[i].size());
+            out_resource.primitives += primitive_arrays[i];
         }
     }
     {
@@ -216,7 +243,7 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, MeshAsset* cfg, Mes
     skr::Vector<uint8_t> buffer0 = {};
     skr::Vector<uint8_t> buffer1 = {};
 
-    skr_guid_t shuffle_layout_id = cfg->vertexType;
+    GUID shuffle_layout_id = cfg->vertexType;
     CGPUVertexLayout shuffle_layout = {};
     const char* shuffle_layout_name = nullptr;
     if (!shuffle_layout_id.is_zero())
@@ -227,7 +254,48 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, MeshAsset* cfg, Mes
     // FIXME: select mesh to cook
     out_resource.name = (const char8_t*)gltf_data->meshes[0].name;
     if (out_resource.name.is_empty()) out_resource.name = u8"gltfMesh";
-    // record primitvies
+
+    // 1. extract raw meshes
+    skr::Map<uint32_t, SRawMesh> raw_meshes;
+    {
+        for (uint32_t i = 0; i < gltf_data->meshes_count; i++)
+            raw_meshes.try_add_default(i);
+        for (uint32_t i = 0; i < gltf_data->meshes_count; i++)
+            raw_meshes.add(i, std::move(GenerateRawMeshForGLTFMesh(&gltf_data->meshes[i])));
+    }
+    // 2. extract indices and vertices
+    skr::Vector<skr::Vector<MeshPrimitive>> primitive_arrays;
+    primitive_arrays.resize_default(gltf_data->nodes_count);
+    {
+        // 2.1 indices
+        for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
+        {
+            if (!gltf_data->nodes[i].mesh) continue;
+            auto mesh_index = cgltf_mesh_index(gltf_data, gltf_data->nodes[i].mesh);
+            auto& raw_mesh = raw_meshes.find(mesh_index).value();
+            auto& new_primitives = primitive_arrays[i]; 
+            EmplaceAllRawMeshIndices(&raw_mesh, buffer0, new_primitives);
+        }
+        // 2.2 vertices
+        for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
+        {
+            if (!gltf_data->nodes[i].mesh) continue;
+            auto mesh_index = cgltf_mesh_index(gltf_data, gltf_data->nodes[i].mesh);
+            auto& raw_mesh = raw_meshes.find(mesh_index).value();
+            auto& new_primitives = primitive_arrays[i]; 
+            EmplaceStaticRawMeshVertices(&raw_mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, 0, new_primitives);
+        }
+        // 2.3 vertices
+        for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
+        {
+            if (!gltf_data->nodes[i].mesh) continue;
+            auto mesh_index = cgltf_mesh_index(gltf_data, gltf_data->nodes[i].mesh);
+            auto& raw_mesh = raw_meshes.find(mesh_index).value();
+            auto& new_primitives = primitive_arrays[i]; 
+            EmplaceSkinRawMeshVertices(&raw_mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer1, 1, new_primitives);
+        }
+    }
+    // 3. record primitvies
     for (uint32_t i = 0; i < gltf_data->nodes_count; i++)
     {
         const auto node_ = gltf_data->nodes + i;
@@ -236,23 +304,16 @@ void CookGLTFMeshData_SplitSkin(const cgltf_data* gltf_data, MeshAsset* cfg, Mes
         GetGLTFNodeTransform(node_, mesh_section.translation, mesh_section.scale, mesh_section.rotation);
         if (node_->mesh != nullptr)
         {
-            SRawMesh raw_mesh = GenerateRawMeshForGLTFMesh(node_->mesh);
-            skr::Vector<MeshPrimitive> new_primitives;
-            // record all indices
-            EmplaceAllRawMeshIndices(&raw_mesh, buffer0, new_primitives);
-            EmplaceStaticRawMeshVertices(&raw_mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer0, 0, new_primitives);
-            EmplaceSkinRawMeshVertices(&raw_mesh, shuffle_layout_name ? &shuffle_layout : nullptr, buffer1, 1, new_primitives);
-
             for (uint32_t j = 0; j < node_->mesh->primitives_count; j++)
             {
                 const auto& gltf_prim = node_->mesh->primitives[j];
-                auto& prim = new_primitives[j];
+                auto& prim = primitive_arrays[i][j];
                 prim.vertex_layout = shuffle_layout_id;
                 prim.material_index = static_cast<uint32_t>(gltf_prim.material - gltf_data->materials);
                 mesh_section.primitive_indices.add(out_resource.primitives.size() + j);
             }
-            out_resource.primitives.reserve(out_resource.primitives.size() + new_primitives.size());
-            out_resource.primitives += new_primitives;
+            out_resource.primitives.reserve(out_resource.primitives.size() + primitive_arrays[i].size());
+            out_resource.primitives += primitive_arrays[i];
         }
     }
     {

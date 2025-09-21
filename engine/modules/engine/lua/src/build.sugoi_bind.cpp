@@ -1,4 +1,4 @@
-#include "SkrRT/sugoi/array.hpp"
+#include "SkrRuntime/sugoi/array.hpp"
 
 extern "C" {
 #include "lua.h"
@@ -6,8 +6,8 @@ extern "C" {
 }
 #include "./stack.hpp"
 #include "./query.hpp"
-#include "SkrRT/sugoi/chunk.hpp"
-#include "SkrRT/sugoi/archetype.hpp"
+#include "SkrRuntime/sugoi/chunk.hpp"
+#include "SkrRuntime/sugoi/archetype.hpp"
 #include "./type_registry.hpp"
 
 namespace skr::lua

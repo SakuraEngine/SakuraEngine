@@ -136,12 +136,14 @@ void RendererDeviceImpl::initialize(const Builder& builder)
     device = cgpu_create_device(adapter, &device_desc);
     gfx_queue = cgpu_get_queue(device, CGPU_QUEUE_TYPE_GRAPHICS, 0);
 
+#if SKR_PLAT_WINDOWS
     // create default nsight tracker on nvidia devices
     if (cgpux_adapter_is_nvidia(adapter))
     {
         CGPUNSightTrackerDescriptor desc = {};
         nsight_tracker = cgpu_create_nsight_tracker(device, &desc);
     }
+#endif
 
     if (cpy_queue_count_) // request at least one copy queue by default
     {

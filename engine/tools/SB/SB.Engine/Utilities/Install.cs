@@ -7,12 +7,10 @@ namespace SB
     using BS = BuildSystem;
     public static class Install
     {
-        public static DependDatabase DownloadDepend = new DependDatabase(Engine.TempPath, "Engine.Downloads");
-        public static DependDatabase SDKDepend = new DependDatabase(Engine.TempPath, "Engine.SDKs." + Engine.GlobalConfiguration);
         public static async Task<string> Tool(string Name)
         {
-            var ToolDirectory = Path.Combine(Engine.ToolDirectory, Name);
-            await DownloadDepend.OnChanged("Install.Tool.Download", Name, "Install.Tools", async (Depend depend) =>
+            var ToolDirectory = Path.Combine(BuildDirs.ToolDir, Name);
+            await InstallDepends.Download.OnChanged("Install.Tools.Download", Name, "Install.Tools", async (Depend depend) =>
             {
                 var ZipFile = await Download.DownloadFile(Name + GetPlatPostfix());
 
@@ -38,9 +36,9 @@ namespace SB
 
         public static async Task SDK(string Name, Dictionary<string, string>? DirectoryMappings = null, bool PlatPostfix = true)
         {
-            var IntermediateDirectory = Path.Combine(Engine.DownloadDirectory, "SDKs", Name);
+            var IntermediateDirectory = Path.Combine(BuildDirs.DownloadDir, "SDKs", Name);
 
-            await DownloadDepend.OnChanged("Install.SDK.Download", Name, "Install.SDKs", async (Depend depend) =>
+            await InstallDepends.Download.OnChanged("Install.SDKs.Download", Name, "Install.SDKs", async (Depend depend) =>
             {
                 Directory.CreateDirectory(IntermediateDirectory);
                 var ZipFile = await Download.DownloadFile(PlatPostfix ? Name + GetPlatPostfix() : Name + ".zip");
@@ -61,8 +59,8 @@ namespace SB
             {
                 using (Profiler.BeginZone($"Install.SDKs | {Name} | Copy", color: (uint)Profiler.ColorType.Pink1))
                 {
-                    var BuildDirectory = Path.Combine(BS.BuildPath, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}");
-                    SDKDepend.OnChanged("Install.SDK.Copy", Name, "Install.SDKs", (Depend depend) =>
+                    var BuildDirectory = Path.Combine(BuildDirs.BuildDir, $"{BS.TargetOS}-{BS.TargetArch}-{BS.GlobalConfiguration}");
+                    InstallDepends.SDK.OnChanged("Install.SDK.Copy", Name, "Install.SDKs", (Depend depend) =>
                     {
                         Directory.CreateDirectory(BuildDirectory);
 
@@ -93,11 +91,11 @@ namespace SB
         {
             // Determine the final destination
             string finalDestination;
-            finalDestination = Path.IsPathFullyQualified(Destination) ? Destination : Path.Combine(BS.BuildPath, Destination);
+            finalDestination = Path.IsPathFullyQualified(Destination) ? Destination : Path.Combine(BuildDirs.BuildDir, Destination);
             finalDestination = Path.Combine(finalDestination, Name);
             
             // Use dependency system to track the copy operation
-            await SDKDepend.OnChanged("Install.File.Copy", Name, "Install.Files", async (Depend depend) =>
+            await InstallDepends.SDK.OnChanged("Install.File.Copy", Name, "Install.Files", async (Depend depend) =>
             {
                 // Download the file
                 var downloadedFile = await Download.DownloadFile(Name);
@@ -194,7 +192,8 @@ namespace SB
                 foreach (DirectoryInfo subdir in dirs)
                 {
                     string temppath = Path.Combine(destDirName, subdir.Name);
-                    DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+                    var subdirFiles = DirectoryCopy(subdir.FullName, temppath, copySubDirs);
+                    CopiedFiles.AddRange(subdirFiles);
                 }
             }
 

@@ -6,7 +6,7 @@
 #include <SkrCore/platform/vfs.h>
 #include <SkrCore/time.h>
 #include <SkrCore/async/thread_job.hpp>
-#include <SkrRT/io/vram_io.hpp>
+#include <SkrRuntime/io/vram_io.hpp>
 
 struct AnimSamplePlaybackModule : public skr::IDynamicModule
 {

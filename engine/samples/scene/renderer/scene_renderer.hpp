@@ -35,7 +35,7 @@ struct SCENE_RENDERER_API SceneRenderer
     virtual void initialize(skr::RenderDevice* render_device, skr::ecs::ECSWorld* storage, struct skr_vfs_t* resource_vfs) = 0;
     virtual void finalize(skr::RenderDevice* renderer) = 0;
 
-    virtual void draw_primitives(skr::render_graph::RenderGraph* render_graph, skr::span<skr_primitive_draw_t> drawcalls) = 0;
+    virtual void draw_primitives(skr::render_graph::RenderGraph* render_graph, skr::Span<skr_primitive_draw_t> drawcalls) = 0;
 
     virtual void set_camera(utils::Camera* camera) = 0;
     virtual utils::Camera* get_camera() const { return nullptr; }

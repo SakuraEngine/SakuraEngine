@@ -42,10 +42,10 @@ inline CGPUShaderLibraryId create_shader_library(skr::RenderDevice* render_devic
 
 struct Camera
 {
-    skr_float3_t pos = { 5.0f, 10.0f, -10.0f }; // camera position
-    skr_float3_t front = skr_float3_t::forward();    // camera front vector
-    skr_float3_t up = skr_float3_t::up();            // camera up vector
-    skr_float3_t right = skr_float3_t::right();      // camera right vector
+    skr::float3 pos = { 5.0f, 10.0f, -10.0f }; // camera position
+    skr::float3 front = skr::float3::forward();    // camera front vector
+    skr::float3 up = skr::float3::up();            // camera up vector
+    skr::float3 right = skr::float3::right();      // camera right vector
 
     float fov = 3.1415926f / 2.f; // fov_x
     float aspect = 1.0;           // aspect ratio

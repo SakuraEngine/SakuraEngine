@@ -1,13 +1,12 @@
 ﻿<Project>
-
-   <!-- This needs to be set before Sdk.props -->
+  <!-- This needs to be set before Sdk.props -->
   <PropertyGroup>
-    <BaseIntermediateOutputPath>.sb/SB/obj</BaseIntermediateOutputPath>
-    <BaseOutputPath>.sb/SB/bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>build/.sb/SB/obj</BaseIntermediateOutputPath>
+    <BaseOutputPath>build/.sb/SB/bin</BaseOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);build\**；.git\**;vscode\**;vs\**;idea\**;engine\tools\SB\**;engine\tools\.tools\**;agent_docs\**;**\node_modules\**</DefaultItemExcludes>
   </PropertyGroup>
 
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-	
+  <!-- Target configure -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
@@ -16,23 +15,40 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
+  <!-- SDKs -->
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-	
-	<ItemGroup>
-		<Compile Include="./**/**/build.cs" />
-		<Compile Remove="./engine/tools/SB/**/build.cs" />
-	</ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Remove="**" />
-    <EmbeddedResource Remove="**/**" />
-    <None Remove="**/**" />
-    <None Remove="**" />
-	<Compile Include="runbuild.cs" />
+    <!-- Engine modules -->
+    <Compile Include="engine/modules/**/build.cs" />
+
+    <!-- Engine packages -->
+    <Compile Include="engine/packages/**/build.cs" />
+
+    <!-- Engine samples -->
+    <Compile Include="engine/samples/**/build.cs" />
+
+    <!-- Engine tests -->
+    <Compile Include="engine/tests/**/build.cs" />
+
+    <!-- Engine tools, no scan, just enumerate files for better performance -->
+    <Compile Include="engine/tools/build.cs" />
+
+    <!-- D5 -->
+    <Compile Include="d5_render/**/build.cs" />
+    <Compile Include="d5_lite/**/build.cs" />
+
+    <!-- Include local_config.cs if it exists -->
+    <Compile Include="local_config.cs" Condition="Exists('local_config.cs')" />
+
+    <!-- Main -->
+    <Compile Include="engine/run_build.cs" />
   </ItemGroup>
 
+  <!-- SB Engine/Core -->
   <ItemGroup>
-	<ProjectReference Include="engine\tools\SB\SB.Engine\SB.Engine.csproj" />
+    <ProjectReference Include="engine\tools\SB\SB.Engine\SB.Engine.csproj" />
   </ItemGroup>
 
 </Project>

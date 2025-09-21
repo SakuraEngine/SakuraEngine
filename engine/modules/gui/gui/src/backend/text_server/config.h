@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/misc/hash.h"
-#include "SkrRT/config.h"
+#include "SkrRuntime/config.h"
 
 #include <SkrContainers/span.hpp>
 #include <SkrContainers/vector.hpp>

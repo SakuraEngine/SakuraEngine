@@ -97,11 +97,10 @@ namespace SB.Core
         private bool CheckDependency(ref CheckContext ctx, out Depend? OldDepend)
         {
             OldDepend = null;
-            using (var DB = CreateContext(ctx.TargetName))
             {
+                var DB = TLSDB.Value!;
                 var entity = DB.Depends.Find(ctx.TargetName + ctx.FileName + ctx.EmitterName);
                 OldDepend = FromEntity(entity);
-                DB.ChangeTracker.Clear(); // Ensure all tracked entities are detached
             }
             if (OldDepend is not null)
             {
@@ -188,23 +187,21 @@ namespace SB.Core
 
         private void UpdateDependency(string TargetName, Depend NewDepend, Depend? OldDepend, DependOptions opt)
         {
-            NewDepend.ExternalFileTimes = NewDepend.ExternalFiles.Select(x => GetFileLastWriteTime(CacheMode.Cache, x, opt)).ToList();
-            NewDepend.ExternalFileSHAs = NewDepend.ExternalFiles.Select(x => GetFileSHA(CacheMode.Cache, x, opt)).ToList();
+            NewDepend.ExternalFileTimes = NewDepend.ExternalFiles.Select(x => GetFileLastWriteTime(CacheMode.NoCache, x, opt)).ToList();
+            NewDepend.ExternalFileSHAs = NewDepend.ExternalFiles.Select(x => GetFileSHA(CacheMode.NoCache, x, opt)).ToList();
 
             TaskFingerprint Fingerprint = new TaskFingerprint { TargetName = TargetName, File = NewDepend.PrimaryKey, TaskName = "UpdateDependency" };
             TaskManager.Run(Fingerprint, async () =>
             {
                 using (Profiler.BeginZone($"WriteToDB", color: (uint)Profiler.ColorType.Gray))
                 {
-                    using (var DB = CreateContext(TargetName))
-                    {
-                        if (OldDepend is not null)
-                            DB.Depends.Update(ToEntity(NewDepend));
-                        else
-                            DB.Depends.Add(ToEntity(NewDepend));
+                    var DB = TLSDB.Value!;
+                    if (OldDepend is not null)
+                        DB.Depends.Update(ToEntity(NewDepend));
+                    else
+                        DB.Depends.Add(ToEntity(NewDepend));
 
-                        await DB.SaveChangesAsync();
-                    }
+                    await DB.SaveChangesAsync();
                     return true;
                 }
             }, TaskManager.IOQTS).GetAwaiter();
@@ -308,28 +305,22 @@ namespace SB.Core
 
             Factory = new(
                 new DbContextOptionsBuilder<DependContext>()
-                    .UseSqlite($"Data Source={DatabasePath};Mode=ReadWriteCreate;Cache=Shared")
+                    .UseSqlite($"Data Source={DatabasePath}")
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                     .Options
             );
+            TLSDB = new ThreadLocal<DependContext>(() => CreateContext());
 
             // Warm up the database and dispose immediately to avoid connection conflicts
             using (var warmUpContext = Factory.CreateDbContext())
             {
                 warmUpContext.Database.EnsureCreated();
-                // Enable WAL mode for better concurrency
-                warmUpContext.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL");
-                // Optimize SQLite for concurrent access
-                warmUpContext.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL");
-                warmUpContext.Database.ExecuteSqlRaw("PRAGMA temp_store=MEMORY");
-                warmUpContext.Database.ExecuteSqlRaw("PRAGMA mmap_size=30000000000");
-                warmUpContext.Database.ExecuteSqlRaw("PRAGMA busy_timeout=5000");
             }
         }
 
         public void ClearDatabase()
         {
-            using (var context = CreateContext(Name))
+            using (var context = CreateContext())
             {
                 // Remove all dependency entries
                 context.Depends.RemoveRange(context.Depends);
@@ -344,10 +335,11 @@ namespace SB.Core
             }
         }
 
-        private DependContext CreateContext(string TargetName) => Factory.CreateDbContext();
+        private DependContext CreateContext() => Factory.CreateDbContext();
         private string Name { get; init; } = "depend";
         private string DatabasePath { get; init; }
         private PooledDbContextFactory<DependContext> Factory;
+        private ThreadLocal<DependContext> TLSDB;
     }
 
     public struct Depend

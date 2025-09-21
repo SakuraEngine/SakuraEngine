@@ -8,7 +8,7 @@ public static class SkrCore
     static SkrCore()
     {
         Engine.AddSetup<SkrCoreSetup>();
-        
+
         var DependencyGraph = Engine.StaticComponent("SkrDependencyGraph", "SkrCore")
             .Exception(true) // DAG uses lemon which uses exceptions
             .OptimizationLevel(OptimizationLevel.Fastest)
@@ -16,24 +16,11 @@ public static class SkrCore
             .Require("lemon", new PackageConfig { Version = new Version(1, 3, 1) })
             .Depend(Visibility.Private, "lemon@lemon")
             .AddCppFiles("src/graph/build.*.cpp");
-        
-        var SkrString = Engine.StaticComponent("SkrString", "SkrCore")
-            .OptimizationLevel(OptimizationLevel.Fastest)
-            .Depend(Visibility.Public, "SkrBase")
-            .Defines(Visibility.Public, "OPEN_STRING_API=")
-            .AddCppFiles("src/string/build.*.cpp");
 
         var SkrSimpleAsync = Engine.StaticComponent("SkrSimpleAsync", "SkrCore")
             .OptimizationLevel(OptimizationLevel.Fastest)
             .Depend(Visibility.Public, "SkrBase")
             .AddCppFiles("src/async/build.*.cpp");
-
-        var SkrArchive = Engine.StaticComponent("SkrArchive", "SkrCore")
-            .OptimizationLevel(OptimizationLevel.Fastest)
-            .Depend(Visibility.Public, "SkrBase")
-            .Require("yyjson", new PackageConfig { Version = new Version(0, 9, 0) })
-            .Depend(Visibility.Private, "yyjson@yyjson")
-            .AddCppFiles("src/archive/build.*.cpp");
 
         var SkrCore = Engine.Module("SkrCore")
             .Require("MiMalloc", new PackageConfig { Version = new Version(3, 1, 5) })
@@ -41,7 +28,7 @@ public static class SkrCore
 
             .Depend(Visibility.Public, "SkrProfile")
             // TODO: STATIC COMPONENTS, JUST WORKAROUND NOW, WE NEED TO DEPEND THEM AUTOMATICALLY LATTER
-            .Depend(Visibility.Public, "SkrDependencyGraph", "SkrString", "SkrSimpleAsync", "SkrArchive")
+            .Depend(Visibility.Public, "SkrDependencyGraph", "SkrSimpleAsync")
             // END WORKAROUNDS
             .IncludeDirs(Visibility.Public, "include")
             .Defines(Visibility.Private, "SKR_MEMORY_IMPL")
@@ -50,6 +37,8 @@ public static class SkrCore
             .AddCppFiles("src/core/build.*.cpp")
             // RTTR Files
             .AddCppFiles("src/rttr/build.*.cpp")
+            .Require("yyjson", new PackageConfig { Version = new Version(0, 12, 0) })
+            .Depend(Visibility.Private, "yyjson@yyjson")
             // Codegen Files
             .AddMetaHeaders(
                 "include/SkrRTTR/iobject.hpp",

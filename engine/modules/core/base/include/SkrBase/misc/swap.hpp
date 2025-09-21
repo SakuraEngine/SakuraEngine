@@ -5,7 +5,8 @@
 namespace skr
 {
 template <typename T>
-struct Swap {
+struct Swap
+{
 };
 
 namespace concepts
@@ -32,7 +33,8 @@ concept HasSwap = requires(T a, T b) {
 } // namespace concepts
 
 template <concepts::NoStdSwapAndSwapble T>
-struct Swap<T> {
+struct Swap<T>
+{
     inline static void call(T& a, T& b)
     {
         T tmp = std::move(a);
@@ -42,7 +44,8 @@ struct Swap<T> {
 };
 
 template <concepts::HasStdSwap T>
-struct Swap<T> {
+struct Swap<T>
+{
     inline static void call(T& a, T& b)
     {
         std::swap(a, b);

@@ -7,7 +7,8 @@
 namespace skr::container
 {
 template <typename TBlock>
-struct BitRef {
+struct BitRef
+{
     static_assert(std::is_integral_v<TBlock> && !std::is_signed_v<TBlock>);
     using Algo = algo::BitAlgo<TBlock>;
 
@@ -58,9 +59,10 @@ private:
 };
 
 template <typename TBlock, typename TSize>
-struct BitDataRef {
+struct BitDataRef
+{
     BitRef<TBlock> data  = {};
-    TSize             index = npos_of<TSize>;
+    TSize          index = npos_of<TSize>;
 
     inline BitDataRef() = default;
     inline BitDataRef(TSize index)

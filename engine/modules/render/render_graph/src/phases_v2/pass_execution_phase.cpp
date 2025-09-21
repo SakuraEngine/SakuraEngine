@@ -387,6 +387,10 @@ void PassExecutionPhase::execute_compute_pass(RenderGraph* graph_, RenderGraphFr
     {
         cgpu_compute_encoder_bind_pipeline(pass_context.encoder, pass->pipeline);
     }
+    if (pass->ray_pipeline)
+    {
+        cgpu_compute_encoder_bind_ray_pipeline(pass_context.encoder, pass->ray_pipeline);
+    }
     if (pass_context.bind_table)
     {
         cgpux_compute_encoder_bind_bind_table(pass_context.encoder, pass_context.bind_table);
@@ -534,10 +538,13 @@ void PassExecutionPhase::insert_pass_barriers(RenderGraphFrameExecutor* executor
                     tex_barrier.texture = resource_allocation_phase_.get_resource((TextureNode*)barrier.resource);
                     tex_barrier.src_state = barrier.transition.before_state;
                     tex_barrier.dst_state = barrier.transition.after_state;
-                    tex_barrier.queue_acquire = barrier.source_queue;
-                    tex_barrier.queue_release = barrier.target_queue;
-                    tex_barrier.d3d12_begin_only = barrier.transition.is_begin;
-                    tex_barrier.d3d12_end_only = barrier.transition.is_end;
+                    tex_barrier.begin_only = barrier.transition.is_begin;
+                    tex_barrier.end_only = barrier.transition.is_end;
+                    
+                    tex_barrier.subresource_barrier = barrier.transition.is_subresource;
+                    tex_barrier.mip_level = barrier.transition.mip_level;
+                    tex_barrier.array_layer = barrier.transition.array_level;
+
                     texture_barriers.add(tex_barrier);
                 }
                 else if (resource_type == EObjectType::Buffer)
@@ -546,10 +553,8 @@ void PassExecutionPhase::insert_pass_barriers(RenderGraphFrameExecutor* executor
                     buf_barrier.buffer = resource_allocation_phase_.get_resource((BufferNode*)barrier.resource);
                     buf_barrier.src_state = barrier.transition.before_state;
                     buf_barrier.dst_state = barrier.transition.after_state;
-                    buf_barrier.queue_acquire = barrier.source_queue;
-                    buf_barrier.queue_release = barrier.target_queue;
-                    buf_barrier.d3d12_begin_only = barrier.transition.is_begin;
-                    buf_barrier.d3d12_end_only = barrier.transition.is_end;
+                    buf_barrier.begin_only = barrier.transition.is_begin;
+                    buf_barrier.end_only = barrier.transition.is_end;
                     buffer_barriers.add(buf_barrier);
                 }
             }

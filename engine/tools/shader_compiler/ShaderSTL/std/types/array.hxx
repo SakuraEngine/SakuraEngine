@@ -34,7 +34,7 @@ struct [[builtin("array")]] Array
     {
         for (size_type i = 0; i < N; ++i)
         {
-            v[i] = u;
+            operator[](i) = u;
         }
     }
 

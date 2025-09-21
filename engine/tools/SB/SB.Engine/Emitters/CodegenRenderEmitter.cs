@@ -58,7 +58,7 @@ namespace SB
             if (MetaAttribute.AllGeneratedMetaFiles is not null)
                 DependFiles.AddRange(MetaAttribute.AllGeneratedMetaFiles);
             // Execute
-            bool Changed = Engine.CodegenDepend.OnChanged(Target.Name, "", this.Name, (Depend depend) => {
+            bool Changed = EngineDepends.Codegen.OnChanged(Target.Name, "", this.Name, (Depend depend) => {
                 Directory.Delete(CodegenDirectory, true);
                 Directory.CreateDirectory(CodegenDirectory);
 
@@ -86,7 +86,7 @@ namespace SB
         private static ModuleAttribute? GetModAttr(string TargetName) => BS.GetTarget(TargetName)?.GetAttribute<ModuleAttribute>();
 
         // TODO: INSTALL DIRECTORY
-        private static string GenerateScript = Path.Combine(Engine.EngineDirectory, "engine/tools/meta_codegen_ts/codegen.ts");
+        private static string GenerateScript = Path.Combine(BuildDirs.EngineDir, "engine/tools/meta_codegen_ts/codegen.ts");
         private IToolchain Toolchain { get; }
         public static volatile int Time = 0;
     }
@@ -115,7 +115,7 @@ namespace SB
 
     public static partial class TargetExtensions
     {
-        public static string GetCodegenDirectory(this Target @this) => Path.Combine(@this.GetStorePath(BuildSystem.GeneratedSourceStore), $"codegen/{@this.Name}");
+        public static string GetCodegenDirectory(this Target @this) => Path.Combine(@this.GetBuildGenDir(), $"codegen/{@this.Name}");
     }
 
     public class CodegenSetup : ISetup
@@ -128,7 +128,7 @@ namespace SB
 
             ProcessOptions Options = new ProcessOptions
             {
-                WorkingDirectory = Path.Combine(Engine.EngineDirectory, "engine/tools/meta_codegen_ts"),
+                WorkingDirectory = Path.Combine(BuildDirs.EngineDir, "engine/tools/meta_codegen_ts"),
                 EnableTimeout = true,
                 TimeoutMilliseconds = 30 * 60 * 1000 // 30 minutes
             };
@@ -138,7 +138,7 @@ namespace SB
                 throw new Exception($"bun install failed in meta_codegen_ts: {Error}");
             }
 
-            Options.WorkingDirectory = Path.Combine(Engine.EngineDirectory, "engine/tools/merge_natvis_ts");
+            Options.WorkingDirectory = Path.Combine(BuildDirs.EngineDir, "engine/tools/merge_natvis_ts");
             if (BuildSystem.RunProcess(EXE, $"install", out var Output2, out var Error2, Options) != 0)
             {
                 Log.Fatal("bun install failed!\n{Output2}\n{Error2}", Output2, Error2);

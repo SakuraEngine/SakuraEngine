@@ -2,14 +2,13 @@
 #include "SkrGui/framework/key.hpp"
 #include "SkrGui/framework/widget_misc.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/widget/widget.generated.h"
-#endif
+#include "SkrGui/framework/widget/widget.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "8cc86bf9-a351-4093-9bd4-f54789e72b10")
-SKR_GUI_API Widget : virtual public skr::IObject {
+struct [[sattr(guid = "8cc86bf9-a351-4093-9bd4-f54789e72b10"
+)]] SKR_GUI_API Widget : virtual public skr::IObject
+{
     SKR_GENERATE_BODY(Widget)
 
     // build callback

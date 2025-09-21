@@ -1,8 +1,8 @@
 #pragma once
-#include "SkrRT/sugoi/array.hpp"
-#include "SkrRT/sugoi/type_registry.hpp"
-#include "SkrRT/sugoi/archetype.hpp"
-#include "SkrRT/sugoi/chunk.hpp"
+#include "SkrRuntime/sugoi/array.hpp"
+#include "SkrRuntime/sugoi/type_registry.hpp"
+#include "SkrRuntime/sugoi/archetype.hpp"
+#include "SkrRuntime/sugoi/chunk.hpp"
 
 #include "chunk_view.hpp"
 #include <type_traits>

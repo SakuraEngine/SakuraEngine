@@ -13,7 +13,8 @@ SKR_INLINE void intro_sort(T begin, T end, TP&& p = {})
     using Swapper = Swap<std::decay_t<decltype(*begin)>>;
 
     // simulate stack
-    struct Stack {
+    struct Stack
+    {
         T      min;
         T      max;
         size_t max_depth;

@@ -20,7 +20,7 @@ struct RootConstants
     bool use_base_color_texture;
 };
 
-[[group(0)]] Texture2D<float> color_texture;
+[[group(0)]] Texture2D color_texture;
 [[group(1)]] SamplerState color_sampler;
 
 [[push_constant]]

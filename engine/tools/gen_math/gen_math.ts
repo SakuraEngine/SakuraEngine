@@ -36,6 +36,13 @@ traits_builder.$line(`#include "./gen_math.hpp"`)
 traits_builder.$line(`namespace skr {`)
 traits_builder.$line(`inline namespace math {`)
 
+// memory traits builder
+const memory_traits_builder = new CodeBuilder();
+memory_traits_builder.$util_header();
+memory_traits_builder.$line(`#include <SkrBase/memory/memory_traits.hpp>`)
+memory_traits_builder.$line(`#include "./gen_math.hpp"`)
+memory_traits_builder.$line(`namespace skr::memory {`)
+
 // generate vector types
 gen_vector.gen(
   {
@@ -43,6 +50,7 @@ gen_vector.gen(
     c_decl_cpp_builder,
     c_decl_c_builder,
     traits_builder,
+    memory_traits_builder
   },
   path.join(gen_dir, "vec")
 )
@@ -54,6 +62,7 @@ gen_matrix.gen(
     c_decl_cpp_builder,
     c_decl_c_builder,
     traits_builder,
+    memory_traits_builder
   },
   path.join(gen_dir, "mat")
 )
@@ -65,6 +74,7 @@ gen_math_func.gen(
     c_decl_cpp_builder,
     c_decl_c_builder,
     traits_builder,
+    memory_traits_builder
   },
   path.join(gen_dir, "math")
 )
@@ -76,6 +86,7 @@ gen_misc_types.gen(
     c_decl_cpp_builder,
     c_decl_c_builder,
     traits_builder,
+    memory_traits_builder
   },
   path.join(gen_dir, "misc")
 )
@@ -97,6 +108,11 @@ traits_builder.$line("}");
 traits_builder.$line("}");
 const traits_out_path = path.join(gen_dir, "gen_math_traits.hpp");
 traits_builder.write_file(traits_out_path);
+
+// write memory traits
+memory_traits_builder.$line("}");
+const memory_traits_out_path = path.join(gen_dir, "gen_math_memory_traits.hpp");
+memory_traits_builder.write_file(memory_traits_out_path);
 
 // full include builder
 const full_inc_builder = new CodeBuilder();

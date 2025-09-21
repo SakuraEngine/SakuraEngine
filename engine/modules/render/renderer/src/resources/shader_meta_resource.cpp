@@ -7,7 +7,7 @@ namespace skr
 {
 using namespace skr;
 
-bool ShaderOptionsResource::flatten_options(skr::Vector<ShaderOptionTemplate>& dst, skr::span<ShaderOptionsResource*> srcs) SKR_NOEXCEPT
+bool ShaderOptionsResource::flatten_options(skr::Vector<ShaderOptionTemplate>& dst, skr::Span<ShaderOptionsResource*> srcs) SKR_NOEXCEPT
 {
     skr::Set<skr::String>                                                               keys;
     skr::FlatHashMap<skr::String, ShaderOptionTemplate, skr::Hash<skr::String>> kvs;
@@ -38,7 +38,7 @@ bool ShaderOptionsResource::flatten_options(skr::Vector<ShaderOptionTemplate>& d
     return true;
 }
 
-StableShaderHash ShaderOptionInstance::calculate_stable_hash(skr::span<ShaderOptionInstance> ordered_options)
+StableShaderHash ShaderOptionInstance::calculate_stable_hash(skr::Span<ShaderOptionInstance> ordered_options)
 {
     skr::String signatureString;
     option_utils::stringfy(signatureString, ordered_options);
@@ -54,7 +54,7 @@ struct SKR_RENDERER_API ShaderOptionsFactoryImpl : public ShaderOptionsFactory {
     ~ShaderOptionsFactoryImpl() noexcept = default;
 
     bool       AsyncIO() override { return false; }
-    skr_guid_t GetResourceType() override
+    GUID GetResourceType() override
     {
         const auto collection_type = ::skr::type_id_of<ShaderOptionsResource>();
         return collection_type;

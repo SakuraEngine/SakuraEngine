@@ -5,9 +5,10 @@
 namespace skr
 {
 template <class... Ts>
-using variant = skr::container::variant<Ts...>;
+using variant [[sfinal_alias]] = skr::container::variant<Ts...>;
 template <class... Ts>
-struct overload : Ts... {
+struct overload : Ts...
+{
     using Ts::operator()...;
 };
 template <class... Ts>

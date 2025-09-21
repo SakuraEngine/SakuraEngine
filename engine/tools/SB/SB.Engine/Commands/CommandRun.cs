@@ -10,6 +10,8 @@ namespace SB;
 
 public class RunCommand : CommandBase
 {
+    override protected bool DumpCounters => false;
+
     [Cli.RegisterCmd(Name = "run", ShortName = 'r', Help = "Build and run target", Usage = "SB run <target> [args...]\nSB r <target> [args...]")]
     public static object RegisterCommand() => new RunCommand();
 
@@ -24,14 +26,27 @@ public class RunCommand : CommandBase
         var target = BS.GetTarget(targetName);
         if (target == null)
         {
-            Log.Error("Target {Target} not found", targetName);
+            // collect candidate targets
+            var candidates = BS.AllTargets.Values
+                .Select(t => t.Name)
+                .Where(n => n.Contains(targetName, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(n => n)
+                .ToList();
+
+            // join candidates by "\n  -"
+            if (candidates.Count > 0)
+            {
+                var candidateList = string.Join("\n  - ", candidates);
+                Log.Error("Target {Target} not found. Similar targets:\n  - {Candidates}", targetName, candidateList);
+            }
+            else
+            {
+                Log.Error("Target {Target} not found.", targetName);
+            }
+
+
             return -1;
         }
-        // if (target.GetTargetType() != TargetType.Executable)
-        // {
-        //     Log.Error("Target {Target} is not an executable, but {TargetType}", targetName, target.GetTargetType());
-        //     return -1;
-        // }
 
         // build target
         Engine.AddCodegenEmitters(Toolchain);
@@ -89,7 +104,9 @@ public class RunCommand : CommandBase
             P.OutputDataReceived += (sender, e) => { if (e.Data is not null) Console.WriteLine(e.Data); };
             P.ErrorDataReceived += (sender, e) => { if (e.Data is not null) Console.Error.WriteLine(e.Data); };
 
-            Console.WriteLine($"=================>Running {exePath} {exeArgs}");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\nRunning {exePath} {exeArgs}:\n");
+            Console.ResetColor();
 
             // start up
             P.Start();
@@ -100,7 +117,9 @@ public class RunCommand : CommandBase
             // 需要在 WaitForExit(timeout) 返回 true 后，再调用无参数的 WaitForExit() 来确保所有异步读取操作完成：
             P.WaitForExit();
 
-            Console.WriteLine($"=================>Process exited with code {P.ExitCode}");
+            Console.ForegroundColor = P.ExitCode == 0 ? ConsoleColor.Green : ConsoleColor.Red;
+            Console.WriteLine($"\nProcess exited with code {P.ExitCode}");
+            Console.ResetColor();
 
             return P.ExitCode;
         }

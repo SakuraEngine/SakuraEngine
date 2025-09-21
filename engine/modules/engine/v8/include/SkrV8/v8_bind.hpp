@@ -10,18 +10,20 @@
 
 namespace skr
 {
-struct V8MethodMatchResult {
-    bool    matched     = false;
+struct V8MethodMatchResult
+{
+    bool matched = false;
     int32_t match_score = 0;
 };
-struct V8Bind {
+struct V8Bind
+{
     // primitive to v8
-    static v8::Local<v8::Value>  to_v8(int32_t v);
-    static v8::Local<v8::Value>  to_v8(int64_t v);
-    static v8::Local<v8::Value>  to_v8(uint32_t v);
-    static v8::Local<v8::Value>  to_v8(uint64_t v);
-    static v8::Local<v8::Value>  to_v8(double v);
-    static v8::Local<v8::Value>  to_v8(bool v);
+    static v8::Local<v8::Value> to_v8(int32_t v);
+    static v8::Local<v8::Value> to_v8(int64_t v);
+    static v8::Local<v8::Value> to_v8(uint32_t v);
+    static v8::Local<v8::Value> to_v8(uint64_t v);
+    static v8::Local<v8::Value> to_v8(double v);
+    static v8::Local<v8::Value> to_v8(bool v);
     static v8::Local<v8::String> to_v8(StringView view, bool as_literal = false);
 
     // primitive to native

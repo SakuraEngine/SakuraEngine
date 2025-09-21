@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrBase/atomic/atomic_mutex.hpp"
-#include "SkrRT/sugoi/query.hpp"
+#include "SkrRuntime/sugoi/query.hpp"
 #include "SkrContainers/hashmap.hpp"
 
 namespace sugoi
@@ -8,7 +8,7 @@ namespace sugoi
 struct phase_entry {
     sugoi_type_index_t type;
     uint32_t phase;
-    skr::span<sugoi_query_t*> queries;
+    skr::Span<sugoi_query_t*> queries;
     skr::FlatHashMap<sugoi_group_t*, sugoi_query_t*> include;
 };
 skr::String& get_error();

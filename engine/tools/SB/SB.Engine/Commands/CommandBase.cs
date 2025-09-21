@@ -1,9 +1,7 @@
-using SB;
 using SB.Core;
 using Serilog;
 using Serilog.Events;
 using System.Diagnostics;
-using Cli = SB.Cli;
 
 namespace SB;
 
@@ -13,7 +11,7 @@ public abstract class CommandBase
     public bool Verbose { get; set; } = false;
 
     [Cli.Option(Name = "mode", ShortName = 'm', Help = "Build mode", IsRequired = false)]
-    public string Mode { get; set; } = "debug";
+    public string Mode { get; set; } = Engine.DefaultMode;
     [Cli.OptionSelectionProvider("mode")]
     public static IEnumerable<string> ModeSelections()
     {
@@ -28,7 +26,7 @@ public abstract class CommandBase
     public string CategoryString { get; set; } = "all";
 
     [Cli.Option(Name = "toolchain", Help = "Toolchain to use", IsRequired = false, Selections = ["msvc", "clang-cl", "clang"])]
-    public string ToolchainName { get; set; } = OperatingSystem.IsWindows() ? "clang-cl" : "clang";
+    public string ToolchainName { get; set; } = Engine.DefaultToolchain;
 
     [Cli.Option(Name = "proxy", Help = "Set HTTP proxy for downloads")]
     public string Proxy { get; set; } = "";
@@ -38,15 +36,13 @@ public abstract class CommandBase
     {
         Stopwatch timer = Stopwatch.StartNew();
 
-        // Use global verbose setting if available
-        LogEventLevel LogLevel = LogEventLevel.Information;
-        if (Verbose)
-        {
-            LogLevel = LogEventLevel.Verbose;
-        }
-        Engine.InitializeLogger(LogLevel);
+        // setup log level
+        Engine.InitializeLogger(Verbose ? LogEventLevel.Verbose : LogEventLevel.Information);
 
-        // set proxy
+        // notify prepare commandline stage for some basic setup
+        BuildStage.UpdateStage(EBuildStage.PrepareCommandline);
+
+        // setup proxy
         if (!string.IsNullOrEmpty(Proxy))
         {
             Log.Information("Setting HTTP proxy to {Proxy}", Proxy);
@@ -54,8 +50,7 @@ public abstract class CommandBase
         }
 
         // use sha to check file dependency instead of using last write time 
-        if (UseShaDepend)
-            Depend.DefaultUseSHAInsteadOfDateTime = true;
+        Depend.DefaultUseSHAInsteadOfDateTime = UseShaDepend;
 
         // Set compiler
         if (ToolchainName == "clang-cl")
@@ -69,42 +64,52 @@ public abstract class CommandBase
 
         // Set configuration based on mode
         BuildSystem.GlobalConfiguration = Mode.ToLower();
-        if (Mode.ToLower() != "debug" && Mode.ToLower() != "release")
-        {
-            Log.Warning($"Unknown build mode '{Mode}', defaulting to debug");
-            BuildSystem.GlobalConfiguration = "debug";
-        }
         Log.Information("Build start with configuration: {Configuration}", BuildSystem.GlobalConfiguration);
+        BuildStage.UpdateStage(EBuildStage.SetupConfigure);
 
         // Set categories
-        if (CategoryString == "modules")
-            Categories |= TargetCategory.Runtime | TargetCategory.DevTime;
-        if (CategoryString == "tools")
-            Categories |= TargetCategory.Tool;
-        if (CategoryString == "all")
-            Categories |= TargetCategory.Tool | TargetCategory.Runtime | TargetCategory.DevTime;
+        Categories |= CategoryString switch
+        {
+            "modules" => TargetCategory.Runtime | TargetCategory.DevTime,
+            "tools" => TargetCategory.Tool,
+            "all" => TargetCategory.Tool | TargetCategory.Runtime | TargetCategory.DevTime,
+            _ => throw new ArgumentException($"Invalid category: {CategoryString}"),
+        };
         Log.Information("Build start with categories: {Categories}", Categories);
 
         // Bootstrap engine
         _toolchain = Engine.Bootstrap(Categories);
 
-        // run subcmd exec
-        var returnCode = OnExecute();
+        // run custom exec
+        var returnCode = OnExecuteAsync().GetAwaiter().GetResult();
 
         // stop and dump counters
         timer.Stop();
-        Log.Information($"Total: {timer.ElapsedMilliseconds / 1000.0f}s");
-        Log.Information($"Execution Total: {timer.ElapsedMilliseconds / 1000.0f}s");
-        Log.Information($"Compile Commands Total: {CompileCommandsEmitter.Time / 1000.0f}s");
-        Log.Information($"Compile Total: {CppCompileEmitter.Time / 1000.0f}s");
-        Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
+        if (DumpCounters)
+        {
+            Log.Information($"Total: {timer.ElapsedMilliseconds / 1000.0f}s");
+            Log.Information($"Execution Total: {timer.ElapsedMilliseconds / 1000.0f}s");
+            Log.Information($"Compile Commands Total: {CompileCommandsEmitter.Time / 1000.0f}s");
+            Log.Information($"Compile Total: {CppCompileEmitter.Time / 1000.0f}s");
+            Log.Information($"Link Total: {CppLinkEmitter.Time / 1000.0f}s");
+        }
+
         Log.CloseAndFlush();
 
         return returnCode;
     }
 
-    public abstract int OnExecute();
+    public virtual Task<int> OnExecuteAsync()
+    {
+        return Task.FromResult(OnExecute());
+    }
+
+    public virtual int OnExecute()
+    {
+        return 0;
+    }
     public IToolchain Toolchain => _toolchain!;
     private IToolchain? _toolchain;
     protected TargetCategory Categories = TargetCategory.Package;
+    protected virtual bool DumpCounters => true;
 }

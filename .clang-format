@@ -1,63 +1,117 @@
+# tab settings
 UseTab: Never
 TabWidth: 4
-AccessModifierOffset: -4
+
+# indent settings
 IndentWidth: 4
 ObjCBlockIndentWidth: 4
-ContinuationIndentWidth: 4
+AccessModifierOffset: -4 # public: private: protected: indent
+ContinuationIndentWidth: 4 # 行延长缩进
 MaxEmptyLinesToKeep: 1
+IndentCaseLabels: false
+IndentExternBlock: NoIndent # extern "c" indent
 
+# allow `if (a) xxx;` AND `if (a) { xxx }``
 AllowShortIfStatementsOnASingleLine: true
 AllowShortBlocksOnASingleLine: true
 
+# align settings
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
 AlignTrailingComments: true
+AlignAfterOpenBracket: BlockIndent
+AlignOperands: DontAlign
+AlignEscapedNewlinesLeft: true
+
+# space settings
 SpacesBeforeTrailingComments: 1
 SpacesInSquareBrackets: false
-IndentCaseLabels: false
-SpaceBeforeAssignmentOperators: true
-
-# 关键设置：正常代码使用固定缩进，宏内部特殊处理
-AlignAfterOpenBracket: DontAlign
-AlignOperands: DontAlign
-BinPackArguments: false
-BinPackParameters: false
-
-BreakConstructorInitializersBeforeComma: true
 SpaceAfterCStyleCast: false
 SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyParentheses: false
+SpaceBeforeAssignmentOperators: true
+
+# break settings
+BreakConstructorInitializers: BeforeComma # 多行构造初始化列表样式
+BreakInheritanceList: BeforeComma # 多行继承样式
+
+# sort settings
 SortUsingDeclarations: false
 
+# disable column limit, prefer control it manually
 ColumnLimit: 0
+
+# int*, int&
 PointerAlignment: Left
 ReferenceAlignment: Left
-AllowAllParametersOfDeclarationOnNextLine: true
-AlignEscapedNewlinesLeft: true
 
+# allow multi line params like
+# int func(
+#   int a,
+#   int b,
+#   int c
+# )
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# multiline binary expr syntax, our style:
+# a && b ||
+# c && d
 BreakBeforeBinaryOperators: None
+
+# multiline cond ? a : b, our style:
+# cond ?
+#   a :
+#   b
 BreakBeforeTernaryOperators: false
 
+# can we write params in single line, our style:
+# func(
+#   xxxx, xxx,
+#   xxxxx
+#   xxxxx
+# )
+BinPackArguments: true
+BinPackParameters: BinPack
+
+# do not control #if xxx, let user control it
 IndentPPDirectives: BeforeHash
 
+# brace break
 BreakBeforeBraces: Custom
 BraceWrapping:
+  # type & namespace
   AfterClass: true
   AfterStruct: true
   AfterEnum: true
   AfterNamespace: true
   AfterUnion: true
-  AfterFunction: true
+  # if while for...
+  AfterControlStatement: true
   BeforeElse: true
+  BeforeWhile: true
+  # function
+  AfterFunction: true
+  # lambda
+  BeforeLambdaBody: false
   IndentBraces: false
   AfterExternBlock: false
-  AfterControlStatement: true
+
+# func({ 1, 2, 3 })
 Cpp11BracedListStyle: false
 
+# try to keep require in single line
 RequiresClausePosition: SingleLine
 
-# 宏特殊处理
+# keep attribute itself
+BreakAfterAttributes: Leave
+
+# do not sort includes
+SortIncludes: false
+
+#======================== marco process
+
+# marcos treat as attribute
 AttributeMacros:
   - "SUGOI_UNLIKELY"
   - "SUGOI_FORCEINLINE"
@@ -65,33 +119,64 @@ AttributeMacros:
   - "SKR_ALIGNAS"
 
 WhitespaceSensitiveMacros:
-  - "spush_attr"
-  - "spop_attr"
-  - "sreflect_enum"
-  - "sreflect_struct"
-  - "sreflect_enum_class"
-  - "sreflect_interface"
-  - "sreflect_function"
-
-# 告诉 clang-format 这些宏是语句宏
-StatementMacros:
   - "sattr"
-  - "sreflect_struct"
-  - "sreflect_enum"
-  - "sreflect_enum_class"
-  - "sreflect_interface"
-  - "sreflect_function"
-  - "sreflect_managed_component"
+  # using flag
+  - sfinal_alias
+  # param flag
+  - sparam_in
+  - sparam_out
+  - sparam_inout
+  # rttr api
+  - "srttr_flag"
+  - "srttr_attr"
+  # script api
+  - sscript_visible
+  - sscript_newable
+  - sscript_mapping
+  - sscript_mixin
+  - sscript_getter
+  - sscript_setter
 
-ForEachMacros: ["forloop"]
+Macros:
+  # using flag
+  - sfinal_alias=clang::annotate("")
 
-BreakAfterAttributes: Leave
-IndentExternBlock: NoIndent
+  # param flags
+  - sparam_in=clang::annotate("")
+  - sparam_out=clang::annotate("")
+  - sparam_inout=clang::annotate("")
 
-# 特殊处理：不要重新格式化宏块
-ReflowComments: false
+  # script api
+  - sscript_visible=clang::annotate("")
+  - sscript_newable=clang::annotate("")
+  - sscript_mapping=clang::annotate("")
+  - sscript_mixin=clang::annotate("")
+  - sscript_getter(x)=clang::annotate("")
+  - sscript_setter(x)=clang::annotate("")
 
-# 保持原有的换行
-KeepEmptyLinesAtTheStartOfBlocks: true
+  # attr
+  - sattr(x)=clang::annotate("")
+  - sattr(x,y)=clang::annotate("")
+  - sattr(x,y,z)=clang::annotate("")
+  - sattr(x,y,z,w)=clang::annotate("")
+  - sattr(x,y,z,w,a)=clang::annotate("")
+  - sattr(x,y,z,w,a,b)=clang::annotate("")
+  - sattr(x,y,z,w,a,b,c)=clang::annotate("")
+  - sattr(x,y,z,w,a,b,c,d)=clang::annotate("")
+  - sattr(x,y,z,w,a,b,c,d,e)=clang::annotate("")
 
-SortIncludes: false
+  # srttr_flag
+  - srttr_flag(x)=clang::annotate("")
+  # srttr_attr
+  - srttr_attr(x)=clang::annotate("")
+  - srttr_attr(x,y)=clang::annotate("")
+  - srttr_attr(x,y,z)=clang::annotate("")
+  - srttr_attr(x,y,z,w)=clang::annotate("")
+  - srttr_attr(x,y,z,w,a)=clang::annotate("")
+  - srttr_attr(x,y,z,w,a,b)=clang::annotate("")
+  - srttr_attr(x,y,z,w,a,b,c)=clang::annotate("")
+  - srttr_attr(x,y,z,w,a,b,c,d)=clang::annotate("")
+  - srttr_attr(x,y,z,w,a,b,c,d,e)=clang::annotate("")
+
+ForEachMacros:
+  - "forloop"

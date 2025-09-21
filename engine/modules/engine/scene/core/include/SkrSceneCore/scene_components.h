@@ -1,11 +1,9 @@
 #pragma once
 // The Scene ECS Components Definitions
-#include "SkrRT/ecs/component.hpp"
+#include "SkrRuntime/ecs/component.hpp"
 #include "SkrBase/math.h"
 
-#ifndef __meta__
-    #include "SkrSceneCore/scene_components.generated.h" // IWYU pragma: export
-#endif
+#include "SkrSceneCore/scene_components.generated.h" // IWYU pragma: export
 
 #ifndef SKR_SCENE_MAX_NAME_LENGTH
     #define SKR_SCENE_MAX_NAME_LENGTH 32
@@ -35,21 +33,13 @@ using Transform = skr_transform_f_t;
 #endif
 using Rotator = skr::RotatorF;
 
-sreflect_struct(
-    guid = "01981176-1f33-777f-b448-10ddaf1d03e2";
-    ecs.comp = @enable;)
-IndexComponent
-{
-    uint32_t value;
-};
-
 // transforms
 
-sreflect_struct(
+struct [[sattr(
     guid = "01981176-5d6c-777a-8b33-feb16c1de2b6";
-    serde = @bin | @json;
-    ecs.comp = @enable;)
-RotationComponent
+    serde = @enable;
+    ecs.comp = @enable;
+)]] RotationComponent
 {
 public:
     SKR_GENERATE_BODY(RotationComponent)
@@ -83,15 +73,17 @@ private:
     friend struct TransformFromRootJob;
     friend class ::skr::TransformSystem;
     Rotator euler;
+
+    [[sattr(serde = @disable)]]
     mutable bool dirty;
 };
 static_assert(sizeof(RotationComponent) <= sizeof(float) * 4, "RotationComponent size mismatch!");
 
-sreflect_struct(
+struct [[sattr(
     guid = "01981176-7361-72ca-a0c5-5b539d1764e1";
-    serde = @bin | @json;
-    ecs.comp = @enable;)
-SKR_ALIGNAS(16) PositionComponent
+    serde = @enable
+    ecs.comp = @enable;
+)]] SKR_ALIGNAS(16) PositionComponent
 {
 public:
     SKR_GENERATE_BODY(PositionComponent)
@@ -125,14 +117,16 @@ private:
     friend struct TransformFromRootJob;
     friend class ::skr::TransformSystem;
     Position value;
+
+    [[sattr(serde = @disable)]]
     mutable bool dirty;
 };
 static_assert(sizeof(PositionComponent) <= sizeof(PositionElement) * 4, "PositionComponent size mismatch!");
 
-sreflect_struct(
+struct [[sattr(
     guid = "01981176-8537-72d1-88a4-e459116c0717";
-    serde = @bin | @json;
-    ecs.comp = @enable;)
+    serde = @enable
+    ecs.comp = @enable;)]]
 SKR_ALIGNAS(16) ScaleComponent
 {
 public:
@@ -177,16 +171,21 @@ private:
     friend struct TransformFromRootJob;
     friend class ::skr::TransformSystem;
     skr::float3 value;
+
+    [[sattr(serde = @disable)]]
     mutable bool dirty;
 };
 static_assert(sizeof(ScaleComponent) <= sizeof(float) * 4, "ScaleComponent size mismatch!");
 
-sreflect_struct(
+struct [[sattr(
     guid = "01981176-4865-779f-9e5d-ebaf834fc004";
-    ecs.comp = @enable;)
-SKR_ALIGNAS(16) TransformComponent
+    serde = @enable
+    ecs.comp = @enable;
+)]] SKR_ALIGNAS(16) TransformComponent
 {
 public:
+    SKR_GENERATE_BODY(TransformComponent)
+
     inline TransformComponent(Position position, QuatF rotation, float3 scale)
     {
         set(position, rotation, scale);
@@ -204,28 +203,29 @@ private:
     Transform value;
 };
 
-sreflect_struct(
+struct [[sattr(
     guid = "01981176-b891-77ed-aafb-05019c8340d0";
-    ecs.comp = @enable;)
-CameraComponent
+    serde = @enable
+    ecs.comp = @enable;
+)]] CameraComponent
 {
     uint32_t viewport_id;
     uint32_t viewport_width;
     uint32_t viewport_height;
 };
 
-sreflect_struct(
+struct [[sattr(
     guid = "01981177-1059-7687-8b72-50788033fdd4";
-    ecs.comp = @enable;)
-ParentComponent
+    ecs.comp = @enable;
+)]] ParentComponent
 {
     skr::ecs::Entity entity;
 };
 
-sreflect_struct(
+struct [[sattr(
     guid = "01981176-f870-738b-8cac-5e3d87ba37b5";
-    ecs.comp.array = 4;)
-ChildrenComponent
+    ecs.comp.array = 4;
+)]] ChildrenComponent
 {
     skr::ecs::Entity entity;
 };
@@ -234,9 +234,11 @@ ChildrenComponent
 using ChildrenArray = sugoi::ArrayComponent<ChildrenComponent, 4>;
 #endif
 
-sreflect_enum_class(
-    guid = "c8df77f2-9830-4004-84e6-1d55e0f9a83f" serde = @bin | @json)
-ETransformDirtyState : uint32_t{
+enum class [[sattr(
+    guid = "c8df77f2-9830-4004-84e6-1d55e0f9a83f" 
+    serde = @enable
+)]] ETransformDirtyState : uint32_t
+{
     NotDirty = 0,
     Location = 0x1,
     Rotation = 0x2,
@@ -247,10 +249,11 @@ ETransformDirtyState : uint32_t{
     Absolute = 0x200
 };
 
-sreflect_struct(
+struct [[sattr(
     guid = "0f3ca51a-3d6d-4614-97dc-a388969301a9";
-    ecs.comp = @enable;)
-TransformDirtyComponent
+    serde = @enable
+    ecs.comp = @enable;
+)]] TransformDirtyComponent
 {
     ETransformDirtyState this_state = ETransformDirtyState::NotDirty;
 };

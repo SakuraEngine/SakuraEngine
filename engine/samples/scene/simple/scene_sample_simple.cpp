@@ -7,7 +7,7 @@
 #include <SkrScene/actor_manager.h>
 #include <SkrSceneCore/scene_components.h>
 #include <SkrSceneCore/transform_system.h>
-#include <SkrRT/ecs/world.hpp>
+#include <SkrRuntime/ecs/world.hpp>
 
 struct SceneSampleSimpleModule : public skr::IDynamicModule
 {

@@ -9,7 +9,7 @@ struct RootConstants
 };
 
 // Bindless texture array - length 0 means unbounded/bindless
-Texture2D<float> sampled_textures[0];
+Texture2D<> sampled_textures[0];
 
 [[group(1)]]
 Sampler texture_sampler;

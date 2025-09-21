@@ -2,26 +2,25 @@
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
 #include "SkrGui/framework/render_object/render_object.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/render_object/single_child_render_object.generated.h"
-#endif
+#include "SkrGui/framework/render_object/single_child_render_object.generated.h"
 
 namespace skr::gui
 {
-sreflect_interface(
+struct [[sattr(
     guid = "5349672b-bfc5-46a9-9a02-40ef563c196d"
-)
-SKR_GUI_API ISingleChildRenderObject : virtual public skr::IObject {
+)]] SKR_GUI_API ISingleChildRenderObject : virtual public skr::IObject
+{
     SKR_GENERATE_BODY(ISingleChildRenderObject)
     virtual ~ISingleChildRenderObject() = default;
 
-    virtual GUID accept_child_type() const SKR_NOEXCEPT               = 0;
+    virtual GUID accept_child_type() const SKR_NOEXCEPT = 0;
     virtual void set_child(NotNull<RenderObject*> child) SKR_NOEXCEPT = 0;
-    virtual void remove_child() SKR_NOEXCEPT                          = 0;
+    virtual void remove_child() SKR_NOEXCEPT = 0;
 };
 
 template <typename TSelf, typename TChild>
-struct SingleChildRenderObjectMixin {
+struct SingleChildRenderObjectMixin
+{
     TChild* _child;
 
     inline GUID accept_child_type(const TSelf& self) const SKR_NOEXCEPT
@@ -50,7 +49,7 @@ struct SingleChildRenderObjectMixin {
     /*===============> Begin Single Child Render Object Mixin <===============*/ \
 private:                                                                         \
     SingleChildRenderObjectMixin<__SELF, __CHILD>                                \
-    _single_child_render_object_mixin = {};                                      \
+        _single_child_render_object_mixin = {};                                  \
                                                                                  \
 public:                                                                          \
     GUID accept_child_type() const SKR_NOEXCEPT override                         \

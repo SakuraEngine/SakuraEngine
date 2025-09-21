@@ -4,10 +4,11 @@
 #include "SkrCore/module/module.hpp"
 #include "SkrCore/async/thread_job.hpp"
 #include "SkrTask/fib_task.hpp"
-#include "SkrRT/resource/resource_system.h"
-#include "SkrRT/resource/local_resource_registry.hpp"
+#include "SkrRuntime/resource/resource_system.h"
+#include "SkrRuntime/resource/local_resource_registry.hpp"
 #include "SkrSceneCore/scene_components.h"
 #include "SkrSystem/system_app.h"
+#include <SkrCore/serialize/json_archive.hpp>
 
 #include <random>
 #include <chrono>
@@ -27,7 +28,7 @@
 #include "SkrMeshCore/mesh_processing.hpp"
 #include "SkrMeshTool/mesh_asset.hpp"
 #include "common/utils.h"
-#include "SkrRenderer/shared/database.hpp"
+#include "SkrRenderer/shared/gpu_table.hpp"
 
 using namespace skr::literals;
 const auto MeshAssetID = u8"18db1369-ba32-4e91-aa52-b2ed1556f576"_guid;
@@ -57,15 +58,17 @@ struct VirtualProject : skd::SProject
 
     void SaveToDisk()
     {
-        skr::archive::JsonWriter writer(4);
-        writer.StartObject();
-        writer.Key(u8"assets");
-        skr::json_write(&writer, MetaDatabase);
-        writer.EndObject();
-
+        auto writer = skr::ArWriteJson::Create();
+        {
+            skr::Archive::ObjectScope obj_scope(writer);
+            SKR_FAST_CHECK(obj_scope.is_success(), );
+            SKR_FAST_CHECK(writer.key_value(u8"assets", MetaDatabase), );
+        }
+        
         // Write to model_viewer.project file
         const auto project_path = skr::fs::current_directory() / u8"model_viewer.project";
-        auto json_str = writer.Write();
+        skr::String json_str;
+        writer.write_to_string(json_str);
 
         if (skr::fs::File::write_all_text(project_path, json_str.view()))
             SKR_LOG_INFO(u8"[ModelViewer] Project saved to: %s", project_path.c_str());
@@ -77,26 +80,26 @@ struct VirtualProject : skd::SProject
     {
         const auto project_path = skr::fs::current_directory() / u8"model_viewer.project";
 
-        skr::String json_content;
-        if (skr::fs::File::read_all_text(project_path, json_content))
-        {
-            // Parse JSON
-            skr::archive::JsonReader reader(json_content.view());
-            reader.StartObject();
-            reader.Key(u8"assets");
-            {
-                skr::json_read(&reader, MetaDatabase);
-                SKR_LOG_INFO(u8"[ModelViewer] Project loaded from: %s, %zu assets",
-                    project_path.c_str(),
-                    MetaDatabase.size());
-            }
-            reader.EndObject();
-        }
-        else
+        auto reader = skr::ArReadJson::ReadFile(project_path);
+        if (reader.is_failed())
         {
             // File doesn't exist, which is fine - just means empty project
             MetaDatabase.clear();
             SKR_LOG_INFO(u8"[ModelViewer] No existing project file found at: %s, starting with empty project", project_path.c_str());
+            return;
+        }
+
+        // read
+        {
+            skr::Archive::ObjectScope obj_scope(reader);
+            SKR_FAST_CHECK(obj_scope.is_success(), );
+
+            SKR_FAST_CHECK(reader.key_value(u8"assets", MetaDatabase), );
+            SKR_LOG_INFO(
+                u8"[ModelViewer] Project loaded from: %s, %zu assets",
+                project_path.c_str(),
+                MetaDatabase.size()
+            );
         }
     }
 
@@ -115,7 +118,7 @@ public:
     virtual void on_unload() override;
 
 protected:
-    void CookAndLoadGLTF();
+    void CookAndLoadTestGLTF();
     void InitializeAssetSystem();
     void DestroyAssetSystem();
     void InitializeReosurceSystem();
@@ -258,7 +261,7 @@ void ModelViewerModule::on_load(int argc, char8_t** argv)
         InitializeAssetSystem();
     }
 
-    CookAndLoadGLTF();
+    CookAndLoadTestGLTF();
 
     world.initialize();
 }
@@ -360,7 +363,6 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
     // Create compute pipeline for debug rendering
     CreateComputePipeline();
 
-    GPUTableManager = skr::gpu::TableManager::Create(render_device->get_cgpu_device());
     GPUScene.Initialize(GPUTableManager.get(), render_device, &world);
 
     // AsyncResource<> is a handle can be constructed by any resource type & ids
@@ -401,6 +403,8 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
         const uint32_t group_count_y = (screen_size.y + 15) / 16;
 
         // Update GPUScene
+        auto MaterialBuffer = MatFactory->UpdateGPUTable(render_graph);
+        auto PrimitiveBuffer = MeshFactory->UpdateGPUTable(render_graph);
         GPUScene.ExecuteUpload(render_graph);
 
         // Create output render target texture
@@ -410,7 +414,8 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
                     .extent(screen_size.x, screen_size.y)
                     .format(CGPU_FORMAT_R8G8B8A8_UNORM)
                     .allow_readwrite();
-            });
+            }
+        );
 
         // Setup camera (looking at the scene from a distance)
         struct CameraConstants
@@ -444,14 +449,15 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
                         .set_pipeline(compute_pipeline)
                         .read(u8"SceneTLAS", TLASHandle)
                         .read(u8"GPUSceneInstances", GPUScene.GetSceneBuffer(render_graph))
-                        .read(u8"MaterialTable", GPUScene.GetMaterialBuffer(render_graph))
-                        .read(u8"PrimitiveTable", GPUScene.GetPrimitiveBuffer(render_graph))
+                        .read(u8"MaterialTable", MaterialBuffer)
+                        .read(u8"PrimitiveTable", PrimitiveBuffer)
                         .readwrite(u8"output_texture", render_target_handle);
                 },
                 [=, this](render_graph::RenderGraph& g, render_graph::ComputePassContext& ctx) {
                     // Bind Bindless IB/VBs
                     auto vbibs = MeshFactory->descriptor_buffer();
                     cgpu_compute_encoder_bind_descriptor_buffer(ctx.encoder, vbibs, u8"VertexBuffers");
+                    cgpu_compute_encoder_bind_descriptor_buffer(ctx.encoder, vbibs, u8"IndexBuffers");
                     auto texs = MatFactory->descriptor_buffer();
                     cgpu_compute_encoder_bind_descriptor_buffer(ctx.encoder, texs, u8"MaterialTextures");
 
@@ -459,9 +465,8 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
                     cgpu_compute_encoder_push_constants(ctx.encoder, root_signature, u8"camera_constants", &camera_constants);
 
                     // Dispatch compute shader
-                    uint32_t group_count_x = (static_cast<uint32_t>(camera_constants.screenSize.x) + 15) / 16;
-                    uint32_t group_count_y = (static_cast<uint32_t>(camera_constants.screenSize.y) + 15) / 16;
-                    cgpu_compute_encoder_dispatch(ctx.encoder, group_count_x, group_count_y, 1);
+                    cgpu_compute_encoder_set_threadgroup_size(ctx.encoder, 16, 16, 1);
+                    cgpu_compute_encoder_dispatch(ctx.encoder, camera_constants.screenSize.x, camera_constants.screenSize.y, 1);
                 });
 
             // Add copy pass to copy render target to backbuffer
@@ -473,7 +478,8 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
                 },
                 [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& ctx) {
                     // Copy implementation handled by render graph
-                });
+                }
+            );
         }
 
         render_frame_index = render_graph->execute();
@@ -481,7 +487,7 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
             render_graph->collect_garbage(render_frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
 
         render_app->present_all();
-        
+
         logic_frame_index += 1;
     }
 
@@ -494,7 +500,7 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
     return 0;
 }
 
-void ModelViewerModule::CookAndLoadGLTF()
+void ModelViewerModule::CookAndLoadTestGLTF()
 {
     auto& CookSystem = *skd::asset::GetCookSystem();
     const bool NeedImport = !project.ExistImportedAsset(u8"girl.model.meta");
@@ -515,9 +521,13 @@ void ModelViewerModule::CookAndLoadGLTF()
             skr::type_id_of<skd::asset::MeshCooker>() // this cooker cooks t he raw mesh data to mesh resource
         );
         // source file
+#if SKR_PLAT_WINDOWS
         importer->assetPath = u8"D:/D5EngineAssets/Models/sponza/scene.gltf";
+#else
+        importer->assetPath = u8"/Users/Shared/D5EngineAssets/Models/sponza/scene.gltf";
+#endif
         // importer->assetPath = u8"C:/Code/D5Engine/engine/samples/assets/sketchfab/loli/scene.gltf";
-        CookSystem.ImportAssetMeta(&project, asset, importer, metadata);       
+        CookSystem.ImportAssetMeta(&project, asset, importer, metadata);
 
         // save
         CookSystem.SaveAssetMeta(&project, asset);
@@ -552,6 +562,7 @@ void ModelViewerModule::CreateEntities(uint32_t count)
             Builder.add_component(&Spawner::translations)
                 .add_component(&Spawner::rotations)
                 .add_component(&Spawner::scales)
+                .add_component(&Spawner::transforms)
                 .add_component(&Spawner::meshes)
 
                 .add_component(&Spawner::instances)
@@ -564,6 +575,8 @@ void ModelViewerModule::CreateEntities(uint32_t count)
             auto entities = Context.entities();
             for (uint32_t i = 0; i < cnt; i++)
             {
+                inst_datas[i].resize(1);
+                
                 // Generate random position with Z behind camera
                 skr::float3 random_pos = { 0.f, 0.f, 0.f };
                 scales[i].set(1.f);
@@ -575,11 +588,12 @@ void ModelViewerModule::CreateEntities(uint32_t count)
                 rotations[i].set(0, 0, 0);
 
                 // Create transform matrix from components
-                auto transform_matrix = skr::scene::Transform(
+                auto transform = skr::scene::Transform(
                     skr::math::QuatF(rotations[i].get()),
                     random_pos,
-                    scales[i].get());
-                inst_datas[i].transform = transform_matrix.to_matrix();
+                    scales[i].get()
+                );
+                transforms[i].set(transform);
 
                 // Add to GPU scene
                 pScene->AddEntity(entities[i]);
@@ -602,6 +616,7 @@ void ModelViewerModule::CreateEntities(uint32_t count)
         ComponentView<skr::scene::PositionComponent> translations;
         ComponentView<skr::scene::RotationComponent> rotations;
         ComponentView<skr::scene::ScaleComponent> scales;
+        ComponentView<skr::scene::TransformComponent> transforms;
         ComponentView<skr::MeshComponent> meshes;
         uint32_t local_index = 0;
     } spawner;
@@ -647,6 +662,9 @@ void ModelViewerModule::DestroyAssetSystem()
 void ModelViewerModule::InitializeReosurceSystem()
 {
     using namespace skr::literals;
+
+    GPUTableManager = skr::gpu::TableManager::Create(render_device->get_cgpu_device());
+
     auto resource_system = skr::GetResourceSystem();
     registry = SkrNew<skr::LocalResourceRegistry>(project.GetResourceVFS());
     resource_system->Initialize(registry, project.GetRamService());
@@ -696,13 +714,14 @@ void ModelViewerModule::InitializeReosurceSystem()
     // material factory
     {
         skr::MaterialFactory::Root factoryRoot = {};
-        factoryRoot.device = render_device->get_cgpu_device();
+        factoryRoot.render_device = render_device;
         factoryRoot.job_queue = job_queue.get();
         factoryRoot.ram_service = ram_service;
 
         // we have no shaders to install by material factory so these can be null
         factoryRoot.bytecode_vfs = nullptr;
         factoryRoot.shader_map = nullptr;
+        factoryRoot.table_manager = GPUTableManager;
 
         MatFactory = skr::MaterialFactory::Create(factoryRoot);
         resource_system->RegisterFactory(MatFactory);
@@ -715,6 +734,7 @@ void ModelViewerModule::InitializeReosurceSystem()
         factoryRoot.ram_service = ram_service;
         factoryRoot.vram_service = vram_service;
         factoryRoot.render_device = render_device;
+        factoryRoot.table_manager = GPUTableManager;
         MeshFactory = skr::MeshFactory::Create(factoryRoot);
         resource_system->RegisterFactory(MeshFactory);
     }
@@ -799,8 +819,7 @@ void ModelViewerModule::CreateComputePipeline()
     auto linear_sampler = render_device->get_linear_sampler();
     CGPUShaderEntryDescriptor compute_shader_entry = {
         .library = compute_shader,
-        .entry = u8"cs_main",
-        .stage = CGPU_SHADER_STAGE_COMPUTE
+        .entry = u8"cs_main"
     };
     CGPURootSignatureDescriptor root_desc = {
         .shaders = &compute_shader_entry,

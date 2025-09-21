@@ -1,5 +1,6 @@
 #pragma once
 #include "SkrScene/scene.h"
+#include "SkrScene/actor_manager.h"
 
 namespace skr
 {
@@ -17,101 +18,107 @@ void Scene::serialize()
     }
 }
 
-inline bool Parse(skr::archive::JsonReader& reader, const char8_t* key, bool required = true)
+void Scene::deserialize()
 {
-    bool exist = true;
-    auto parse = reader.Key(key);
-    parse.error_then([&](skr::archive::JsonReadError e) {
-        exist = false;
-        if (!required && (e == skr::archive::JsonReadError::KeyNotFound))
-            return;
-        SKR_LOG_FATAL(u8"Parse scene file failed, error code %d");
-    });
-    return exist;
-}
-
-bool JsonSerde<Scene>::read(skr::archive::JsonReader* r, Scene& v)
-{
-
-    r->StartObject();
-
-    auto& reader = *r;
-    if (Parse(reader, u8"root_actor", true))
-    {
-        skr::json_read(r, v.root_actor_guid);
-    }
-    auto root = skr::ActorManager::GetInstance().GetRoot();
-    root.lock()->InitWorld();
-
-    size_t actors_count;
-    reader.Key(u8"actors");
-    // First Round, initialize actor instance with type guid and actor guid
-    reader.StartArray(actors_count);
-    for (size_t i = 0; i < actors_count; i++)
-    {
-        reader.StartObject();
-        reader.Key(u8"actor_guid");
-        skr::GUID actor_guid;
-        skr::json_read(&reader, actor_guid);
-        auto actor_iter = v.actors.find(actor_guid);
-
-        skr::RCWeak<Actor> actor_ref;
-
-        // check if actor already exists
-        if (actor_iter)
-        {
-            actor_ref = actor_iter.value();
-        }
-        else
-        {
-            reader.Key(u8"actor_rttr_type_guid");
-            skr::GUID actor_attr_type_guid;
-            skr::json_read(&reader, actor_attr_type_guid);
-            // create actor with type guid
-            auto actor = skr::ActorManager::GetInstance().CreateActor(actor_attr_type_guid);
-            actor->Initialize(actor_guid);
-            v.actors.add(actor_guid, actor);
-            actor_iter = v.actors.find(actor_guid);
-            actor_ref = actor_iter.value();
-        }
-        reader.Key(u8"actor_data");
-        skr::json_read(&reader, *actor_ref.lock()); // from json to serialized
-        reader.EndObject();
-    }
-    reader.EndArray();
-
-    for (auto& actor : v.actors)
+    for (auto& actor : actors)
     {
         actor.value->deserialize();
     }
-
-
-    r->EndObject();
-    return true;
 }
 
-bool JsonSerde<Scene>::write(skr::archive::JsonWriter* w, const Scene& v)
+void Serialize<Scene>::read(ArchiveRead& r, skr::Scene& v)
 {
-    w->StartObject();
-    w->Key(u8"root_actor");
-    if (!skr::JsonSerde<skr_guid_t>::write(w, v.root_actor_guid)) return false;
-    w->Key(u8"actors");
-    // write actors in list
-    w->StartArray();
-    for (auto& [k, actor] : v.actors)
-    {
-        w->StartObject();
-        w->Key(u8"actor_guid");
-        if (!skr::JsonSerde<skr_guid_t>::write(w, k)) return false;
-        w->Key(u8"actor_rttr_type_guid");
-        if (!skr::JsonSerde<skr_guid_t>::write(w, actor->GetRTTRTypeGUID())) return false;
-        w->Key(u8"actor_data");
-        if (!skr::JsonSerde<Actor>::write(w, *actor.get())) return false;
-        w->EndObject();
-    }
-    w->EndArray();
-    w->EndObject();
-    return true;
-}
+    Archive::ObjectScope obj_scope(r);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
 
+    // read root actor
+    SKR_FAST_CHECK(r.key_value_required(u8"root_actor", v.root_actor_guid), );
+
+    // init world
+    auto root = skr::ActorManager::GetInstance().GetRoot();
+    root.lock()->InitWorld();
+
+    // read actors
+    SKR_FAST_CHECK(r.key_required(u8"actors"), );
+    {
+        Archive::ArrayScope arr_scope(r);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // read actors count
+        uint64_t actors_count = 0;
+        SKR_FAST_CHECK(r.array_size(actors_count), );
+        v.actors.reserve(actors_count);
+
+        // read each actor
+        for (size_t i = 0; i < actors_count; i++)
+        {
+            Archive::ObjectScope obj_scope_actor(r);
+            SKR_FAST_CHECK(obj_scope_actor.is_success(), );
+
+            // read actor guid
+            skr::GUID actor_guid;
+            SKR_FAST_CHECK(r.key_value_required(u8"guid", actor_guid), );
+
+            // construct it if needed
+            skr::RC<Actor> actor_ref;
+            if (auto found_actor = v.actors.find(actor_guid))
+            {
+                actor_ref = found_actor.value();
+            }
+            else
+            {
+                // read actor type id
+                skr::GUID actor_type_id;
+                SKR_FAST_CHECK(r.key_value_required(u8"type_id", actor_type_id), );
+
+                // create actor
+                auto actor = skr::ActorManager::GetInstance().CreateActor(
+                    actor_type_id
+                );
+                actor->Initialize(actor_guid);
+                v.actors.add(actor_guid, actor);
+
+                actor_ref = actor;
+            }
+
+            // read actor data
+            SKR_FAST_CHECK(r.key_value_required(u8"data", *actor_ref), );
+        }
+
+        // finalize all actors
+        for (auto& [k, actor] : v.actors)
+        {
+            actor->deserialize();
+        }
+    }
+}
+void Serialize<Scene>::write(ArchiveWrite& w, const skr::Scene& v)
+{
+    Archive::ObjectScope obj_scope(w);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // write root actor
+    SKR_FAST_CHECK(w.key_value(u8"root_actor", v.root_actor_guid), );
+
+    // write actors
+    SKR_FAST_CHECK(w.key(u8"actors"), );
+    {
+        Archive::ArrayScope arr_scope(w);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // write actors count
+        SKR_FAST_CHECK(w.array_size<uint64_t>((uint64_t)v.actors.size()), );
+
+        // write each actor
+        for (const auto& [k, actor] : v.actors)
+        {
+            Archive::ObjectScope obj_scope_actor(w);
+            SKR_FAST_CHECK(obj_scope_actor.is_success(), );
+
+            SKR_FAST_CHECK(w.key_value(u8"guid", k), );
+            SKR_FAST_CHECK(w.key_value(u8"type_id", actor->GetRTTRTypeGUID()), );
+            SKR_FAST_CHECK(w.key_value(u8"data", *actor), );
+        }
+    }
+}
 } // namespace skr

@@ -1,14 +1,13 @@
 #pragma once
 #include "SkrGui/framework/element/element.hpp"
 #include "SkrGui/framework/fwd_framework.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/element/render_object_element.generated.h"
-#endif
+#include "SkrGui/framework/element/render_object_element.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "df4199cc-0c92-4c46-9e74-e9851b1a67ce")
-SKR_GUI_API RenderObjectElement : public Element {
+struct [[sattr(guid = "df4199cc-0c92-4c46-9e74-e9851b1a67ce"
+)]] SKR_GUI_API RenderObjectElement : public Element
+{
     SKR_GENERATE_BODY(RenderObjectElement)
     using Super = Element;
     using Super::Super;
@@ -26,8 +25,8 @@ SKR_GUI_API RenderObjectElement : public Element {
     RenderObject* render_object() const SKR_NOEXCEPT;
 
     // child render object ops
-    virtual void add_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT                     = 0;
-    virtual void remove_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT                  = 0;
+    virtual void add_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT = 0;
+    virtual void remove_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT = 0;
     virtual void move_render_object_child(NotNull<RenderObject*> child, Slot old_slot, Slot new_slot) SKR_NOEXCEPT = 0;
 
     // attach & detach & move
@@ -41,11 +40,11 @@ private:
 
 private:
     // help functions
-    void                 _update_render_object() SKR_NOEXCEPT;
+    void _update_render_object() SKR_NOEXCEPT;
     RenderObjectElement* _find_ancestor_render_object_element() const SKR_NOEXCEPT;
 
 private:
-    RenderObject*        _render_object                  = nullptr;
+    RenderObject* _render_object = nullptr;
     RenderObjectElement* _ancestor_render_object_element = nullptr;
 };
 } // namespace skr::gui

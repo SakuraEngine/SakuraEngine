@@ -2,7 +2,7 @@
 #include "SkrBase/config.h"
 
 #ifndef SKR_MAX_THREAD_NAME_LENGTH
-#define SKR_MAX_THREAD_NAME_LENGTH 31
+#define SKR_MAX_THREAD_NAME_LENGTH 127
 #endif
 
 #if defined(_WIN32) || defined(XBOX)

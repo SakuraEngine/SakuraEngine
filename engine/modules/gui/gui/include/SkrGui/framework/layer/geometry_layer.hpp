@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/framework/layer/layer.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/layer/geometry_layer.generated.h"
-#endif
+#include "SkrGui/framework/layer/geometry_layer.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "1d1fbcab-eb50-4a22-99f6-59c5f4aca3e9")
-GeometryLayer : public Layer {
+struct [[sattr(guid = "1d1fbcab-eb50-4a22-99f6-59c5f4aca3e9")]]
+GeometryLayer : public Layer
+{
     SKR_GENERATE_BODY(GeometryLayer)
     using Super = Layer;
 

@@ -43,8 +43,26 @@ inline static SECURITY_ATTRIBUTES* CreateSecurityDescriptor(const unsigned int a
 SharedMemory::SharedMemory(skr::GUID key, const unsigned int size, const unsigned int accessPermission)
 {
 	char nameHead[0x100] = { 0 };
-	sprintf(nameHead, "Global\\SharedMemory_%u_%u_%u_%u",
-		key.storage0, key.storage1, key.storage2, key.storage3);
+	char* write_ptr = nameHead;
+	
+	// append prefix
+	{
+		const char* shared_memory_prefix = "Global\\SharedMemory_";
+		constexpr size_t shared_memory_prefix_len = sizeof("Global\\SharedMemory_") - 1;
+		std::memcpy(write_ptr, shared_memory_prefix, shared_memory_prefix_len);
+		write_ptr += shared_memory_prefix_len;
+	}
+
+	// append guid
+	{
+		auto new_ptr = key.encode_base64((skr_char8*)write_ptr, false);
+		write_ptr = (char*)new_ptr;
+	}
+
+	// append \0
+	{
+		*write_ptr = 0;
+	}
 
 	shared_handle = (int64_t)CreateFileMappingA(
 		INVALID_HANDLE_VALUE,
@@ -58,8 +76,26 @@ SharedMemory::SharedMemory(skr::GUID key, const unsigned int size, const unsigne
 	int iRet = GetLastError();
 	if (NULL == shared_handle && ERROR_ACCESS_DENIED == iRet)
 	{
-		sprintf(nameHead, "MessageQueue_%u_%u_%u_%u",
-			key.storage0, key.storage1, key.storage2, key.storage3);
+		write_ptr = nameHead;
+		// append message queue prifix
+		{
+			const char* prefix = "MessageQueue_";
+			constexpr size_t prefix_len = sizeof("MessageQueue_") - 1;
+			std::memcpy(nameHead, prefix, prefix_len);
+			write_ptr += prefix_len;
+		}
+
+		// append guid
+		{
+			auto new_ptr = key.encode_base64((skr_char8*)write_ptr, false);
+			write_ptr = (char*)new_ptr;
+		}
+
+		// append \0
+		{
+			*write_ptr = 0;
+		}
+
 		shared_handle = (int64_t)CreateFileMappingA(
 			INVALID_HANDLE_VALUE,
 			CreateSecurityDescriptor(accessPermission),

@@ -8,9 +8,9 @@
 #include "SkrTask/parallel_for.hpp"     // IWYU pragma: export
 
 #include "SkrCore/module/module.hpp"        // IWYU pragma: export
-#include "SkrRT/resource/config_resource.h" // IWYU pragma: export
+#include "SkrRuntime/resource/config_resource.h" // IWYU pragma: export
 
-#include "SkrRT/io/ram_io.hpp"          // IWYU pragma: export
+#include "SkrRuntime/io/ram_io.hpp"          // IWYU pragma: export
 #include "SkrTask/fib_task.hpp"         // IWYU pragma: export
 #include "SkrCore/async/thread_job.hpp" // IWYU pragma: export
 

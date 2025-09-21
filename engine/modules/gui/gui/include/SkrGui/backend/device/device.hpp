@@ -1,9 +1,7 @@
 #pragma once
 #include "SkrGui/fwd_config.hpp"
 #include "SkrGui/math/geometry.hpp"
-#ifndef __meta__
-    #include "SkrGui/backend/device/device.generated.h"
-#endif
+#include "SkrGui/backend/device/device.generated.h"
 
 namespace skr::gui
 {
@@ -35,15 +33,15 @@ struct IParagraph;
 //
 // 对使用方来说，无论如何，都有唯一且确定的 NativeDevice 贯穿整个 APP 的生命周期
 // 使用方需要思考这些问题，并将某些 API 转发到这个全局唯一的 NativeDevice 上，而不是另外处理
-sreflect_interface(
+struct [[sattr(
     guid = "8ba2ea3e-8a8e-4d88-a7d6-c98552219fc8"
-)
-SKR_GUI_API INativeDevice : virtual public skr::IObject {
+)]] SKR_GUI_API INativeDevice : virtual public skr::IObject
+{
     SKR_GENERATE_BODY(INativeDevice)
 
     // window
-    virtual NotNull<INativeWindow*> create_window()                              = 0;
-    virtual void                    destroy_window(NotNull<INativeWindow*> view) = 0;
+    virtual NotNull<INativeWindow*> create_window() = 0;
+    virtual void destroy_window(NotNull<INativeWindow*> view) = 0;
 
     // display info
     virtual const DisplayMetrics& display_metrics() const = 0;
@@ -52,11 +50,11 @@ SKR_GUI_API INativeDevice : virtual public skr::IObject {
     virtual NotNull<IUpdatableImage*> create_updatable_image() = 0;
 
     // canvas management
-    virtual NotNull<ICanvas*> create_canvas()                          = 0;
-    virtual void              destroy_canvas(NotNull<ICanvas*> canvas) = 0;
+    virtual NotNull<ICanvas*> create_canvas() = 0;
+    virtual void destroy_canvas(NotNull<ICanvas*> canvas) = 0;
 
     // text management
-    virtual NotNull<IParagraph*> create_paragraph()                                = 0;
-    virtual void                 destroy_paragraph(NotNull<IParagraph*> paragraph) = 0;
+    virtual NotNull<IParagraph*> create_paragraph() = 0;
+    virtual void destroy_paragraph(NotNull<IParagraph*> paragraph) = 0;
 };
 } // namespace skr::gui

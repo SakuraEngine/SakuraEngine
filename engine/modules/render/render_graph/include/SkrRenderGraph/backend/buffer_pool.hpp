@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRT/config.h"
+#include "SkrRuntime/config.h"
 #include <SkrContainers/hashmap.hpp>
 #include <SkrContainers/stl_deque.hpp>
 #include "SkrGraphics/api.h"

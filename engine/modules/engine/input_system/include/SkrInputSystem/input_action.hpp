@@ -14,7 +14,7 @@ struct InputTrigger;
 template <typename ValueType>
 using ActionEvent = skr::stl_function<void(const ValueType&)>;
 
-using ActionEventId = skr_guid_t;
+using ActionEventId = GUID;
 
 static const ActionEventId kEventId_Invalid = { 0xbbd09231, 0xa76b, 0x4c0f, { 0x83, 0x2e, 0x11, 0x7f, 0xd6, 0xac, 0x5c, 0x1b } };
 
@@ -64,11 +64,11 @@ InputAction::bind_event<float>(const ActionEvent<float>& event, ActionEventId id
 
 template <>
 SKR_INPUT_SYSTEM_API ActionEventId
-InputAction::bind_event<skr_float2_t>(const ActionEvent<skr_float2_t>& event, ActionEventId id) SKR_NOEXCEPT;
+InputAction::bind_event<float2>(const ActionEvent<float2>& event, ActionEventId id) SKR_NOEXCEPT;
 
 template <>
 SKR_INPUT_SYSTEM_API ActionEventId
-InputAction::bind_event<skr_float3_t>(const ActionEvent<skr_float3_t>& event, ActionEventId id) SKR_NOEXCEPT;
+InputAction::bind_event<float3>(const ActionEvent<float3>& event, ActionEventId id) SKR_NOEXCEPT;
 
 template <>
 SKR_INPUT_SYSTEM_API ActionEventId

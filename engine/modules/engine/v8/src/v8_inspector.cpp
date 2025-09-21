@@ -45,7 +45,7 @@ bool V8WebSocketServer::init(int port)
     });
 
     // startup server
-    _ws_server         = hv::WebSocketServer(&_ws_service);
+    _ws_server = hv::WebSocketServer(&_ws_service);
     _ws_server.service = &_http_service;
     _ws_server.setPort(_port);
     _ws_server.setThreadNum(1);
@@ -158,7 +158,7 @@ void V8InspectorClient::init(V8Isolate* isolate)
 
     // create v8 data
     _inspector = v8_inspector::V8Inspector::create(isolate->v8_isolate(), this);
-    _session   = _inspector->connect(
+    _session = _inspector->connect(
         kContextGroupId,
         &_channel,
         v8_inspector::StringView{ (const uint8_t*)kContextName.data(), kContextName.size() },
@@ -195,7 +195,7 @@ void V8InspectorClient::runMessageLoopOnPause(int contextGroupId)
     if (_is_runing_message_loop) { return; }
 
     _is_runing_message_loop = true;
-    _run_message_loop       = true;
+    _run_message_loop = true;
 
     while (_run_message_loop)
     {
@@ -203,7 +203,7 @@ void V8InspectorClient::runMessageLoopOnPause(int contextGroupId)
         _isolate->pump_message_loop();
     }
 
-    _run_message_loop       = false;
+    _run_message_loop = false;
     _is_runing_message_loop = false;
 }
 void V8InspectorClient::quitMessageLoopOnPause()
@@ -214,7 +214,7 @@ void V8InspectorClient::runIfWaitingForDebugger(int contextGroupId)
 {
     // pause_on_next_statement(u8"for test");
     _run_message_loop = true;
-    _connected        = true;
+    _connected = true;
 }
 
 // notify

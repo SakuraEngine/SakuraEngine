@@ -33,6 +33,7 @@ public static class LLVMTools
             .TargetType(TargetType.Static)
             .Depend(Visibility.Public, "CppSLAst")
             .IncludeDirs(Visibility.Public, "shader_compiler/LLVM/include")
+            .IncludeDirs(Visibility.Private, "shader_compiler/LLVM/src")
             .AddCppFiles("shader_compiler/LLVM/src/**.cpp")
             .UsePrivatePCH("shader_compiler/LLVM/src/LLVM.pch.hpp")
             .LinkAgainstLLVM();
@@ -49,12 +50,14 @@ public static class LLVMTools
             .AddCppFiles("shader_compiler/ast_test.cpp");
     }
 
+    internal static string LLVMInstallPath => Path.Combine(BuildDirs.DownloadDir, "llvm-" + LLVMDownloader.Version);
+
     private static Target LinkAgainstLLVM(this Target @this)
     {
-        var LibDir = Path.Combine(Engine.DownloadDirectory, "llvm-" + LLVMDownloader.Version, "lib");
+        var LibDir = Path.Combine(LLVMInstallPath, "lib");
         @this.RTTI(false)
             .Cl_CXFlags(Visibility.Private, "/wd4244", "/wd4291", "/wd4819")
-            .IncludeDirs(Visibility.Private, Path.Combine(Engine.DownloadDirectory, "llvm-" + LLVMDownloader.Version, "include"))
+            .IncludeDirs(Visibility.Private, Path.Combine(LLVMInstallPath, "include"))
             .LinkDirs(Visibility.Public, LibDir)
             .Defines(Visibility.Public, "CLANG_BUILD_STATIC")
             .Clang_CXFlags(Visibility.Public, "-Wno-preferred-type-bitfield-enum-conversion");
@@ -103,46 +106,21 @@ public class LLVMDownloader
     public static string Version = "20.1.8";
     public static bool Download()
     {
-        string URL = "";
-        Directory.CreateDirectory(Engine.DownloadDirectory);
-        string Destination = Path.Combine(Engine.DownloadDirectory, "llvm-" + Version + ".7z");
+        Directory.CreateDirectory(BuildDirs.DownloadDir);
+
+        string ZFileName = "";
         if (BuildSystem.HostOS == OSPlatform.OSX)
         {
-            URL = "https://github.com/SakuraEngine/llvm-build/releases/download/llvm-darwin-" + Version + "/llvm-darwin-" + Version + "-clang-arm64-release.7z";
+            ZFileName = "llvm-darwin-" + Version + "-clang-arm64-release.7z";
         }
         else if (BuildSystem.HostOS == OSPlatform.Windows)
         {
-            URL = "https://github.com/SakuraEngine/llvm-build/releases/download/llvm-windows-" + Version + "/llvm-windows-" + Version + "-msvc-x64-md-release.7z";
+            ZFileName = "llvm-windows-" + Version + "-msvc-x64-md-release.7z";
         }
-        Install.DownloadDepend.OnChanged("Download-LLVM", "LLVM-" + Version, "LLVMDoctor", (Depend depend) =>
-        {
-            Log.Verbose("http handshaking ... from {URL} to {Destination}", URL, Destination);
-            using (var Http = new HttpClient(new HttpClientHandler { Proxy = SB.Download.HttpProxyObject.Value }))
-            {
-                Log.Information("downloading ... from {URL} to {Destination}", URL, Destination);
-                var Bytes = Http.GetByteArrayAsync(URL);
-                Bytes.Wait();
-                File.WriteAllBytes(Destination, Bytes.Result);
-            }
-            depend.ExternalFiles.Add(Destination);
-        }, null, null);
 
-        Install.DownloadDepend.OnChanged("Install-LLVM", "LLVM-" + Version, "LLVMDoctor", (Depend depend) =>
-        {
-            var IntermediateDirectory = Path.Combine(Engine.DownloadDirectory, "llvm-" + Version);
-            Directory.CreateDirectory(IntermediateDirectory);
-            using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(Destination))
-            {
-                Log.Information("Extracting ... from {Destination} to {IntermediateDirectory}", Destination, IntermediateDirectory);
-                archive.WriteToDirectory(IntermediateDirectory, new SharpCompress.Common.ExtractionOptions()
-                {
-                    ExtractFullPath = true,
-                    Overwrite = true
-                });
-            }
-            depend.ExternalFiles.Add(Destination);
-        }, null, null);
-        Log.Verbose("LLVM SDK Installation complete, version {Version}", Version);
-        return true;
+        Install.SDK("llvm-21.1.1-release", new Dictionary<string, string> {
+            { "./", LLVMTools.LLVMInstallPath }
+        }).Wait();
+        return false;
     }
 }

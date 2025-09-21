@@ -145,6 +145,7 @@ CGPU_API CGPUComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGPUCommand
 CGPU_API void cgpu_compute_encoder_bind_descriptor_set_vulkan(CGPUComputePassEncoderId encoder, CGPUDescriptorSetId descriptor);
 CGPU_API void cgpu_compute_encoder_push_constants_vulkan(CGPUComputePassEncoderId encoder, CGPURootSignatureId rs, const char8_t* name, const void* data);
 CGPU_API void cgpu_compute_encoder_bind_pipeline_vulkan(CGPUComputePassEncoderId encoder, CGPUComputePipelineId pipeline);
+CGPU_API void cgpu_compute_encoder_set_threadgroup_size_vulkan(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 CGPU_API void cgpu_compute_encoder_dispatch_vulkan(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z);
 CGPU_API void cgpu_cmd_end_compute_pass_vulkan(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder);
 
@@ -342,6 +343,10 @@ typedef struct CGPUCommandBuffer_Vulkan {
     VkRenderPass pRenderPass;
     uint32_t mNodeIndex : 4;
     uint32_t mType : 3;
+    // Compute threadgroup size
+    uint32_t mThreadgroupSizeX;
+    uint32_t mThreadgroupSizeY;
+    uint32_t mThreadgroupSizeZ;
 } CGPUCommandBuffer_Vulkan;
 
 typedef struct CGPUBuffer_Vulkan {

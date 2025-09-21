@@ -146,7 +146,7 @@ public:
         safe_comp<IOStatusComponent>()->add_finish_callback(point, callback, data);
     }
 
-    skr::span<skr_io_block_t> get_blocks() SKR_NOEXCEPT
+    skr::Span<skr_io_block_t> get_blocks() SKR_NOEXCEPT
     {
         return safe_comp<BlocksComponent>()->get_blocks();
     }
@@ -161,7 +161,7 @@ public:
         safe_comp<BlocksComponent>()->reset_blocks();
     }
 
-    skr::span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT
+    skr::Span<skr_io_compressed_block_t> get_compressed_blocks() SKR_NOEXCEPT
     {
         return safe_comp<CompressedBlocksComponent>()->get_compressed_blocks();
     }
@@ -180,7 +180,7 @@ private:
     auto& acquire_cmap() const SKR_NOEXCEPT
     {
         static bool initialized = false;
-        static skr::ParallelFlatHashMap<skr_guid_t, uint32_t, skr::Hash<skr_guid_t>> map = {};
+        static skr::ParallelFlatHashMap<GUID, uint32_t, skr::Hash<GUID>> map = {};
         if (!initialized)
         {
             std::apply([&](const auto&... args) {

@@ -35,7 +35,7 @@ ShaderAST 是 SakuraEngine 自研的着色器中间表示（IR）系统，作为
 AST 类是 Shader AST 的核心管理器，负责内置函数注册和代码生成：
 
 ```cpp
-// tools/shader_compiler/AST/include/CppSL/AST.hpp
+// tools/shader_compiler/AST/include/CppSL/CppSLAST.hpp
 struct AST {
     // 内置函数查找和特化
     const TemplateCallableDecl* FindIntrinsic(const char* name) const;

@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/framework/element/render_object_element.hpp"
-#ifndef __meta__
-    #include "SkrGui/framework/element/single_child_render_object_element.generated.h"
-#endif
+#include "SkrGui/framework/element/single_child_render_object_element.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "a3f51c75-2995-4f99-95c7-1166b3ba17a6")
-SingleChildRenderObjectElement : public RenderObjectElement {
+struct [[sattr(guid = "a3f51c75-2995-4f99-95c7-1166b3ba17a6")]]
+SingleChildRenderObjectElement : public RenderObjectElement
+{
     SKR_GENERATE_BODY(SingleChildRenderObjectElement)
     using Super = RenderObjectElement;
     using Super::Super;

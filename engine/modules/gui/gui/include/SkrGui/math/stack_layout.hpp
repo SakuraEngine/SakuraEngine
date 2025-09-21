@@ -1,8 +1,6 @@
 #pragma once
 #include "SkrGui/math/geometry.hpp"
-#ifndef __meta__
-    #include "SkrGui/math/stack_layout.generated.h"
-#endif
+#include "SkrGui/math/stack_layout.generated.h"
 
 namespace skr::gui
 {
@@ -10,10 +8,9 @@ namespace skr::gui
 // 这里决定了如何处理 min-max
 // constraints 传递流程如下
 // parent-constraints ==> padding/child-constraints ==> child.layout()
-sreflect_enum_class(
+enum class [[sattr(
     guid = "01092beb-ecd0-4292-8217-7998997a8746"
-)
-EPositionalFit : uint8_t
+)]] EPositionalFit : uint8_t
 {
     Loose,       // min = 0.0f
     Expand,      // min = max = max
@@ -21,10 +18,9 @@ EPositionalFit : uint8_t
 };
 
 // Canvas 如何决定自己的大小
-sreflect_enum_class(
+enum class [[sattr(
     guid = "1a43aede-a6f7-4750-8f29-da2965b9abcb"
-)
-EStackSize : uint8_t
+)]] EStackSize : uint8_t
 {
     Shrink, // size = max(child_size)
     Expand, // size = constraints.biggest()

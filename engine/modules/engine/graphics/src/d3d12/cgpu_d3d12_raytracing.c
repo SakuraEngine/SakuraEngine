@@ -341,6 +341,29 @@ void cgpu_cmd_build_acceleration_structures_d3d12(CGPUCommandBufferId cmd, const
     SAFE_RELEASE(dxrCmd);
 }
 
+void cgpu_compute_encoder_bind_ray_pipeline_d3d12(CGPUComputePassEncoderId encoder, CGPURayPipelineId pipeline)
+{
+    CGPURayPipelineBase_D3D12* PPL = (CGPURayPipelineBase_D3D12*)pipeline;
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)encoder;
+    D3D12Util_ResetRootSignature(Cmd, CGPU_PIPELINE_TYPE_COMPUTE, (const CGPURootSignature_D3D12*)pipeline->root_signature);
+    COM_CALL(SetPipelineState1, (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList, PPL->StateObject);
+}
+
+void cgpu_compute_encoder_dispatch_rays_d3d12(CGPUComputePassEncoderId encoder, const struct CGPUDispatchRaysDescriptor* desc)
+{
+    CGPURayPipelineBase_D3D12* PPL = (CGPURayPipelineBase_D3D12*)desc->pipeline;
+    CGPUCommandBuffer_D3D12* Cmd = (CGPUCommandBuffer_D3D12*)encoder;
+    SKR_DECLARE_ZERO(D3D12_DISPATCH_RAYS_DESC, rayDesc);
+    rayDesc.Width = desc->width;
+    rayDesc.Height = desc->height;
+    rayDesc.Depth = desc->depth;
+    rayDesc.RayGenerationShaderRecord = PPL->RayGenerationShaderRecord;
+    rayDesc.MissShaderTable = PPL->MissShaderTable;
+    rayDesc.HitGroupTable = PPL->HitGroupTable;
+    rayDesc.CallableShaderTable = PPL->CallableShaderTable;
+    COM_CALL(DispatchRays, (ID3D12GraphicsCommandList4*)Cmd->pDxCmdList, &rayDesc);
+}
+
 inline static D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE ToDXRASType(ECGPUAccelerationStructureType type)
 {
     return type == CGPU_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL ? D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL : D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;

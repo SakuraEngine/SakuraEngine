@@ -1,19 +1,18 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_shifted_box.hpp"
-#ifndef __meta__
-    #include "SkrGui/render_objects/render_positioned.generated.h"
-#endif
+#include "SkrGui/render_objects/render_positioned.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "50971da8-2439-46c1-adcb-579f270e354d")
-RenderPositioned : public RenderShiftedBox {
+struct [[sattr(guid = "50971da8-2439-46c1-adcb-579f270e354d")]]
+RenderPositioned : public RenderShiftedBox
+{
     SKR_GENERATE_BODY(RenderPositioned)
     using Super = RenderShiftedBox;
 
     // getter & setter
     inline float width_factor() const SKR_NOEXCEPT { return _width_factor; }
-    inline void  set_width_factor(float value) SKR_NOEXCEPT
+    inline void set_width_factor(float value) SKR_NOEXCEPT
     {
         if (_width_factor != value)
         {
@@ -22,7 +21,7 @@ RenderPositioned : public RenderShiftedBox {
         }
     }
     inline float height_factor() const SKR_NOEXCEPT { return _height_factor; }
-    inline void  set_height_factor(float value) SKR_NOEXCEPT
+    inline void set_height_factor(float value) SKR_NOEXCEPT
     {
         if (_height_factor != value)
         {
@@ -31,7 +30,7 @@ RenderPositioned : public RenderShiftedBox {
         }
     }
     inline const Positional& positional() const SKR_NOEXCEPT { return _positional; }
-    inline void              set_positional(const Positional& positional) SKR_NOEXCEPT
+    inline void set_positional(const Positional& positional) SKR_NOEXCEPT
     {
         if (_positional != positional)
         {
@@ -57,8 +56,8 @@ private:
     inline bool shrink_wrap_height() const SKR_NOEXCEPT { return _height_factor || !constraints().has_bounded_height(); }
 
 private:
-    Optional<float> _width_factor  = {}; // used in anchor mode
+    Optional<float> _width_factor = {};  // used in anchor mode
     Optional<float> _height_factor = {}; // used in anchor mode
-    Positional      _positional    = {};
+    Positional _positional = {};
 };
 } // namespace skr::gui

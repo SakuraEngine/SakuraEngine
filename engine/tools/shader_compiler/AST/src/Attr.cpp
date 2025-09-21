@@ -114,6 +114,18 @@ bool SemanticAttr::GetSemanticQualifier(SemanticType semantic, ShaderStage stage
                 default: break;
             }
         }
+        case ShaderStage::ClosestHit:
+        case ShaderStage::Miss:
+        case ShaderStage::AnyHit:
+        {
+            switch (semantic)
+            {
+                case SemanticType::RayPayload: 
+                    out = EVariableQualifier::Inout; 
+                    return true;
+                default: break;
+            }
+        }
         default:
             break;
     }

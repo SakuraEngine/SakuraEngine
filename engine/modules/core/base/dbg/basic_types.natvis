@@ -2,9 +2,33 @@
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
     <!--modules/core/base/include/SkrBase/types/guid.h-->
     <!--32-16-16-16-48-->
-    <Type Name="skr_guid_t">
+    <!--[time-low]-[time-mid]-[time-high-and-version]-[clock-seq-and-reserved & clock-seq-low]-[node]-->
+    <Type Name="skr::GUID">
         <DisplayString>
-            {{{storage0,nvoXb}-{((uint16_t*)&amp;storage1)[0],nvoXb}-{((uint16_t*)&amp;storage1)[1],nvoXb}-{((uint8_t*)&amp;storage2)[0],nvoXb}{((uint8_t*)&amp;storage2)[1],nvoXb}-{((uint8_t*)&amp;storage2)[2],nvoXb}{((uint8_t*)&amp;storage2)[3],nvoXb}{((uint8_t*)&amp;storage3)[0],nvoXb}{((uint8_t*)&amp;storage3)[1],nvoXb}{((uint8_t*)&amp;storage3)[2],nvoXb}{((uint8_t*)&amp;storage3)[3],nvoXb}}}
+            {{{_storage0,nvoXb}-{((uint16_t*)&amp;_storage1)[0],nvoXb}-{((uint16_t*)&amp;_storage1)[1],nvoXb}-{((uint8_t*)&amp;_storage2)[0],nvoXb}{((uint8_t*)&amp;_storage2)[1],nvoXb}-{((uint8_t*)&amp;_storage2)[2],nvoXb}{((uint8_t*)&amp;_storage2)[3],nvoXb}{((uint8_t*)&amp;_storage3)[0],nvoXb}{((uint8_t*)&amp;_storage3)[1],nvoXb}{((uint8_t*)&amp;_storage3)[2],nvoXb}{((uint8_t*)&amp;_storage3)[3],nvoXb}}}
+        </DisplayString>
+        <Expand>
+            <Item Name="time-low">_storage0,nvoXb</Item>
+            <Item Name="time-mid">((uint16_t*)&amp;_storage1)[0],nvoXb</Item>
+            <Item Name="time-high-and-version">((uint16_t*)&amp;_storage1)[1],nvoXb</Item>
+            <Item Name="clock-seq-and-reserved">((uint8_t*)&amp;_storage2)[0],nvoXb</Item>
+            <Item Name="clock-seq-low">((uint8_t*)&amp;_storage2)[1],nvoXb</Item>
+            <Item Name="node[0]">((uint8_t*)&amp;_storage2)[2],nvoXb</Item>
+            <Item Name="node[1]">((uint8_t*)&amp;_storage2)[3],nvoXb</Item>
+            <Item Name="node[2]">((uint8_t*)&amp;_storage3)[0],nvoXb</Item>
+            <Item Name="node[3]">((uint8_t*)&amp;_storage3)[1],nvoXb</Item>
+            <Item Name="node[4]">((uint8_t*)&amp;_storage3)[2],nvoXb</Item>
+            <Item Name="node[5]">((uint8_t*)&amp;_storage3)[3],nvoXb</Item>
+        </Expand>
+    </Type>
+    <Type Name="skr::MD5">
+        <DisplayString>
+            {_bytes[0],nvoXb}{_bytes[1],nvoXb}{_bytes[2],nvoXb}{_bytes[3],nvoXb}{_bytes[4],nvoXb}{_bytes[5],nvoXb}{_bytes[6],nvoXb}{_bytes[7],nvoXb}{_bytes[8],nvoXb}{_bytes[9],nvoXb}{_bytes[10],nvoXb}{_bytes[11],nvoXb}{_bytes[12],nvoXb}{_bytes[13],nvoXb}{_bytes[14],nvoXb}{_bytes[15],nvoXb}
+        </DisplayString>
+    </Type>
+    <Type Name="skr::SHA256">
+        <DisplayString>
+            {_bytes[0],nvoXb}{_bytes[1],nvoXb}{_bytes[2],nvoXb}{_bytes[3],nvoXb}{_bytes[4],nvoXb}{_bytes[5],nvoXb}{_bytes[6],nvoXb}{_bytes[7],nvoXb}{_bytes[8],nvoXb}{_bytes[9],nvoXb}{_bytes[10],nvoXb}{_bytes[11],nvoXb}{_bytes[12],nvoXb}{_bytes[13],nvoXb}{_bytes[14],nvoXb}{_bytes[15],nvoXb}{_bytes[16],nvoXb}{_bytes[17],nvoXb}{_bytes[18],nvoXb}{_bytes[19],nvoXb}{_bytes[20],nvoXb}{_bytes[21],nvoXb}{_bytes[22],nvoXb}{_bytes[23],nvoXb}{_bytes[24],nvoXb}{_bytes[25],nvoXb}{_bytes[26],nvoXb}{_bytes[27],nvoXb}{_bytes[28],nvoXb}{_bytes[29],nvoXb}{_bytes[30],nvoXb}{_bytes[31],nvoXb}
         </DisplayString>
     </Type>
 </AutoVisualizer>

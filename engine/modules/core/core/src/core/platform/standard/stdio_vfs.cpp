@@ -91,7 +91,7 @@ skr_vfile_t* skr_stdio_fopen(skr_vfs_t* fs, const char8_t* path, ESkrFileMode mo
         {
             SkrZoneScopedN("RetryOpenRW");
 
-            modeStr = skr_vfs_overwirte_filemode_to_string(mode);
+            modeStr = skr_vfs_overwrite_filemode_to_string(mode);
             cfile = fopen((const char*)filePath.c_str(), (const char*)modeStr);
         }
     }

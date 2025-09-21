@@ -1904,7 +1904,11 @@ void cgpu_cmd_end_event_vulkan(CGPUCommandBufferId cmd)
 // Compute CMDs
 CGPUComputePassEncoderId cgpu_cmd_begin_compute_pass_vulkan(CGPUCommandBufferId cmd, const struct CGPUComputePassDescriptor* desc)
 {
-    // DO NOTHING NOW
+    CGPUCommandBuffer_Vulkan* Cmd = (CGPUCommandBuffer_Vulkan*)cmd;
+    // 初始化threadgroup size为0，表示未设置
+    Cmd->mThreadgroupSizeX = 0;
+    Cmd->mThreadgroupSizeY = 0;
+    Cmd->mThreadgroupSizeZ = 0;
     return (CGPUComputePassEncoderId)cmd;
 }
 
@@ -2002,11 +2006,36 @@ void cgpu_compute_encoder_bind_pipeline_vulkan(CGPUComputePassEncoderId encoder,
     D->mVkDeviceTable.vkCmdBindPipeline(Cmd->pVkCmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, PPL->pVkPipeline);
 }
 
+void cgpu_compute_encoder_set_threadgroup_size_vulkan(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
+{
+    CGPUCommandBuffer_Vulkan* Cmd = (CGPUCommandBuffer_Vulkan*)encoder;
+    Cmd->mThreadgroupSizeX = X;
+    Cmd->mThreadgroupSizeY = Y;
+    Cmd->mThreadgroupSizeZ = Z;
+}
+
 void cgpu_compute_encoder_dispatch_vulkan(CGPUComputePassEncoderId encoder, uint32_t X, uint32_t Y, uint32_t Z)
 {
     CGPUCommandBuffer_Vulkan* Cmd = (CGPUCommandBuffer_Vulkan*)encoder;
     const CGPUDevice_Vulkan* D = (CGPUDevice_Vulkan*)Cmd->super.device;
-    D->mVkDeviceTable.vkCmdDispatch(Cmd->pVkCmdBuf, X, Y, Z);
+    
+    // 使用设置的threadgroup size，如果没有设置则使用默认值
+    uint32_t threadgroupX = Cmd->mThreadgroupSizeX;
+    uint32_t threadgroupY = Cmd->mThreadgroupSizeY;
+    uint32_t threadgroupZ = Cmd->mThreadgroupSizeZ;
+    
+    if (threadgroupX == 0 || threadgroupY == 0 || threadgroupZ == 0) {
+        threadgroupX = 32; // 默认值
+        threadgroupY = 32;
+        threadgroupZ = 1;
+    }
+    
+    // 计算threadgroup数量，使用向上取整
+    uint32_t groupCountX = (X + threadgroupX - 1) / threadgroupX;
+    uint32_t groupCountY = (Y + threadgroupY - 1) / threadgroupY;
+    uint32_t groupCountZ = (Z + threadgroupZ - 1) / threadgroupZ;
+    
+    D->mVkDeviceTable.vkCmdDispatch(Cmd->pVkCmdBuf, groupCountX, groupCountY, groupCountZ);
 }
 
 void cgpu_cmd_end_compute_pass_vulkan(CGPUCommandBufferId cmd, CGPUComputePassEncoderId encoder)
@@ -2513,7 +2542,7 @@ CGPUSwapChainId cgpu_create_swapchain_vulkan_impl(CGPUDeviceId device, const CGP
         Ts[i].T.super.info = &Ts[i].I;
 
         Ts[i].I.is_cube = false;
-        Ts[i].I.array_size_minus_one = 0;
+        Ts[i].I.array_size = 1;
         Ts[i].I.sample_count = CGPU_SAMPLE_COUNT_1; // TODO: ?
         Ts[i].I.format = VkUtil_FormatTranslateToCGPU(surface_format.format);
         Ts[i].I.aspect_mask = VkUtil_DeterminAspectMask(VkUtil_FormatTranslateToVk(Ts[i].I.format), false);

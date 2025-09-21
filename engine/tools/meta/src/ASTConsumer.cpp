@@ -29,13 +29,179 @@ void str_join(std::string &a, const std::string &b, const std::string_view sep =
   }
   a += b;
 }
+
+// 前向声明
+std::string filter_cstdint_alias(clang::QualType type, clang::ASTContext *ctx);
+std::string filter_using_alias(clang::QualType type, clang::ASTContext *ctx);
+std::string resolve_template_arguments(clang::QualType type, clang::ASTContext *ctx);
+
 std::string get_type_name(clang::QualType type, clang::ASTContext *ctx) {
-  type = type.getCanonicalType();
-  auto baseName = type.getAsString(ctx->getLangOpts());
-  str_remove_all(baseName, "struct ");
-  str_remove_all(baseName, "class ");
-  return baseName;
+  // 优先查找标记了__final_name__的using别名
+  std::string using_alias = filter_using_alias(type, ctx);
+  if (!using_alias.empty()) {
+    return using_alias;
+  }
+
+  // 检查是否有cstdint类型别名，优先使用cstdint别名
+  std::string cstdint_alias = filter_cstdint_alias(type, ctx);
+  if (!cstdint_alias.empty()) {
+    return cstdint_alias;
+  }
+
+  // 没有找到标记的using别名或cstdint别名，返回canonical类型名称
+  auto canonicalType = type.getCanonicalType();
+  auto canonicalName = canonicalType.getAsString(ctx->getLangOpts());
+  str_remove_all(canonicalName, "struct ");
+  str_remove_all(canonicalName, "class ");
+  return canonicalName;
 }
+
+std::string filter_cstdint_alias(clang::QualType type, clang::ASTContext *ctx) {
+  // 检查类型链，寻找cstdint中的类型别名
+  clang::QualType current_type = type;
+
+  // 遍历typedef链
+  while (auto typedef_type = current_type->getAs<clang::TypedefType>()) {
+    auto typedef_decl = typedef_type->getDecl();
+    std::string typedef_name = typedef_decl->getName().str();
+
+    // 检查是否是cstdint中的基本类型别名
+    if (typedef_name == "int8_t" || typedef_name == "int16_t" ||
+        typedef_name == "int32_t" || typedef_name == "int64_t" ||
+        typedef_name == "uint8_t" || typedef_name == "uint16_t" ||
+        typedef_name == "uint32_t" || typedef_name == "uint64_t" ||
+        typedef_name == "size_t") {
+
+      // 获取完整的限定名称（可能包含std::命名空间）
+      std::string qualified_name = typedef_decl->getQualifiedNameAsString();
+      return qualified_name;
+    }
+
+    // 继续查找底层类型
+    current_type = typedef_decl->getUnderlyingType();
+  }
+
+  // 没有找到cstdint别名，返回空字符串
+  return "";
+}
+
+std::string filter_using_alias(clang::QualType type, clang::ASTContext *ctx) {
+  // 检查类型链，寻找标记了__final_name__的using/typedef声明
+  clang::QualType current_type = type;
+
+  // 遍历typedef链
+  while (auto typedef_type = current_type->getAs<clang::TypedefType>()) {
+    auto typedef_decl = typedef_type->getDecl();
+
+    // 检查是否有__final_name__标记
+    for (auto annotate : typedef_decl->specific_attrs<clang::AnnotateAttr>()) {
+      if (annotate->getAnnotation() == "__final_name__") {
+        // 找到标记的using/typedef，返回完整限定名称
+        return typedef_decl->getQualifiedNameAsString();
+      }
+    }
+
+    // 继续查找底层类型
+    current_type = typedef_decl->getUnderlyingType();
+  }
+
+  // 也检查TypeAliasDecl (using声明) - 遍历整个模板特化链条
+  current_type = type;
+  clang::TypeAliasTemplateDecl* found_decl = nullptr;
+  while (auto template_spec_type = current_type->getAs<clang::TemplateSpecializationType>()) {
+    // 对于模板特化类型，检查模板声明
+    if (auto template_decl = template_spec_type->getTemplateName().getAsTemplateDecl()) {
+      if (auto type_alias_template = llvm::dyn_cast<clang::TypeAliasTemplateDecl>(template_decl)) {
+        auto type_alias_decl = type_alias_template->getTemplatedDecl();
+
+        // 检查是否有__final_name__标记
+        for (auto annotate : type_alias_decl->specific_attrs<clang::AnnotateAttr>()) {
+          if (annotate->getAnnotation() == "__final_name__") {
+            found_decl = type_alias_template;
+          }
+        }
+
+        // 继续查找底层类型，遍历using链条
+        current_type = type_alias_decl->getUnderlyingType();
+      } else {
+        // 如果不是TypeAliasTemplateDecl，退出循环
+        break;
+      }
+    } else {
+      // 如果无法获取模板声明，退出循环
+      break;
+    }
+  }
+
+  if (found_decl) {
+    auto desuger_type = type;
+    while (true) {
+      auto template_spec_type = desuger_type->getAs<clang::TemplateSpecializationType>();
+      auto template_decl = template_spec_type->getTemplateName().getAsTemplateDecl();
+      auto type_alias_template = llvm::dyn_cast<clang::TypeAliasTemplateDecl>(template_decl);
+      if (type_alias_template == found_decl) {
+        break;
+      } else {
+        desuger_type = desuger_type.getSingleStepDesugaredType(*ctx);
+      }
+    }
+    return resolve_template_arguments(desuger_type, ctx);
+  }
+
+  // 没有找到标记的using别名，返回空字符串
+  return "";
+}
+
+std::string resolve_template_arguments(clang::QualType type, clang::ASTContext *ctx) {
+  // 检查是否是模板特化类型
+  if (auto template_spec_type = type->getAs<clang::TemplateSpecializationType>()) {
+    std::string result;
+
+    // 获取模板名称
+    if (auto template_decl = template_spec_type->getTemplateName().getAsTemplateDecl()) {
+      result = template_decl->getQualifiedNameAsString();
+    } else {
+      // 对于其他情况，使用类型的字符串表示来提取模板名称
+      std::string full_type = type.getAsString(ctx->getLangOpts());
+      size_t angle_pos = full_type.find('<');
+      if (angle_pos != std::string::npos) {
+        result = full_type.substr(0, angle_pos);
+      } else {
+        result = full_type;
+      }
+    }
+
+    // 处理模板参数
+    result += "<";
+    auto template_args = template_spec_type->template_arguments();
+    for (unsigned i = 0; i < template_args.size(); ++i) {
+      if (i > 0) {
+        result += ", ";
+      }
+
+      const auto &arg = template_args[i];
+      if (arg.getKind() == clang::TemplateArgument::Type) {
+        // 递归处理类型参数，使用完整的get_type_name逻辑
+        clang::QualType arg_type = arg.getAsType();
+        result += get_type_name(arg_type, ctx);
+      } else {
+        // 对于非类型参数，使用默认字符串表示
+        std::string arg_str;
+        llvm::raw_string_ostream arg_stream(arg_str);
+        arg.print(ctx->getPrintingPolicy(), arg_stream, true);
+        arg_stream.flush();
+        result += arg_str;
+      }
+    }
+    result += ">";
+
+    return result;
+  }
+
+  // 不是模板类型，返回普通类型名称
+  return get_type_name(type, ctx);
+}
+
 std::string get_raw_type_name(clang::QualType type, clang::ASTContext *ctx) {
   if (type->isPointerType() || type->isReferenceType())
     type = type->getPointeeType();
@@ -1005,7 +1171,7 @@ void ASTConsumer::_fill_ctor_data(clang::CXXConstructorDecl *ctor_decl, Construc
   out_ctor_data.name = ctor_decl->getQualifiedNameAsString();
   auto func_proto_type = ctor_decl->getType()->getAs<clang::FunctionProtoType>();
   out_ctor_data.attrs = help::parse_attr(ctor_decl);
-  
+
   // parse parameters
   for (auto param : ctor_decl->parameters()) {
     Field param_data;
@@ -1056,4 +1222,5 @@ void ASTConsumer::_fill_ctor_data(clang::CXXConstructorDecl *ctor_decl, Construc
     out_ctor_data.parameters.push_back(std::move(param_data));
   }
 }
+
 } // namespace meta

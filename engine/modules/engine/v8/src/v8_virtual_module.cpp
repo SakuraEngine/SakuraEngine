@@ -54,7 +54,7 @@ bool V8VirtualModule::raw_register_type(V8BindTemplate* bind_tp, StringView ns)
         else
         {
             String conflict_type = found->is_bind_tp() ? u8"bind tp" : u8"namespace";
-            String name          = found->is_bind_tp() ? found->bind_tp()->type_name() : found->name();
+            String name = found->is_bind_tp() ? found->bind_tp()->type_name() : found->name();
 
             SKR_LOG_FMT_ERROR(
                 u8"bind tp '{}' conflict, when export '{}' with namespace '{}', conflict with {} '{}'",

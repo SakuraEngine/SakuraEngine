@@ -26,17 +26,14 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
     auto rs = desc->root_signature;
     const auto hashes_size = desc->names_count * sizeof(uint64_t);
     const auto locations_size = desc->names_count * sizeof(CGPUXBindTableLocation);
-    const auto sets_size = rs->table_count * sizeof(CGPUDescriptorSetId);
-    const auto total_size = sizeof(CGPUXBindTable) + hashes_size + locations_size + sets_size;
+    const auto total_size = sizeof(CGPUXBindTable) + hashes_size + locations_size;
     CGPUXBindTable* table = (CGPUXBindTable*)cgpu_calloc_aligned(1, total_size, alignof(CGPUXBindTable));
+    new (table) CGPUXBindTable();
     uint64_t* pHashes = (uint64_t*)(table + 1);
     CGPUXBindTableLocation* pLocations = (CGPUXBindTableLocation*)(pHashes + desc->names_count);
-    CGPUDescriptorSetId* pSets = (CGPUDescriptorSetId*)(pLocations + desc->names_count);
     table->names_count = desc->names_count;
     table->name_hashes = pHashes;
     table->name_locations = pLocations;
-    table->sets_count = rs->table_count;
-    table->sets = pSets;
     table->root_signature = desc->root_signature;
     // calculate hashes for each name
     for (uint32_t i = 0; i < desc->names_count; i++)
@@ -45,11 +42,12 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
         pHashes[i] = skr_hash_of(name, strlen((const char*)name));
     }
     // calculate active sets
-    for (uint32_t setIdx = 0; setIdx < rs->table_count; setIdx++)
+    for (uint32_t i = 0; i < rs->table_count; i++)
     {
-        for (uint32_t bindIdx = 0; bindIdx < rs->tables[setIdx].resources_count; bindIdx++)
+        for (uint32_t bindIdx = 0; bindIdx < rs->tables[i].resources_count; bindIdx++)
         {
-            const auto res = rs->tables[setIdx].resources[bindIdx];
+            const auto setIdx = rs->tables[i].set_index;
+            const auto res = rs->tables[i].resources[bindIdx];
             const auto hash = skr_hash_of(res.name, strlen((const char*)res.name));
             for (uint32_t k = 0; k < desc->names_count; k++)
             {
@@ -57,7 +55,7 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
                 {
                     // initialize location set/binding
                     new (pLocations + k) CGPUXBindTableLocation();
-                    const_cast<uint32_t&>(pLocations[k].tbl_idx) = setIdx;
+                    const_cast<uint32_t&>(pLocations[k].logicalSetIdx) = setIdx;
                     const_cast<uint32_t&>(pLocations[k].binding) = res.binding;
                     const_cast<CGPUViewUsages&>(pLocations[k].view_usage) = res.view_usages;
                     const_cast<ECGPUResourceType&>(pLocations[k].type) = res.type;
@@ -65,9 +63,9 @@ CGPUXBindTableId CGPUXBindTable::Create(CGPUDeviceId device, const struct CGPUXB
                     CGPUDescriptorSetDescriptor setDesc = {};
                     setDesc.root_signature = desc->root_signature;
                     setDesc.set_index = setIdx;
-                    if (!pSets[setIdx]) 
+                    if (!table->sets[setIdx])
                     {
-                        pSets[setIdx] = cgpu_create_descriptor_set(device, &setDesc);
+                        table->sets[setIdx] = cgpu_create_descriptor_set(device, &setDesc);
                     }
                     break;
                 }
@@ -107,7 +105,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
         const auto& location = name_locations[i];
         if (!location.value.binded)
         {
-            needsUpdateIndices.add(location.tbl_idx);
+            needsUpdateIndices.add(location.logicalSetIdx);
         }
     }
     for (auto setIdx : needsUpdateIndices)
@@ -116,7 +114,7 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
         for (uint32_t i = 0; i < names_count; i++)
         {
             const auto& location = name_locations[i];
-            if (!location.value.binded && location.tbl_idx == setIdx)
+            if (!location.value.binded && location.logicalSetIdx == setIdx)
             {
                 // const auto& set = sets[location.tbl_idx];
                 // TODO: batch update for better performance
@@ -135,31 +133,25 @@ void CGPUXBindTable::Update(const struct CGPUDescriptorData* datas, uint32_t cou
 
 void CGPUXBindTable::Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < sets_count; i++)
+    for (auto&& [i, set] : sets)
     {
-        if (sets[i] != nullptr)
-        {
-            cgpu_render_encoder_bind_descriptor_set(encoder, sets[i]);
-        }
+        cgpu_render_encoder_bind_descriptor_set(encoder, set);
     }
 }
 
 void CGPUXBindTable::Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < sets_count; i++)
+    for (auto&& [i, set] : sets)
     {
-        if (sets[i] != nullptr)
-        {
-            cgpu_compute_encoder_bind_descriptor_set(encoder, sets[i]);
-        }
+        cgpu_compute_encoder_bind_descriptor_set(encoder, set);
     }
 }
 
 void CGPUXBindTable::Free(CGPUXBindTableId table) SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < table->sets_count; i++)
+    for (auto&& [i, set] : table->sets)
     {
-        if (table->sets[i]) cgpu_free_descriptor_set(table->sets[i]);
+        cgpu_free_descriptor_set(set);
     }
     for (uint32_t i = 0; i < table->names_count; i++)
     {
@@ -196,17 +188,15 @@ void cgpux_free_bind_table(CGPUXBindTableId bind_table)
 
 // CGPUX merged bind table apis
 
-CGPUXMergedBindTableId CGPUXMergedBindTable::Create(CGPUDeviceId device, const struct CGPUXMergedBindTableDescriptor *desc) SKR_NOEXCEPT
+CGPUXMergedBindTableId CGPUXMergedBindTable::Create(CGPUDeviceId device, const struct CGPUXMergedBindTableDescriptor* desc) SKR_NOEXCEPT
 {
     SKR_ASSERT(desc->root_signature);
 
-    const auto total_size = sizeof(CGPUXMergedBindTable) + 3 * desc->root_signature->table_count * sizeof(CGPUDescriptorSetId);
+    const auto total_size = sizeof(CGPUXMergedBindTable);
     CGPUXMergedBindTable* table = (CGPUXMergedBindTable*)cgpu_calloc_aligned(1, total_size, alignof(CGPUXMergedBindTable));
+    new (table) CGPUXMergedBindTable();
     table->root_signature = desc->root_signature;
     table->sets_count = desc->root_signature->table_count;
-    table->copied = (CGPUDescriptorSetId*)(table + 1);
-    table->merged = table->copied + table->sets_count;
-    table->result = table->merged + table->sets_count;
     return table;
 }
 
@@ -228,7 +218,7 @@ void CGPUXMergedBindTable::Merge(const CGPUXBindTableId* bind_tables, uint32_t c
         uint32_t source_table = notfound_index;
         for (uint32_t j = 0; j < count; j++)
         {
-            if (bind_tables[j]->sets[tblIdx] != nullptr)
+            if (bind_tables[j]->sets.find(tblIdx)->second != nullptr)
             {
                 if (source_table == notfound_index)
                 {
@@ -249,31 +239,33 @@ void CGPUXMergedBindTable::Merge(const CGPUXBindTableId* bind_tables, uint32_t c
         else if (source_table == overlap_index)
         {
             SkrZoneScopedN("CGPUXMergedBindTable::MergeOverlap");
-            
-            if (!merged[tblIdx]) 
+
+            auto setIdx = root_signature->tables[tblIdx].set_index;
+            if (!merged[setIdx])
             {
                 CGPUDescriptorSetDescriptor setDesc = {};
                 setDesc.root_signature = root_signature;
-                setDesc.set_index = tblIdx;
-                merged[tblIdx] = cgpu_create_descriptor_set(root_signature->device, &setDesc);
+                setDesc.set_index = setIdx;
+                merged[setIdx] = cgpu_create_descriptor_set(root_signature->device, &setDesc);
             }
             // update merged value
-            mergeUpdateForTable(bind_tables, count, tblIdx);
-            result[tblIdx] = merged[tblIdx];
+            mergeUpdateForTable(bind_tables, count, setIdx);
+            result[setIdx] = merged[setIdx];
         }
         else // direct copy from source table
         {
-            copied[tblIdx] = bind_tables[source_table]->sets[tblIdx];
-            result[tblIdx] = copied[tblIdx];
+            auto setIdx = root_signature->tables[tblIdx].set_index;
+            copied[setIdx] = bind_tables[source_table]->sets.find(setIdx)->second;
+            result[setIdx] = copied[setIdx];
         }
     }
 }
 
-void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tables, uint32_t count, uint32_t tbl_idx) SKR_NOEXCEPT
+void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tables, uint32_t count, uint32_t setIdx) SKR_NOEXCEPT
 {
     SkrZoneScopedN("CGPUXMergedBindTable::UpdateDescriptors");
 
-    auto to_update = merged[tbl_idx];
+    auto to_update = merged[setIdx];
     // TODO: refactor & remove this vector
     skr::Vector<CGPUDescriptorData> datas;
     // foreach table location to update values
@@ -282,7 +274,7 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
         for (uint32_t j = 0; j < bind_tables[i]->names_count; j++)
         {
             const auto& location = bind_tables[i]->name_locations[j];
-            if (location.tbl_idx == tbl_idx)
+            if (location.logicalSetIdx == setIdx)
             {
                 SkrZoneScopedN("CGPUXMergedBindTable::UpdateDescriptor");
                 // batch update for better performance
@@ -297,32 +289,31 @@ void CGPUXMergedBindTable::mergeUpdateForTable(const CGPUXBindTableId* bind_tabl
 
 void CGPUXMergedBindTable::Bind(CGPURenderPassEncoderId encoder) const SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < sets_count; i++)
+    for (auto&& [i, set] : result)
     {
-        if (result[i] != nullptr)
-        {
-            cgpu_render_encoder_bind_descriptor_set(encoder, result[i]);
-        }
+        if (set == nullptr) 
+            continue;
+        cgpu_render_encoder_bind_descriptor_set(encoder, set);
     }
 }
 
 void CGPUXMergedBindTable::Bind(CGPUComputePassEncoderId encoder) const SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < sets_count; i++)
+    for (auto&& [i, set] : result)
     {
-        if (result[i] != nullptr)
-        {
-            cgpu_compute_encoder_bind_descriptor_set(encoder, result[i]);
-        }
+        if (set == nullptr) 
+            continue;
+        cgpu_compute_encoder_bind_descriptor_set(encoder, set);
     }
 }
 
 void CGPUXMergedBindTable::Free(CGPUXMergedBindTableId table) SKR_NOEXCEPT
 {
-    for (uint32_t i = 0; i < table->sets_count; i++)
+    for (auto&& [i, set] : table->merged)
     {
-        // free merged sets
-        if (table->merged[i]) cgpu_free_descriptor_set(table->merged[i]);
+        if (set == nullptr) 
+            continue;
+        cgpu_free_descriptor_set(set);
     }
     ((CGPUXMergedBindTable*)table)->~CGPUXMergedBindTable();
     cgpu_free_aligned((void*)table, alignof(CGPUXMergedBindTable));
@@ -356,11 +347,11 @@ void cgpux_free_merged_bind_table(CGPUXMergedBindTableId merged_table)
 // equals & hashes
 namespace cgpux
 {
-skr_hash hash<CGPUVertexLayout>::operator()(const CGPUVertexLayout& val) const 
+skr_hash hash<CGPUVertexLayout>::operator()(const CGPUVertexLayout& val) const
 {
     SkrZoneScopedN("hash<CGPUVertexLayout>");
 
-    return skr_hash_of(&val, sizeof(CGPUVertexLayout)); 
+    return skr_hash_of(&val, sizeof(CGPUVertexLayout));
 }
 
 skr_hash equal_to<CGPUVertexLayout>::operator()(const CGPUVertexLayout& a, const CGPUVertexLayout& b) const
@@ -371,12 +362,12 @@ skr_hash equal_to<CGPUVertexLayout>::operator()(const CGPUVertexLayout& a, const
     for (uint32_t i = 0; i < a.attribute_count; i++)
     {
         const bool vequal = (a.attributes[i].array_size == b.attributes[i].array_size) &&
-                            (a.attributes[i].format == b.attributes[i].format) &&
-                            (a.attributes[i].binding == b.attributes[i].binding) &&
-                            (a.attributes[i].offset == b.attributes[i].offset) &&
-                            (a.attributes[i].elem_stride == b.attributes[i].elem_stride) &&
-                            (a.attributes[i].rate == b.attributes[i].rate) &&
-                            (0 == strcmp((const char*)a.attributes[i].semantic_name, (const char*)b.attributes[i].semantic_name));
+            (a.attributes[i].format == b.attributes[i].format) &&
+            (a.attributes[i].binding == b.attributes[i].binding) &&
+            (a.attributes[i].offset == b.attributes[i].offset) &&
+            (a.attributes[i].elem_stride == b.attributes[i].elem_stride) &&
+            (a.attributes[i].rate == b.attributes[i].rate) &&
+            (0 == strcmp((const char*)a.attributes[i].semantic_name, (const char*)b.attributes[i].semantic_name));
         if (!vequal) return false;
     }
     return true;
@@ -387,51 +378,51 @@ skr_hash equal_to<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDe
     SkrZoneScopedN("equal_to<CGPUShaderEntryDescriptor>");
 
     if (a.library != b.library) return false;
-    if (a.stage != b.stage) return false;
-    if (a.num_constants != b.num_constants) return false;
     if (a.entry && !b.entry) return false;
     if (!a.entry && b.entry) return false;
     if (a.entry && ::strcmp((const char*)a.entry, (const char*)b.entry) != 0) return false;
+    /*
     for (uint32_t i = 0; i < a.num_constants; i++)
     {
         if (a.constants[i].constantID != b.constants[i].constantID) return false;
         if (a.constants[i].u != b.constants[i].u) return false;
     }
+    */
     return true;
 }
 
-skr_hash hash<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDescriptor& val) const 
+skr_hash hash<CGPUShaderEntryDescriptor>::operator()(const CGPUShaderEntryDescriptor& val) const
 {
     SkrZoneScopedN("hash<CGPUShaderEntryDescriptor>");
 
-    skr_hash result = val.stage;
-    const auto entry_hash = val.entry ? skr_hash_of((const char*)val.entry, strlen((const char*)val.entry)) : 0; 
-    const auto constants_hash = val.constants ? skr_hash_of(val.constants, sizeof(CGPUConstantSpecialization) * val.num_constants) : 0;
+    skr_hash result = 0;
+    const auto entry_hash = val.entry ? skr_hash_of((const char*)val.entry, strlen((const char*)val.entry)) : 0;
+    // const auto constants_hash = val.constants ? skr_hash_of(val.constants, sizeof(CGPUConstantSpecialization) * val.num_constants) : 0;
     const auto pLibrary = static_cast<const void*>(val.library);
-    hash_combine(result, entry_hash, constants_hash, pLibrary);    
-    return result;   
+    hash_combine(result, entry_hash /*, constants_hash*/, pLibrary);
+    return result;
 }
 
 skr_hash equal_to<CGPUBlendStateDescriptor>::operator()(const CGPUBlendStateDescriptor& a, const CGPUBlendStateDescriptor& b) const
 {
     SkrZoneScopedN("equal_to<CGPUBlendStateDescriptor>");
 
-    if (a.alpha_to_coverage != b.alpha_to_coverage) return false;            
-    if (a.independent_blend != b.independent_blend) return false;       
+    if (a.alpha_to_coverage != b.alpha_to_coverage) return false;
+    if (a.independent_blend != b.independent_blend) return false;
     for (uint32_t i = 0; i < count; i++)
     {
-        if (a.src_factors[i] != b.src_factors[i]) return false;            
-        if (a.dst_factors[i] != b.dst_factors[i]) return false;            
-        if (a.src_alpha_factors[i] != b.src_alpha_factors[i]) return false;            
-        if (a.dst_alpha_factors[i] != b.dst_alpha_factors[i]) return false;            
-        if (a.blend_modes[i] != b.blend_modes[i]) return false;            
-        if (a.blend_alpha_modes[i] != b.blend_alpha_modes[i]) return false;            
-        if (a.masks[i] != b.masks[i]) return false;            
+        if (a.src_factors[i] != b.src_factors[i]) return false;
+        if (a.dst_factors[i] != b.dst_factors[i]) return false;
+        if (a.src_alpha_factors[i] != b.src_alpha_factors[i]) return false;
+        if (a.dst_alpha_factors[i] != b.dst_alpha_factors[i]) return false;
+        if (a.blend_modes[i] != b.blend_modes[i]) return false;
+        if (a.blend_alpha_modes[i] != b.blend_alpha_modes[i]) return false;
+        if (a.masks[i] != b.masks[i]) return false;
     }
     return true;
 }
 
-skr_hash hash<CGPUBlendStateDescriptor>::operator()(const CGPUBlendStateDescriptor& val) const 
+skr_hash hash<CGPUBlendStateDescriptor>::operator()(const CGPUBlendStateDescriptor& val) const
 {
     SkrZoneScopedN("hash<CGPUBlendStateDescriptor>");
 
@@ -442,24 +433,24 @@ skr_hash equal_to<CGPUDepthStateDesc>::operator()(const CGPUDepthStateDesc& a, c
 {
     SkrZoneScopedN("equal_to<CGPUDepthStateDesc>");
 
-    if (a.depth_test != b.depth_test) return false;            
-    if (a.depth_write != b.depth_write) return false;            
-    if (a.depth_func != b.depth_func) return false;            
-    if (a.stencil_test != b.stencil_test) return false;            
-    if (a.stencil_read_mask != b.stencil_read_mask) return false;            
-    if (a.stencil_write_mask != b.stencil_write_mask) return false;            
-    if (a.stencil_front_func != b.stencil_front_func) return false;            
-    if (a.stencil_front_fail != b.stencil_front_fail) return false;            
-    if (a.depth_front_fail != b.depth_front_fail) return false;            
-    if (a.stencil_front_pass != b.stencil_front_pass) return false;            
-    if (a.stencil_back_func != b.stencil_back_func) return false;            
-    if (a.stencil_back_fail != b.stencil_back_fail) return false;            
-    if (a.depth_back_fail != b.depth_back_fail) return false;            
-    if (a.stencil_back_pass != b.stencil_back_pass) return false;            
+    if (a.depth_test != b.depth_test) return false;
+    if (a.depth_write != b.depth_write) return false;
+    if (a.depth_func != b.depth_func) return false;
+    if (a.stencil_test != b.stencil_test) return false;
+    if (a.stencil_read_mask != b.stencil_read_mask) return false;
+    if (a.stencil_write_mask != b.stencil_write_mask) return false;
+    if (a.stencil_front_func != b.stencil_front_func) return false;
+    if (a.stencil_front_fail != b.stencil_front_fail) return false;
+    if (a.depth_front_fail != b.depth_front_fail) return false;
+    if (a.stencil_front_pass != b.stencil_front_pass) return false;
+    if (a.stencil_back_func != b.stencil_back_func) return false;
+    if (a.stencil_back_fail != b.stencil_back_fail) return false;
+    if (a.depth_back_fail != b.depth_back_fail) return false;
+    if (a.stencil_back_pass != b.stencil_back_pass) return false;
     return true;
 }
 
-skr_hash hash<CGPUDepthStateDesc>::operator()(const CGPUDepthStateDesc& val) const 
+skr_hash hash<CGPUDepthStateDesc>::operator()(const CGPUDepthStateDesc& val) const
 {
     SkrZoneScopedN("hash<CGPUDepthStateDesc>");
 
@@ -470,18 +461,18 @@ skr_hash equal_to<CGPURasterizerStateDescriptor>::operator()(const CGPURasterize
 {
     SkrZoneScopedN("equal_to<CGPURasterizerStateDescriptor>");
 
-    if (a.cull_mode != b.cull_mode) return false;            
-    if (a.depth_bias != b.depth_bias) return false;            
-    if (a.slope_scaled_depth_bias != b.slope_scaled_depth_bias) return false;            
-    if (a.fill_mode != b.fill_mode) return false;            
-    if (a.front_face != b.front_face) return false;            
-    if (a.enable_multi_sample != b.enable_multi_sample) return false;            
-    if (a.enable_scissor != b.enable_scissor) return false;            
-    if (a.enable_depth_clamp != b.enable_depth_clamp) return false;            
+    if (a.cull_mode != b.cull_mode) return false;
+    if (a.depth_bias != b.depth_bias) return false;
+    if (a.slope_scaled_depth_bias != b.slope_scaled_depth_bias) return false;
+    if (a.fill_mode != b.fill_mode) return false;
+    if (a.front_face != b.front_face) return false;
+    if (a.enable_multi_sample != b.enable_multi_sample) return false;
+    if (a.enable_scissor != b.enable_scissor) return false;
+    if (a.enable_depth_clamp != b.enable_depth_clamp) return false;
     return true;
 }
 
-skr_hash hash<CGPURasterizerStateDescriptor>::operator()(const CGPURasterizerStateDescriptor& val) const 
+skr_hash hash<CGPURasterizerStateDescriptor>::operator()(const CGPURasterizerStateDescriptor& val) const
 {
     SkrZoneScopedN("hash<CGPURasterizerStateDescriptor>");
 
@@ -492,18 +483,18 @@ skr_hash equal_to<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipe
 {
     SkrZoneScopedN("equal_to<CGPURenderPipelineDescriptor>");
 
-    if (a.vertex_layout->attribute_count != b.vertex_layout->attribute_count) 
+    if (a.vertex_layout->attribute_count != b.vertex_layout->attribute_count)
         return false;
-    if (a.render_target_count != b.render_target_count) 
+    if (a.render_target_count != b.render_target_count)
         return false;
 
     // equal root signature
     const auto rs_a = a.root_signature->pool_sig ? a.root_signature->pool_sig : a.root_signature;
     const auto rs_b = b.root_signature->pool_sig ? b.root_signature->pool_sig : b.root_signature;
     if (rs_a != rs_b) return false;
-    
+
     // equal sample quality & count
-    if (a.sample_quality != b.sample_quality)  return false;
+    if (a.sample_quality != b.sample_quality) return false;
     if (a.sample_count != b.sample_count) return false;
 
     // equal out formats
@@ -537,7 +528,7 @@ skr_hash equal_to<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipe
     if (a.fragment_shader && !b.fragment_shader) return false;
     if (!a.fragment_shader && b.fragment_shader) return false;
     if (a.fragment_shader && !equal_to<CGPUShaderEntryDescriptor>()(*a.fragment_shader, *b.fragment_shader)) return false;
-    
+
     // equal vertex layout
     if (a.vertex_layout && !b.vertex_layout) return false;
     if (!a.vertex_layout && b.vertex_layout) return false;
@@ -546,7 +537,8 @@ skr_hash equal_to<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipe
     // equal blend state
     if (a.blend_state && !b.blend_state) return false;
     if (!a.blend_state && b.blend_state) return false;
-    auto bs_equal = equal_to<CGPUBlendStateDescriptor>(); bs_equal.count = a.render_target_count;
+    auto bs_equal = equal_to<CGPUBlendStateDescriptor>();
+    bs_equal.count = a.render_target_count;
     if (a.blend_state && !bs_equal(*a.blend_state, *b.blend_state)) return false;
 
     // equal depth state
@@ -563,13 +555,13 @@ skr_hash equal_to<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipe
 }
 
 hash<CGPURenderPipelineDescriptor>::ParameterBlock::ParameterBlock(const CGPURenderPipelineDescriptor& desc)
-    : render_target_count(desc.render_target_count), 
-    sample_count(desc.sample_count), 
-    sample_quality(desc.sample_quality),
-    color_resolve_disable_mask(desc.color_resolve_disable_mask),
-    depth_stencil_format(desc.depth_stencil_format),
-    prim_topology(desc.prim_topology),
-    enable_indirect_command(desc.enable_indirect_command)
+    : render_target_count(desc.render_target_count)
+    , sample_count(desc.sample_count)
+    , sample_quality(desc.sample_quality)
+    , color_resolve_disable_mask(desc.color_resolve_disable_mask)
+    , depth_stencil_format(desc.depth_stencil_format)
+    , prim_topology(desc.prim_topology)
+    , enable_indirect_command(desc.enable_indirect_command)
 {
     for (uint32_t i = 0; i < render_target_count; i++)
     {
@@ -577,7 +569,7 @@ hash<CGPURenderPipelineDescriptor>::ParameterBlock::ParameterBlock(const CGPURen
     }
 }
 
-skr_hash hash<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipelineDescriptor& a) const 
+skr_hash hash<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipelineDescriptor& a) const
 {
     SkrZoneScopedN("hash<CGPURenderPipelineDescriptor>");
 
@@ -593,16 +585,14 @@ skr_hash hash<CGPURenderPipelineDescriptor>::operator()(const CGPURenderPipeline
     const auto& blend_state = a.blend_state ? *a.blend_state : kZeroCGPUBlendStateDescriptor;
     const auto& depth_state = a.depth_state ? *a.depth_state : kZeroCGPUDepthStateDesc;
     const auto& rasterizer_state = a.rasterizer_state ? *a.rasterizer_state : kZeroCGPURasterizerStateDescriptor;
-    hash_combine(result, rs_a,
-        vertex_shader, tesc_shader, tese_shader, geom_shader, fragment_shader, 
-        vertex_layout, blend_state, depth_state, rasterizer_state, block);
+    hash_combine(result, rs_a, vertex_shader, tesc_shader, tese_shader, geom_shader, fragment_shader, vertex_layout, blend_state, depth_state, rasterizer_state, block);
     return 0;
 }
 
-skr_hash hash<hash<CGPURenderPipelineDescriptor>::ParameterBlock>::operator()(const hash<CGPURenderPipelineDescriptor>::ParameterBlock& val) const 
+skr_hash hash<hash<CGPURenderPipelineDescriptor>::ParameterBlock>::operator()(const hash<CGPURenderPipelineDescriptor>::ParameterBlock& val) const
 {
     SkrZoneScopedN("hash<CGPURenderPipelineDescriptor::ParameterBlock>");
 
     return skr_hash_of(&val, sizeof(hash<CGPURenderPipelineDescriptor>::ParameterBlock));
 }
-}
+} // namespace cgpux

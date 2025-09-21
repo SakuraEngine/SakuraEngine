@@ -51,7 +51,7 @@ struct gui_render_graph_t
                     .format(back_desc->format)
                     .sample_count(sample_count)
                     .allow_render_target();
-            if (back_desc->width > 2048) builder.allocate_dedicated();
+            if (back_desc->width > 2048) builder.heap_dedicated();
             });(void)msaaTarget;
         }
         else
@@ -71,7 +71,7 @@ struct gui_render_graph_t
                     .format(CGPU_FORMAT_D32_SFLOAT)
                     .sample_count(sample_count)
                     .allow_depth_stencil();
-                if (texInfo->width > 2048) builder.allocate_dedicated();
+                if (texInfo->width > 2048) builder.heap_dedicated();
             });
     }
 

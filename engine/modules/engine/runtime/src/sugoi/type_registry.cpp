@@ -1,6 +1,6 @@
 #include "SkrBase/misc/make_zeroed.hpp"
-#include "SkrRT/sugoi/sugoi.h"
-#include "SkrRT/sugoi/type_index.hpp"
+#include "SkrRuntime/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/type_index.hpp"
 
 #include "./pool.hpp"
 #include "./impl/type_registry.hpp"
@@ -214,7 +214,7 @@ void TypeRegistry::Impl::foreach_types(sugoi_type_callback_t callback, void* u)
 guid_t TypeRegistry::Impl::make_guid()
 {
     guid_t guid;
-    skr_make_guid(&guid);
+    skr_create_guid(&guid);
     return guid;
 }
 

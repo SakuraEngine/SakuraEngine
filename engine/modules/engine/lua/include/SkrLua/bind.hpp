@@ -2,8 +2,8 @@
 #include "SkrBase/misc/traits.hpp"
 #include "SkrBase/misc/constexpr_join.hpp"
 #include "SkrContainers/string.hpp"
-#include "SkrRT/resource/resource_handle.h"
-#include "SkrRTTR/rttr_traits.hpp"
+#include "SkrRuntime/resource/resource_handle.h"
+#include <SkrBase/type_info.hpp>
 #include "SkrBase/config.h"
 #include "SkrLua/bind_fwd.hpp"
 
@@ -17,9 +17,9 @@ namespace skr::lua
 SKR_LUA_API int               push_enum(lua_State* L, long long v);
 SKR_LUA_API long long         check_enum(lua_State* L, int index);
 SKR_LUA_API long long         opt_enum(lua_State* L, int index, long long def);
-SKR_LUA_API int               push_guid(lua_State* L, const skr_guid_t* guid);
-SKR_LUA_API const skr_guid_t* check_guid(lua_State* L, int index);
-SKR_LUA_API const skr_guid_t* opt_guid(lua_State* L, int index, const skr_guid_t* def);
+SKR_LUA_API int               push_guid(lua_State* L, const GUID* guid);
+SKR_LUA_API const GUID* check_guid(lua_State* L, int index);
+SKR_LUA_API const GUID* opt_guid(lua_State* L, int index, const GUID* def);
 SKR_LUA_API int               push_string(lua_State* L, const skr::String& str);
 SKR_LUA_API int               push_string(lua_State* L, skr::StringView str);
 SKR_LUA_API skr::String check_string(lua_State* L, int index);
@@ -38,18 +38,18 @@ SKR_LUA_API skr::SP<void> check_sptr(lua_State* L, int index, std::string_view t
 SKR_LUA_API int             push_sobjectptr(lua_State* L, const skr::RC<SInterface>& value, std::string_view tid);
 SKR_LUA_API skr::RC<SInterface> check_sobjectptr(lua_State* L, int index, std::string_view tid);
 // TODO: how should we handle math operations in lua?
-// SKR_LUA_API int push_float2(lua_State* L, const skr_float2_t* float2);
-// SKR_LUA_API skr_float2_t check_float2(lua_State* L, int index);
-// SKR_LUA_API int push_float3(lua_State* L, const skr_float3_t* float3);
-// SKR_LUA_API skr_float3_t check_float3(lua_State* L, int index);
-// SKR_LUA_API int push_float4(lua_State* L, const skr_float4_t* float4);
-// SKR_LUA_API skr_float4_t check_float4(lua_State* L, int index);
+// SKR_LUA_API int push_float2(lua_State* L, const float2* float2);
+// SKR_LUA_API float2 check_float2(lua_State* L, int index);
+// SKR_LUA_API int push_float3(lua_State* L, const float3* float3);
+// SKR_LUA_API float3 check_float3(lua_State* L, int index);
+// SKR_LUA_API int push_float4(lua_State* L, const float4* float4);
+// SKR_LUA_API float4 check_float4(lua_State* L, int index);
 
 template <class T, class = void>
 struct DefaultBindTrait;
 
 template <class T>
-struct DefaultBindTrait<T*, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::RTTRTraits<T>>>> {
+struct DefaultBindTrait<T*, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::TypeInfo<T>>>> {
     static int push(lua_State* L, T* value)
     {
         return push_unknown(L, value, skr::type_name_of<T>());
@@ -61,7 +61,7 @@ struct DefaultBindTrait<T*, std::enable_if_t<!std::is_enum_v<T> && skr::is_compl
 };
 
 template <class T>
-struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::RTTRTraits<T>>>> {
+struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::TypeInfo<T>>>> {
     static int push(lua_State* L, const T& value)
     {
         static constexpr std::string_view prefix = "[unique]";
@@ -77,7 +77,7 @@ struct DefaultBindTrait<T, std::enable_if_t<!std::is_enum_v<T> && skr::is_comple
 };
 
 template <class T>
-struct DefaultBindTrait<skr::SP<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::RTTRTraits<T>>>> {
+struct DefaultBindTrait<skr::SP<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::TypeInfo<T>>>> {
     static int push(lua_State* L, const skr::SP<T>& value)
     {
         static constexpr std::string_view prefix = "[shared]";
@@ -91,7 +91,7 @@ struct DefaultBindTrait<skr::SP<T>, std::enable_if_t<!std::is_enum_v<T> && skr::
 };
 
 template <class T>
-struct DefaultBindTrait<skr::RC<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::RTTRTraits<T>>>> {
+struct DefaultBindTrait<skr::RC<T>, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::TypeInfo<T>>>> {
     static int push(lua_State* L, const skr::RC<T>& value)
     {
         static constexpr std::string_view prefix = "[shared]";
@@ -123,7 +123,7 @@ struct DefaultBindTrait<T, std::enable_if_t<std::is_enum_v<T>>> {
 };
 
 template <class T>
-struct DefaultBindTrait<const T&, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::RTTRTraits<T>>>> {
+struct DefaultBindTrait<const T&, std::enable_if_t<!std::is_enum_v<T> && skr::is_complete_v<skr::TypeInfo<T>>>> {
     static int push(lua_State* L, const T& value)
     {
         return DefaultBindTrait<T>::push(L, value);
@@ -242,19 +242,19 @@ struct BindTrait<bool> {
 };
 
 template <>
-struct BindTrait<skr_guid_t> {
-    static int push(lua_State* L, const skr_guid_t& guid)
+struct BindTrait<GUID> {
+    static int push(lua_State* L, const GUID& guid)
     {
         return push_guid(L, &guid);
     }
 
-    static const skr_guid_t check(lua_State* L, int index, int& used)
+    static const GUID check(lua_State* L, int index, int& used)
     {
         used = 1;
         return *check_guid(L, index);
     }
 
-    static const skr_guid_t opt(lua_State* L, int index, const skr_guid_t& def)
+    static const GUID opt(lua_State* L, int index, const GUID& def)
     {
         return *opt_guid(L, index, &def);
     }

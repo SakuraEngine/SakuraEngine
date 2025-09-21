@@ -63,7 +63,7 @@ namespace SB.Core
 
             var SourceFile = Driver.Arguments["Source"] as string;
             var ObjectFile = Driver.Arguments["Object"] as string;
-            var Changed = BS.CppCompileDepends(Target).OnChanged(Target.Name, SourceFile!, Emitter.Name, (Depend depend) =>
+            var Changed = BuildDepends.Solve(Target).OnChanged(Target.Name, SourceFile!, Emitter.Name, (Depend depend) =>
             {
                 var Args = String.Join(" ", CompilerArgsList);
                 ProcessOptions Options = new ProcessOptions

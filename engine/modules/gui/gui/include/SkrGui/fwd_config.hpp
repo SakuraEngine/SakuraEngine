@@ -10,7 +10,7 @@
 #include <limits>
 
 // reflection
-#include "SkrRT/config.h"
+#include "SkrRuntime/config.h"
 #include "SkrRTTR/iobject.hpp"
 
 // export macro
@@ -63,7 +63,7 @@ using NotNull = ::skr::not_null<T>;
 template <typename T>
 using Optional = skr::Optional<T>;
 template <typename T>
-using Span = skr::span<T>;
+using Span = skr::Span<T>;
 
 // containers
 using String     = skr::String;

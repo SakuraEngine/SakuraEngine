@@ -14,7 +14,8 @@ namespace skr::container
 
 // free linked list helper, for generic
 template <typename TSize>
-struct SparseVectorFreeListNode {
+struct SparseVectorFreeListNode
+{
     TSize prev = 0;
     TSize next = 0;
 };
@@ -51,14 +52,16 @@ using SparseVectorDataRef = VectorDataRef<T, TSize, kConst>;
 namespace skr::memory
 {
 template <typename T, typename TSize>
-struct MemoryTraits<skr::container::SparseVectorStorage<T, TSize>, skr::container::SparseVectorStorage<T, TSize>> : public MemoryTraits<T, T> {
+struct MemoryTraits<skr::container::SparseVectorStorage<T, TSize>, skr::container::SparseVectorStorage<T, TSize>> : public MemoryTraits<T, T>
+{
 };
 } // namespace skr::memory
 
 namespace skr
 {
 template <typename T, typename TSize>
-struct Swap<::skr::container::SparseVectorStorage<T, TSize>> {
+struct Swap<::skr::container::SparseVectorStorage<T, TSize>>
+{
     static void call(::skr::container::SparseVectorStorage<T, TSize>& a, ::skr::container::SparseVectorStorage<T, TSize>& b)
     {
         Swap<T>::call(a._sparse_vector_data, b._sparse_vector_data);

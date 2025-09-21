@@ -268,10 +268,8 @@ void create_render_pipeline()
     free(fs_bytes);
     // Create RS
     CGPUShaderEntryDescriptor ppl_shaders[2];
-    ppl_shaders[0].stage = CGPU_SHADER_STAGE_VERT;
     ppl_shaders[0].entry = "vs";
     ppl_shaders[0].library = vertex_shader;
-    ppl_shaders[1].stage = CGPU_SHADER_STAGE_FRAG;
     ppl_shaders[1].entry = "fs";
     ppl_shaders[1].library = fragment_shader;
     const char8_t* sampler_name = "texture_sampler";

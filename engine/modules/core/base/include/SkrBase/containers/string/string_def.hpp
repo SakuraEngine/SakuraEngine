@@ -10,7 +10,8 @@ template <typename T, typename TSize, bool kConst>
 using StringDataRef = VectorDataRef<T, TSize, kConst>;
 
 template <typename TStr>
-struct StringPartitionResult {
+struct StringPartitionResult
+{
     TStr left  = {};
     TStr mid   = {};
     TStr right = {};
@@ -23,7 +24,8 @@ enum class EStringParseStatus
     Invalid,
 };
 template <typename T, typename TStringView>
-struct StringParseResult {
+struct StringParseResult
+{
     using ViewType = TStringView;
 
     T                  value;

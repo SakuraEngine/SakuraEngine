@@ -60,7 +60,7 @@ void PassDependencyAnalysis::analyze_pass_dependencies(RenderGraph* graph)
             continue;
 
         // For each resource, check last accessor directly
-        for (const auto& current_access : current_resource_info->all_resource_accesses)
+        for (const auto& current_access : current_resource_info->resource_accesses)
         {
             auto resource = current_access.resource;
             auto& last_access = resource_last_access_[resource];
@@ -286,13 +286,13 @@ void PassDependencyAnalysis::identify_logical_critical_path()
     }
 }
 
-uint32_t PassDependencyAnalysis::get_logical_dependency_level(PassNode* pass) const
+uint32_t PassDependencyAnalysis::get_dependency_level(PassNode* pass) const
 {
     auto it = pass_dependencies_.find(pass);
     return it ? it.value().logical_dependency_level : 0;
 }
 
-uint32_t PassDependencyAnalysis::get_logical_topological_order(PassNode* pass) const
+uint32_t PassDependencyAnalysis::get_topological_order(PassNode* pass) const
 {
     auto it = pass_dependencies_.find(pass);
     return it ? it.value().logical_topological_order : UINT32_MAX;
@@ -424,7 +424,7 @@ void PassDependencyAnalysis::dump_logical_topology() const
     for (size_t i = 0; i < logical_topology_.logical_topological_order.size(); ++i)
     {
         auto* pass = logical_topology_.logical_topological_order[i];
-        uint32_t level = get_logical_dependency_level(pass);
+        uint32_t level = get_dependency_level(pass);
 
         SKR_LOG_INFO(u8"  [%zu] %s (logical level: %u)", i, pass->get_name(), level);
     }
@@ -456,7 +456,7 @@ void PassDependencyAnalysis::dump_logical_critical_path() const
     for (size_t i = 0; i < logical_topology_.logical_critical_path.size(); ++i)
     {
         auto* pass = logical_topology_.logical_critical_path[i];
-        uint32_t level = get_logical_dependency_level(pass);
+        uint32_t level = get_dependency_level(pass);
 
         SKR_LOG_INFO(u8"[%zu] %s (logical level: %u)",
             i,

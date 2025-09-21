@@ -5,31 +5,26 @@
 #include "SkrContainersDef/string.hpp"
 #include "SkrRTTR/type.hpp"
 #include <SkrRTTR/type_registry.hpp>
-#ifndef __meta__
-    #include "SkrCore/cli.generated.h"
-#endif
+#include "SkrCore/cli.generated.h"
 
 // attributes
 namespace skr::attr
 {
-// clang-format off
-sreflect_struct(guid = "5ec06e6b-ca62-45ca-aa35-d39e1aba88a4")
-CmdOption {
-    // clang-format on
-    skr_char8 short_name  = {};
-    String    name        = {};
-    String    help        = {};
-    bool      is_required = true;
+struct [[sattr(guid = "5ec06e6b-ca62-45ca-aa35-d39e1aba88a4")]]
+CmdOption
+{
+    skr_char8 short_name = {};
+    String name = {};
+    String help = {};
+    bool is_required = true;
 };
-// clang-format off
-sreflect_struct(guid = "3bd3f46e-e8fd-41e8-9c94-c74e2d93141b")
-CmdExec {
-    // clang-format on
+struct [[sattr(guid = "3bd3f46e-e8fd-41e8-9c94-c74e2d93141b")]]
+CmdExec
+{
 };
-// clang-format off
-sreflect_struct(guid = "098c17f7-d906-45ea-86d2-180d73a1cb40")
-CmdSub {
-    // clang-format on
+struct [[sattr(guid = "098c17f7-d906-45ea-86d2-180d73a1cb40")]]
+CmdSub
+{
 
     String name = {};
     skr_char8 short_name = {};
@@ -437,8 +432,8 @@ struct SKR_CORE_API CmdParser
 
 private:
     // helper
-    static span<const CmdToken> _find_option_param_pack(const Vector<CmdToken>& args, uint64_t option_idx);
-    static span<const CmdToken> _find_rest_params_pack(const Vector<CmdToken>& args, uint64_t name_idx);
+    static Span<const CmdToken> _find_option_param_pack(const Vector<CmdToken>& args, uint64_t option_idx);
+    static Span<const CmdToken> _find_rest_params_pack(const Vector<CmdToken>& args, uint64_t name_idx);
     static void _error_require_params(CliOutputBuilder& builder, const CmdToken& arg);
     static void _error_parse_params(CliOutputBuilder& builder, const CmdToken& arg, StringView param, StringView type);
     static void _error_unknown_option(CliOutputBuilder& builder, const CmdToken& arg);
@@ -446,7 +441,7 @@ private:
         CmdOptionData* found_option,
         uint32_t& current_idx,
         const CmdToken& arg,
-        span<const CmdToken> params,
+        Span<const CmdToken> params,
         CliOutputBuilder& builder,
         Set<CmdOptionData*>& required_options);
 

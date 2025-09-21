@@ -29,8 +29,8 @@ void SkrRendererModule::on_load(int argc, char8_t** argv)
 #endif
     // initailize render device
     auto builder = make_zeroed<skr::RenderDevice::Builder>();
-    builder.enable_debug_layer = true;
-    builder.enable_gpu_based_validation = true;
+    builder.enable_debug_layer = false;
+    builder.enable_gpu_based_validation = false;
     builder.enable_set_name = true;
 #if SKR_PLAT_WINDOWS
     builder.backend = CGPU_BACKEND_D3D12;
@@ -58,13 +58,13 @@ void SkrRendererModule::on_load(int argc, char8_t** argv)
     // register vertex layout
     {
         CGPUVertexLayout vertex_layout = {};
-        vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-        vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-        vertex_layout.attributes[2] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr_float2_t), CGPU_INPUT_RATE_VERTEX };
-        vertex_layout.attributes[3] = { u8"NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 3, 0, sizeof(skr_float3_t), CGPU_INPUT_RATE_VERTEX };
-        vertex_layout.attributes[4] = { u8"TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[0] = { u8"POSITION", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 0, 0, sizeof(skr::float3), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[1] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 1, 0, sizeof(skr::float2), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[2] = { u8"TEXCOORD", 1, CGPU_FORMAT_R32G32_SFLOAT, 2, 0, sizeof(skr::float2), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[3] = { u8"NORMAL", 1, CGPU_FORMAT_R32G32B32_SFLOAT, 3, 0, sizeof(skr::float3), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[4] = { u8"TANGENT", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 4, 0, sizeof(skr::float4), CGPU_INPUT_RATE_VERTEX };
         vertex_layout.attributes[5] = { u8"JOINTS", 1, CGPU_FORMAT_R32G32B32A32_UINT, 5, 0, sizeof(uint32_t) * 4, CGPU_INPUT_RATE_VERTEX };
-        vertex_layout.attributes[6] = { u8"WEIGHTS", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 6, 0, sizeof(skr_float4_t), CGPU_INPUT_RATE_VERTEX };
+        vertex_layout.attributes[6] = { u8"WEIGHTS", 1, CGPU_FORMAT_R32G32B32A32_SFLOAT, 6, 0, sizeof(skr::float4), CGPU_INPUT_RATE_VERTEX };
         vertex_layout.attribute_count = 7;
         skr_mesh_resource_register_vertex_layout(::kGLTFVertexLayoutWithJointId, u8"SkinnedMesh", &vertex_layout);
         vertex_layout.attribute_count = 4;

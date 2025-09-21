@@ -9,7 +9,8 @@
 namespace skr::container
 {
 template <typename TSize>
-struct RingBufferMemoryBase {
+struct RingBufferMemoryBase
+{
     using SizeType = TSize;
 
     // getter
@@ -34,7 +35,9 @@ protected:
 namespace skr::container
 {
 template <typename T, typename Base, typename Allocator>
-struct RingBufferMemory : public Base, public Allocator {
+struct RingBufferMemory : public Base
+    , public Allocator
+{
     using DataType           = T;
     using SizeType           = typename Base::SizeType;
     using AllocatorCtorParam = typename Allocator::CtorParam;
@@ -166,12 +169,16 @@ struct RingBufferMemory : public Base, public Allocator {
 
         if (new_size > Base::_capacity)
         {
-            SizeType new_capacity = default_get_grow<T>(new_size, Base::_capacity);
-            SKR_ASSERT(new_capacity >= Base::_capacity);
-            if (new_capacity >= Base::_capacity)
-            {
-                realloc(new_capacity);
-            }
+            grow_memory_to(new_size);
+        }
+    }
+    inline void grow_memory_to(SizeType new_size) noexcept
+    {
+        SizeType new_capacity = default_get_grow<T>(new_size, Base::_capacity);
+        SKR_ASSERT(new_capacity >= Base::_capacity);
+        if (new_capacity >= Base::_capacity)
+        {
+            realloc(new_capacity);
         }
     }
     inline void shrink() noexcept
@@ -219,9 +226,11 @@ private:
 namespace skr::container
 {
 template <typename T, uint64_t kCount, typename Base>
-struct FixedRingBufferMemory : public Base {
+struct FixedRingBufferMemory : public Base
+{
     static_assert(kCount > 0, "FixedRingBufferMemory must have a capacity larger than 0");
-    struct DummyParam {
+    struct DummyParam
+    {
     };
     using DataType           = T;
     using SizeType           = typename Base::SizeType;
@@ -314,6 +323,10 @@ struct FixedRingBufferMemory : public Base {
     {
         SKR_ASSERT((Base::size() + grow_size) <= kCount && "FixedRingBufferMemory can't alloc memory that larger than kCount");
     }
+    inline void grow_memory_to(SizeType new_size) noexcept
+    {
+        SKR_ASSERT(new_size <= kCount && "FixedRingBufferMemory can't alloc memory that larger than kCount");
+    }
     inline void shrink() noexcept
     {
         // do noting
@@ -354,7 +367,9 @@ private:
 namespace skr::container
 {
 template <typename T, uint64_t kInlineCount, typename Base, typename Allocator>
-struct InlineRingBufferMemory : public Base, public Allocator {
+struct InlineRingBufferMemory : public Base
+    , public Allocator
+{
     using DataType           = T;
     using SizeType           = typename Base::SizeType;
     using AllocatorCtorParam = typename Allocator::CtorParam;
@@ -567,12 +582,16 @@ struct InlineRingBufferMemory : public Base, public Allocator {
 
         if (new_size > Base::_capacity)
         {
-            SizeType new_capacity = default_get_grow<T>(new_size, Base::_capacity);
-            SKR_ASSERT(new_capacity >= Base::_capacity);
-            if (new_capacity >= Base::_capacity)
-            {
-                realloc(new_capacity);
-            }
+            grow_memory_to(new_size);
+        }
+    }
+    inline void grow_memory_to(SizeType new_size) noexcept
+    {
+        SizeType new_capacity = default_get_grow<T>(new_size, Base::_capacity);
+        SKR_ASSERT(new_capacity >= Base::_capacity);
+        if (new_capacity >= Base::_capacity)
+        {
+            realloc(new_capacity);
         }
     }
     inline void shrink() noexcept

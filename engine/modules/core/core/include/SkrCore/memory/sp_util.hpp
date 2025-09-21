@@ -15,25 +15,26 @@ concept ObjectWithSPDeleter = requires(T* p) {
     { p->skr_sp_delete() } -> std::same_as<void>;
 };
 template <typename From, typename To>
-concept SPConvertible = requires() {
-    std::convertible_to<From*, To*>;
-};
+concept SPConvertible = std::convertible_to<From*, To*>;
 template <typename T>
-struct SPDeleterTraits {
+struct SPDeleterTraits
+{
     inline static void do_delete(T* p)
     {
         SkrDelete(p);
     }
 };
 template <ObjectWithSPDeleter T>
-struct SPDeleterTraits<T> {
+struct SPDeleterTraits<T>
+{
     inline static void do_delete(T* p)
     {
         p->skr_sp_delete();
     }
 };
 
-struct SPRefCounter {
+struct SPRefCounter
+{
     inline SPCounterType ref_count() const
     {
         return _ref_count.load(std::memory_order_relaxed);
@@ -94,7 +95,7 @@ struct SPRefCounter {
     }
 
 private:
-    std::atomic<SPCounterType> _ref_count      = 0;
+    std::atomic<SPCounterType> _ref_count = 0;
     std::atomic<SPCounterType> _ref_count_weak = 0;
 };
 

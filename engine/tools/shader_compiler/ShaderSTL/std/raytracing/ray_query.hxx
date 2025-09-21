@@ -34,13 +34,13 @@ struct [[builtin("ray_query")]] RayQuery {
     bool Proceed();
     
     [[callop("RAY_QUERY_CANDIDATE_STATUS")]] 
-    HitType CandidateStatus();
+    HitStatus CandidateStatus();
     
     [[callop("RAY_QUERY_CANDIDATE_TRIANGLE_BARYCENTRICS")]] 
     float2 CandidateTriangleBarycentrics();
     
-    [[callop("RAY_QUERY_CANDIDATE_INSTANCE_ID")]] 
-    uint CandidateInstanceID();
+    [[callop("RAY_QUERY_CANDIDATE_INSTANCE_INDEX")]] 
+    uint CandidateInstanceIndex();
 
     [[callop("RAY_QUERY_CANDIDATE_GEOMETRY_INDEX")]] 
     uint CandidateGeometryIndex();
@@ -56,13 +56,13 @@ struct [[builtin("ray_query")]] RayQuery {
     
 
     [[callop("RAY_QUERY_COMMITTED_STATUS")]] 
-    HitType CommittedStatus();
+    HitStatus CommittedStatus();
     
     [[callop("RAY_QUERY_COMMITTED_TRIANGLE_BARYCENTRICS")]] 
     float2 CommittedTriangleBarycentrics();
     
-    [[callop("RAY_QUERY_COMMITTED_INSTANCE_ID")]] 
-    uint CommittedInstanceID();
+    [[callop("RAY_QUERY_COMMITTED_INSTANCE_INDEX")]] 
+    uint CommittedInstanceIndex();
     
     [[callop("RAY_QUERY_COMMITTED_GEOMETRY_INDEX")]] 
     uint CommittedGeometryIndex();
@@ -85,7 +85,7 @@ struct [[builtin("ray_query")]] RayQuery {
     
     template <typename RayType>
     [[callop("RAY_QUERY_TRACE_RAY_INLINE")]] 
-    void TraceRayInline(const Accel& AS, uint32 mask, const RayType& ray);
+    void TraceRayInline(const RaytracingAccelerationStructure& AS, uint32 mask, const RayType& ray);
 
     [[callop("RAY_QUERY_COMMIT_TRIANGLE")]]
     void CommitTriangle();

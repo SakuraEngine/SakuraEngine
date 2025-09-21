@@ -3,12 +3,12 @@
 #include <SkrContainers/span.hpp>
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/stl_string.hpp>
-#include "SkrRT/sugoi/sugoi.h"
-#include "SkrRT/sugoi/array.hpp"
-#include "SkrRT/sugoi/set.hpp"
-#include "SkrRT/sugoi/type_registry.hpp"
-#include "SkrRT/sugoi/archetype.hpp"
-#include "SkrRT/sugoi/chunk.hpp"
+#include "SkrRuntime/sugoi/sugoi.h"
+#include "SkrRuntime/sugoi/array.hpp"
+#include "SkrRuntime/sugoi/set.hpp"
+#include "SkrRuntime/sugoi/type_registry.hpp"
+#include "SkrRuntime/sugoi/archetype.hpp"
+#include "SkrRuntime/sugoi/chunk.hpp"
 #include "./impl/query.hpp"
 
 #include "./arena.hpp"

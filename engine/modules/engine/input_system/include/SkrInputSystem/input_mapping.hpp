@@ -14,13 +14,13 @@ namespace input
 struct InputLayer;
 struct InputReading;
 
-typedef skr_guid_t            InputTypeId;
+typedef GUID            InputTypeId;
 typedef struct InputAction*   InputActionId;
 typedef struct InputModifier* InputModifierId;
 
-static const skr_guid_t kInputTypeId_Keyboard    = { 0x2229d021, 0x97a0, 0x4a11, { 0x97, 0x26, 0xc4, 0x7b, 0x26, 0xa4, 0x61, 0x79 } };
-static const skr_guid_t kInputTypeId_MouseButton = { 0x8578d530, 0x909d, 0x44f3, { 0xab, 0x6a, 0x83, 0xd6, 0x57, 0xb5, 0xbc, 0x8e } };
-static const skr_guid_t kInputTypeId_MouseAxis   = { 0xe9135be4, 0x3543, 0x4995, { 0xa4, 0xb2, 0x73, 0x63, 0xea, 0x2f, 0x22, 0x03 } };
+static const GUID kInputTypeId_Keyboard    = u8"03815561-7d18-4048-98d5-f2a51cf50484"_guid;
+static const GUID kInputTypeId_MouseButton = u8"71ade68a-4ff3-4d4f-b205-0b03531483ed"_guid;
+static const GUID kInputTypeId_MouseAxis   = u8"5e0c24fd-02b4-47fa-af50-e50c62c1d1da"_guid;
 
 struct SKR_INPUT_SYSTEM_API InputMapping {
     SKR_RC_IMPL();
@@ -40,7 +40,7 @@ protected:
     friend struct InputSystem;
     friend struct InputSystemImpl;
     virtual bool                       process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT;
-    virtual skr::span<InputModifierId> get_modifiers() SKR_NOEXCEPT;
+    virtual skr::Span<InputModifierId> get_modifiers() SKR_NOEXCEPT;
 
     virtual void process_modifiers(float delta) SKR_NOEXCEPT;
     virtual void process_actions(float delta) SKR_NOEXCEPT;
@@ -64,7 +64,7 @@ public:
     void remove_mapping(RC<InputMapping> mapping) SKR_NOEXCEPT;
 
     // get all mappings
-    span<RC<InputMapping> const> get_mappings() const SKR_NOEXCEPT;
+    Span<RC<InputMapping> const> get_mappings() const SKR_NOEXCEPT;
 
     // unmap and free all mappings
     void unmap_all() SKR_NOEXCEPT;
@@ -113,8 +113,8 @@ struct SKR_INPUT_SYSTEM_API InputMapping_MouseAxis : public InputMapping {
     bool process_input_reading(InputLayer* layer, InputReading* reading, EInputKind kind) SKR_NOEXCEPT final;
 
     const EMouseAxis axis;
-    skr_float2_t     old_pos   = { 0.f, 0.f };
-    skr_float2_t     old_wheel = { 0.f, 0.f };
+    float2     old_pos   = { 0.f, 0.f };
+    float2     old_wheel = { 0.f, 0.f };
 };
 } // namespace input
 } // namespace skr

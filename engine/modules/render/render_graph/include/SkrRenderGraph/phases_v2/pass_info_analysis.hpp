@@ -19,14 +19,23 @@ enum class EResourceAccessType : uint32_t
 
 // Resource access info - detailed for dependency analysis
 struct ResourceAccessInfo {
+    PassNode* pass = nullptr;
     ResourceNode* resource = nullptr;
     EResourceAccessType access_type;
     ECGPUResourceState resource_state = CGPU_RESOURCE_STATE_UNDEFINED;
+    // Texture subresource range (optional)
+    uint32_t mip_base = 0;
+    uint32_t mip_count = 0;
+    uint32_t array_base = 0;
+    uint32_t array_count = 0;
+    // Buffer range (optional)
+    uint64_t buffer_from = 0;
+    uint64_t buffer_to = 0;
 };
 
 // Resource info - direct extraction with detailed access info
 struct PassResourceInfo {
-    StackVector<ResourceAccessInfo> all_resource_accesses; // For dependency analysis
+    StackVector<ResourceAccessInfo> resource_accesses; // For dependency analysis
     uint32_t total_resource_count = 0;
 };
 

@@ -1,18 +1,32 @@
-compile_commands.json
+# macos
 .DS_Store
-/.vs
-/.cache
-/out
+
+# visual studio
+.vs
+
+# vscode counter cache
 /.VSCodeCounter
 
-.mcp.json
-.claude
-publish
+# clangd cache
+/.cache
+
+# C# build outputs
 **/bin
 **/obj
 
+# jetbrains
+.idea
+
+# for ai
 .memory_bank
 memory_bank/context
-.sb
-.pkgs
-.build
+AGENTS.md
+.mcp.json
+.claude
+publish
+
+# sakura build dir
+build
+
+# sakura build local config
+local_config.cs

@@ -94,24 +94,22 @@ void ComputeFunc(void* usrdata)
         .queue_group_count = 1
     };
     CGPUDeviceId device = cgpu_create_device(adapter, &device_desc);
-    skr_thread_sleep(4000);
 
     // Create compute shader
     uint32_t *shader_bytes, shader_length;
     read_shader_bytes("cgpu-raytracing/raytracing.compute_main",
     &shader_bytes, &shader_length, backend);
-    CGPUShaderLibraryDescriptor shader_desc = {
+    CGPUShaderLibraryDescriptor compute_shader_desc = {
         .code = shader_bytes,
         .code_size = shader_length,
         .name = "ComputeShaderLibrary"
     };
-    CGPUShaderLibraryId compute_shader = cgpu_create_shader_library(device, &shader_desc);
+    CGPUShaderLibraryId compute_shader = cgpu_create_shader_library(device, &compute_shader_desc);
     free(shader_bytes);
 
-    // Create root signature
+    // Create compute pipeline
     CGPUShaderEntryDescriptor compute_shader_entry = {
         .entry = "compute_main",
-        .stage = CGPU_SHADER_STAGE_COMPUTE,
         .library = compute_shader
     };
     CGPURootSignatureDescriptor root_desc = {
@@ -120,13 +118,53 @@ void ComputeFunc(void* usrdata)
     };
     CGPURootSignatureId signature = cgpu_create_root_signature(device, &root_desc);
 
-    // Create compute pipeline
     CGPUComputePipelineDescriptor pipeline_desc = {
         .compute_shader = &compute_shader_entry,
         .root_signature = signature
     };
-    CGPUComputePipelineId pipeline = cgpu_create_compute_pipeline(device, &pipeline_desc);
+    CGPUComputePipelineId compute_pipeline = cgpu_create_compute_pipeline(device, &pipeline_desc);
 
+    // Create ray pipeline
+    read_shader_bytes("cgpu-raytracing/raytracing_pipeline.closesthit",
+    &shader_bytes, &shader_length, backend);
+    CGPUShaderLibraryDescriptor ray_shader_desc = {
+        .code = shader_bytes,
+        .code_size = shader_length,
+        .name = "RayShaderLibrary"
+    };
+    CGPUShaderLibraryId ray_shaders = cgpu_create_shader_library(device, &ray_shader_desc);
+    free(shader_bytes);
+
+    CGPURayPipelineHitGroup hitGroup = {
+        .name = "HitGroup",
+        .anyhit = {
+            .library = ray_shaders,
+            .entry = "anyhit"
+        },
+        .closest = {
+            .library = ray_shaders,
+            .entry = "closesthit"
+        }
+    };
+    CGPURayPipelineDescriptor ray_pipeline_desc = {
+        .name = "RayPipeline",
+        .raygen = {
+            .library = ray_shaders,
+            .entry = "raygen"
+        },
+        .miss = {
+            .library = ray_shaders,
+            .entry = "miss"
+        },
+        .hit_groups = &hitGroup,
+        .hit_groups_count = 1,
+        .max_payload_size = 4 * sizeof(float),
+        .max_attribute_size = 2 * sizeof(float),
+        .max_recursion_depth = 8
+    };
+    CGPURayPipelineId ray_pipeline = cgpu_create_ray_pipeline(device, &ray_pipeline_desc);
+
+    // Create descriptor set
     CGPUDescriptorSetDescriptor set_desc = {
         .root_signature = signature,
         .set_index = 0
@@ -209,6 +247,9 @@ void ComputeFunc(void* usrdata)
     blas_geom.index_offset = 0;
     blas_geom.index_count = 6;
     blas_geom.index_stride = sizeof(uint16_t);
+    blas_geom.transform[0] = 1.f;
+    blas_geom.transform[5] = 1.f;
+    blas_geom.transform[10] = 1.f;
 
     CGPUAccelerationStructureDescriptor blas_desc = { 0 };
     blas_desc.type = CGPU_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
@@ -235,7 +276,7 @@ void ComputeFunc(void* usrdata)
     // Update descriptor set
     CGPUDescriptorData descriptor_data[2] = {
         {
-            .by_name.name = "buf",
+            .by_name.name = "OutputColor",
             .buffers = &data_buffer_view,
             .count = 1
         },
@@ -264,12 +305,28 @@ void ComputeFunc(void* usrdata)
         // Begin dispatch compute pass
         CGPUComputePassDescriptor pass_desc = { .name = "ComputePass" };
         CGPUComputePassEncoderId encoder = cgpu_cmd_begin_compute_pass(cmd, &pass_desc);
-        cgpu_compute_encoder_bind_pipeline(encoder, pipeline);
-        cgpu_compute_encoder_bind_descriptor_set(encoder, set);
-        cgpu_compute_encoder_dispatch(encoder,
-            (uint32_t)ceil(RAYTRACING_WIDTH / (float)32),
-            (uint32_t)ceil(RAYTRACING_HEIGHT / (float)32),
-            1);
+        if (false)
+        {
+            cgpu_compute_encoder_bind_pipeline(encoder, compute_pipeline);
+            cgpu_compute_encoder_bind_descriptor_set(encoder, set);
+            cgpu_compute_encoder_set_threadgroup_size(encoder, 32, 32, 1);
+            cgpu_compute_encoder_dispatch(encoder,
+                RAYTRACING_WIDTH,
+                RAYTRACING_HEIGHT,
+                1);
+        }
+        else
+        {
+            cgpu_compute_encoder_bind_ray_pipeline(encoder, ray_pipeline);
+            cgpu_compute_encoder_bind_descriptor_set(encoder, set);
+            CGPUDispatchRaysDescriptor dispatch = {
+                .width = RAYTRACING_WIDTH,
+                .height = RAYTRACING_HEIGHT,
+                .depth = 1,
+                .pipeline = ray_pipeline
+            };
+            cgpu_compute_encoder_dispatch_rays(encoder, &dispatch);
+        }
         cgpu_cmd_end_compute_pass(cmd, encoder);
         // Barrier UAV buffer to transfer source
         CGPUBufferBarrier buffer_barrier = {
@@ -339,8 +396,10 @@ void ComputeFunc(void* usrdata)
     cgpu_free_queue(gfx_queue);
     cgpu_free_descriptor_set(set);
     cgpu_free_shader_library(compute_shader);
+    cgpu_free_shader_library(ray_shaders);
     cgpu_free_root_signature(signature);
-    cgpu_free_compute_pipeline(pipeline);
+    cgpu_free_compute_pipeline(compute_pipeline);
+    cgpu_free_ray_pipeline(ray_pipeline);
     cgpu_free_device(device);
     cgpu_free_instance(instance);
     sakura_free(image);

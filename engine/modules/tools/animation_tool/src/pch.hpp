@@ -30,8 +30,8 @@
 #include "SkrContainers/span.hpp"             // IWYU pragma: export
 #include "SkrContainers/function_ref.hpp"     // IWYU pragma: export
 
-#include "SkrRT/io/ram_io.hpp"                // IWYU pragma: export
-#include "SkrRT/resource/resource_header.hpp" // IWYU pragma: export
+#include "SkrRuntime/io/ram_io.hpp"                // IWYU pragma: export
+#include "SkrRuntime/resource/resource_header.hpp" // IWYU pragma: export
 
 #include "SkrProfile/profile.h" // IWYU pragma: export
 

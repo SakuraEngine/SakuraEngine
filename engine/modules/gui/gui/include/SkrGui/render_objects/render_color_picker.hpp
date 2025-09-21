@@ -1,13 +1,12 @@
 #pragma once
 #include "SkrGui/framework/render_object/render_box.hpp"
-#ifndef __meta__
-    #include "SkrGui/render_objects/render_color_picker.generated.h"
-#endif
+#include "SkrGui/render_objects/render_color_picker.generated.h"
 
 namespace skr::gui
 {
-sreflect_struct(guid = "f9de7eb7-9431-4dde-a06d-2fb9bc211bb9")
-SKR_GUI_API RenderColorPicker : public RenderBox {
+struct [[sattr(guid = "f9de7eb7-9431-4dde-a06d-2fb9bc211bb9"
+)]] SKR_GUI_API RenderColorPicker : public RenderBox
+{
     SKR_GENERATE_BODY(RenderColorPicker)
     using Super = RenderBox;
 

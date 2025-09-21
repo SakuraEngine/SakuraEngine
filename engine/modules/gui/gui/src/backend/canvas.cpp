@@ -20,9 +20,9 @@ struct _NVGHelper {
         return ((uint32_t)a << 24) + ((uint32_t)b << 16) + ((uint32_t)g << 8) + (uint32_t)r;
     }
 
-    static skr_float2_t nvg__remapUV(skr_float2_t is, skr_float2_t size, const NVGbox& box)
+    static float2 nvg__remapUV(float2 is, float2 size, const NVGbox& box)
     {
-        skr_float2_t result;
+        float2 result;
         if (box.extend[0] == 0.f || box.extend[1] == 0.f)
         {
             return { is.x / size.x, is.y / size.y };
@@ -176,7 +176,7 @@ struct _NVGHelper {
 
     static void nvg__renderPath(ICanvas* canvas, const NVGpath& path, NVGpaint* paint, const skr_float4x4_t& transform, float fringe)
     {
-        skr_float2_t extend{ paint->extent[0], paint->extent[1] };
+        float2 extend{ paint->extent[0], paint->extent[1] };
         auto&        vertices    = canvas->_vertices;
         auto&        indices     = canvas->_indices;
         auto         push_vertex = [&](const NVGvertex& nv, uint32_t i, uint32_t nfill) {

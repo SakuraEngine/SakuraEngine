@@ -9,7 +9,7 @@ public static class GraphicsTests
         // CGPU Memory Pool Test
         Engine.Program("CGPUMemoryPoolTest")
             .EnableUnityBuild()
-            .Depend(Visibility.Public, "SkrRT")           // 包含 SkrGraphics/CGPU
+            .Depend(Visibility.Public, "SkrRuntime")           // 包含 SkrGraphics/CGPU
             .AddCppFiles("memory_pool_test.cpp");
     }
 }

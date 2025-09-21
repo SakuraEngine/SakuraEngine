@@ -55,6 +55,10 @@ enum struct BinaryOp : uint32_t {
     BIT_OR_ASSIGN,
     BIT_XOR_ASSIGN,
     SHL_ASSIGN,
+    SHR_ASSIGN,
+    AND_ASSIGN,
+    
+    COMMA,
 
     COUNT
 };
@@ -67,7 +71,12 @@ enum struct ShaderStage : uint32_t
     Domain,
     Geometry,
     Fragment,
-    Compute
+    Compute,
+    RayGen,
+    ClosestHit,
+    Miss,
+    AnyHit,
+    Count
 };
 
 enum struct SemanticType : uint32_t
@@ -109,7 +118,9 @@ enum struct SemanticType : uint32_t
     ThreadID,               // SV_DispatchThreadID / [[thread_position_in_grid]]
     GroupID,                // SV_GroupID / [[threadgroup_position_in_grid]]
     ThreadPositionInGroup,  // SV_GroupThreadID / [[thread_position_in_threadgroup]]
-    ThreadIndexInGroup,     // SV_GroupIndex / [[thread_index_in_threadgroup]]
+    ThreadIndexInGroup,     // SV_GroupIndex / [[thread_index_in_threadgroup]]3
+    
+    RayPayload,     // SV_RayPayload / !
 
     ViewID, // SV_ViewID / [[render_target_array_index]]
     Count

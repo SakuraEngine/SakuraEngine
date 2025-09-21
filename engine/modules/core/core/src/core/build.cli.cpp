@@ -895,7 +895,7 @@ void CmdParser::parse(int argc, char* argv[])
     }
 }
 // helper
-span<const CmdToken> CmdParser::_find_option_param_pack(const Vector<CmdToken>& args, uint64_t option_idx)
+Span<const CmdToken> CmdParser::_find_option_param_pack(const Vector<CmdToken>& args, uint64_t option_idx)
 {
     // trigger end
     if (option_idx == args.size() - 1)
@@ -925,7 +925,7 @@ span<const CmdToken> CmdParser::_find_option_param_pack(const Vector<CmdToken>& 
     }
     return args.span().subspan(option_idx + 1, search_idx - option_idx - 1);
 }
-span<const CmdToken> CmdParser::_find_rest_params_pack(const Vector<CmdToken>& args, uint64_t name_idx)
+Span<const CmdToken> CmdParser::_find_rest_params_pack(const Vector<CmdToken>& args, uint64_t name_idx)
 {
     uint64_t search_idx = name_idx;
     while (search_idx < args.size())
@@ -1009,7 +1009,7 @@ bool CmdParser::_process_option(
     CmdOptionData* found_option,
     uint32_t& current_idx,
     const CmdToken& arg,
-    span<const CmdToken> params,
+    Span<const CmdToken> params,
     CliOutputBuilder& builder,
     Set<CmdOptionData*>& required_options)
 {

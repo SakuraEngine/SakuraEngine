@@ -1,24 +1,43 @@
 using SB;
 using SB.Core;
-using System.Runtime.CompilerServices;
 
 [TargetScript]
 public static class CoreTests
 {
     static CoreTests()
     {
-        Test.UnitTest("JsonTest")
-            .AddCppFiles("json/main.cpp");
-
-        Test.UnitTest("SerdeTest")
+        Engine.Program("TestSerde")
             .EnableUnityBuild()
-            .AddCppFiles("serde/main.cpp");
+            .EnableCodegen("serde")
+            .AddMetaHeaders("serde/**.hpp")
+            .Depend(Visibility.Private, "SkrTestFramework")
+            .Depend(Visibility.Public, "SkrCore")
+            .AddCppFiles("serde/*.cpp");
 
-        Test.UnitTest("NatvisTest")
+        Test.UnitTest("TestNatvis")
             .Depend(Visibility.Public, "SkrCore")
             .AddCppFiles("natvis/*.cpp");
 
-        Test.UnitTest("DelegateTest")
+        Test.UnitTest("TestDelegate")
             .AddCppFiles("delegate/*.cpp");
+
+        Engine.Program("TestRTTR")
+            .EnableCodegen("rttr")
+            .AddMetaHeaders("rttr/**.hpp")
+            .Depend(Visibility.Private, "SkrTestFramework")
+            .Depend(Visibility.Public, "SkrCore")
+            .AddCppFiles("rttr/**.cpp");
+
+        Engine.Program("TestProxy")
+            .EnableCodegen("proxy")
+            .AddMetaHeaders("proxy/**.hpp")
+            .Depend(Visibility.Private, "SkrTestFramework")
+            .Depend(Visibility.Public, "SkrCore")
+            .AddCppFiles("proxy/**.cpp");
+
+        Test.UnitTest("TestRC")
+            .Depend(Visibility.Private, "SkrTestFramework")
+            .Depend(Visibility.Public, "SkrCore")
+            .AddCppFiles("rc/*.cpp");
     }
 }

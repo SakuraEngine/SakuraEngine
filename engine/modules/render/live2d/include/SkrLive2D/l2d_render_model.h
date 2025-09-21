@@ -45,7 +45,7 @@ SKR_EXTERN_C SKR_LIVE2D_API void
 skr_live2d_render_model_free(skr_live2d_render_model_id render_model);
 
 #ifdef __cplusplus
-    #include "SkrRT/io/vram_io.hpp"
+    #include "SkrRuntime/io/vram_io.hpp"
     #include "SkrContainersDef/map.hpp"
     #include "SkrContainersDef/vector.hpp"
 
@@ -68,7 +68,7 @@ struct skr_live2d_render_model_t
     skr::Map<CGPUTextureViewId, CGPUXBindTableId> mask_bind_tables;
 };
 
-    #include "SkrRT/sugoi/sugoi.h"
+    #include "SkrRuntime/sugoi/sugoi.h"
 template <>
 struct SKR_LIVE2D_API sugoi_id_of<skr_live2d_render_model_comp_t>
 {

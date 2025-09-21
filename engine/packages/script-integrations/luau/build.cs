@@ -35,7 +35,7 @@ public static class Luau
                     if (BuildSystem.TargetOS == OSPlatform.Windows)
                     {
                         var Options = new CFamilyFileOptions();
-                        Options.Arguments.CppFlags(Visibility.Private, "/d2ssa-pre-");
+                        Options.Arguments.CppFlags("/d2ssa-pre-");
                         
                         Target.AddCppFiles(Options, "luau/VM/src/lvmexecute.cc"); 
                     }

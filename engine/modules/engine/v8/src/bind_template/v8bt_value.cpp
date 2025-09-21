@@ -20,7 +20,7 @@ V8BTValue* V8BTValue::TryCreate(V8Isolate* isolate, const RTTRType* type)
     result->_setup(isolate, type);
     result->_make_template();
     result->_copy_ctor = type->find_copy_ctor();
-    result->_assign    = type->find_assign();
+    result->_assign = type->find_assign();
     return result;
 }
 
@@ -63,16 +63,16 @@ v8::Local<v8::Value> V8BTValue::to_v8(
     return bind_core->v8_object.Get(isolate);
 }
 bool V8BTValue::to_native(
-    void*                native_data,
+    void* native_data,
     v8::Local<v8::Value> v8_value,
-    bool                 is_init
+    bool is_init
 ) const
 {
     using namespace ::v8;
     auto isolate = Isolate::GetCurrent();
     auto context = isolate->GetCurrentContext();
 
-    auto  v8_object  = v8_value->ToObject(context).ToLocalChecked();
+    auto v8_object = v8_value->ToObject(context).ToLocalChecked();
     auto* bind_proxy = get_bind_proxy<V8BPValue>(v8_object);
 
     // check bind proxy
@@ -131,7 +131,7 @@ bool V8BTValue::match_param(
     return base_on;
 }
 void V8BTValue::push_param_native(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp,
     v8::Local<v8::Value> v8_value
 ) const
@@ -140,10 +140,10 @@ void V8BTValue::push_param_native(
     if (param_bind_tp.modifiers.is_decayed_pointer())
     { // optimize for ref case
         auto* isolate = v8::Isolate::GetCurrent();
-        auto  context = isolate->GetCurrentContext();
+        auto context = isolate->GetCurrentContext();
 
         // get bind core
-        auto  v8_object  = v8_value->ToObject(context).ToLocalChecked();
+        auto v8_object = v8_value->ToObject(context).ToLocalChecked();
         auto* bind_proxy = get_bind_proxy<V8BPValue>(v8_object);
 
         // check bind core
@@ -163,7 +163,7 @@ void V8BTValue::push_param_native(
     else
     {
         DtorInvoker dtor = _rttr_type->dtor_invoker();
-        native_data      = stack.alloc_param_raw(
+        native_data = stack.alloc_param_raw(
             _rttr_type->size(),
             _rttr_type->alignment(),
             EDynamicStackParamKind::Direct,
@@ -173,7 +173,7 @@ void V8BTValue::push_param_native(
     }
 }
 void V8BTValue::push_param_native_pure_out(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -181,7 +181,7 @@ void V8BTValue::push_param_native_pure_out(
     stack.add_param<void*>(new_value_core->address);
 }
 v8::Local<v8::Value> V8BTValue::read_return_native(
-    DynamicStack&         stack,
+    DynamicStack& stack,
     const V8BTDataReturn& return_bind_tp
 ) const
 {
@@ -195,7 +195,7 @@ v8::Local<v8::Value> V8BTValue::read_return_native(
     return to_v8(native_data);
 }
 v8::Local<v8::Value> V8BTValue::read_return_from_out_param(
-    DynamicStack&        stack,
+    DynamicStack& stack,
     const V8BTDataParam& param_bind_tp
 ) const
 {
@@ -203,21 +203,21 @@ v8::Local<v8::Value> V8BTValue::read_return_from_out_param(
     void* native_data = stack.get_param_raw(param_bind_tp.index);
 
     // get created value proxy
-    native_data            = *reinterpret_cast<void**>(native_data);
-    auto  bind_proxy       = isolate()->map_bind_proxy(native_data);
+    native_data = *reinterpret_cast<void**>(native_data);
+    auto bind_proxy = isolate()->map_bind_proxy(native_data);
     auto* bind_proxy_value = static_cast<V8BPValue*>(bind_proxy);
     return bind_proxy_value->v8_object.Get(v8::Isolate::GetCurrent());
 }
 
 // invoke v8 api
 v8::Local<v8::Value> V8BTValue::make_param_v8(
-    void*                native_data,
+    void* native_data,
     const V8BTDataParam& param_bind_tp
 ) const
 {
     // make bind proxy
-    auto* bind_proxy        = _create_value(native_data);
-    bind_proxy->address     = native_data;
+    auto* bind_proxy = _create_value(native_data);
+    bind_proxy->address = native_data;
     bind_proxy->need_delete = false;
 
     // push param cache
@@ -228,8 +228,8 @@ v8::Local<v8::Value> V8BTValue::make_param_v8(
 
 // field api
 v8::Local<v8::Value> V8BTValue::get_field(
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -242,7 +242,7 @@ v8::Local<v8::Value> V8BTValue::get_field(
     }
 
     // make bind proxy
-    auto* bind_proxy        = _new_bind_proxy(field_address);
+    auto* bind_proxy = _new_bind_proxy(field_address);
     bind_proxy->need_delete = false;
 
     // setup owner ship
@@ -253,8 +253,8 @@ v8::Local<v8::Value> V8BTValue::get_field(
 }
 void V8BTValue::set_field(
     v8::Local<v8::Value> v8_value,
-    void*                obj,
-    const RTTRType*      obj_type,
+    void* obj,
+    const RTTRType* obj_type,
     const V8BTDataField& field_bind_tp
 ) const
 {
@@ -277,12 +277,12 @@ v8::Local<v8::Value> V8BTValue::get_static_field(
     }
 
     // make bind proxy
-    auto* bind_proxy        = _new_bind_proxy(field_address);
+    auto* bind_proxy = _new_bind_proxy(field_address);
     bind_proxy->need_delete = false;
     return bind_proxy->v8_object.Get(v8::Isolate::GetCurrent());
 }
 void V8BTValue::set_static_field(
-    v8::Local<v8::Value>       v8_value,
+    v8::Local<v8::Value> v8_value,
     const V8BTDataStaticField& field_bind_tp
 ) const
 {
@@ -296,44 +296,44 @@ void V8BTValue::set_static_field(
 // check api
 void V8BTValue::solve_invoke_behaviour(
     const V8BTDataParam& param_bind_tp,
-    bool&                appare_in_return,
-    bool&                appare_in_param
+    bool& appare_in_return,
+    bool& appare_in_param
 ) const
 {
     switch (param_bind_tp.inout_flag)
     {
     case ERTTRParamFlag::Out:
-        appare_in_param  = false;
+        appare_in_param = false;
         appare_in_return = true;
         break;
     case ERTTRParamFlag::InOut:
-        appare_in_param  = true;
+        appare_in_param = true;
         appare_in_return = false; // optimized for value type
         break;
     case ERTTRParamFlag::In:
     default:
-        appare_in_param  = true;
+        appare_in_param = true;
         appare_in_return = false;
         break;
     }
 }
 bool V8BTValue::check_param(
     const V8BTDataParam& param_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     return _basic_type_check(param_bind_tp.modifiers, errors);
 }
 bool V8BTValue::check_return(
     const V8BTDataReturn& return_bind_tp,
-    V8ErrorCache&         errors
+    V8ErrorCache& errors
 ) const
 {
     return _basic_type_check(return_bind_tp.modifiers, errors);
 }
 bool V8BTValue::check_field(
     const V8BTDataField& field_bind_tp,
-    V8ErrorCache&        errors
+    V8ErrorCache& errors
 ) const
 {
     if (field_bind_tp.modifiers.is_decayed_pointer())
@@ -347,7 +347,7 @@ bool V8BTValue::check_field(
 }
 bool V8BTValue::check_static_field(
     const V8BTDataStaticField& field_bind_tp,
-    V8ErrorCache&              errors
+    V8ErrorCache& errors
 ) const
 {
     if (field_bind_tp.modifiers.is_decayed_pointer())
@@ -361,13 +361,11 @@ bool V8BTValue::check_static_field(
 }
 
 // v8 export
-bool V8BTValue::has_v8_export_obj(
-) const
+bool V8BTValue::has_v8_export_obj() const
 {
     return true;
 }
-v8::Local<v8::Value> V8BTValue::get_v8_export_obj(
-) const
+v8::Local<v8::Value> V8BTValue::get_v8_export_obj() const
 {
     using namespace ::v8;
 
@@ -410,13 +408,11 @@ void V8BTValue::dump_ts_def(
     });
     builder.$line(u8"}}");
 }
-String V8BTValue::get_ts_type_name(
-) const
+String V8BTValue::get_ts_type_name() const
 {
     return _rttr_type->name();
 }
-bool V8BTValue::ts_is_nullable(
-) const
+bool V8BTValue::ts_is_nullable() const
 {
     return false;
 }
@@ -426,7 +422,7 @@ V8BPValue* V8BTValue::_create_value(void* native_data) const
 {
     using namespace ::v8;
 
-    auto*       isolate = Isolate::GetCurrent();
+    auto* isolate = Isolate::GetCurrent();
     HandleScope handle_scope(isolate);
 
     // construct value
@@ -443,7 +439,7 @@ V8BPValue* V8BTValue::_create_value(void* native_data) const
     }
 
     // make bind proxy
-    auto* bind_proxy        = _new_bind_proxy(alloc_mem);
+    auto* bind_proxy = _new_bind_proxy(alloc_mem);
     bind_proxy->need_delete = true;
 
     return bind_proxy;
@@ -453,21 +449,21 @@ V8BPValue* V8BTValue::_new_bind_proxy(void* address, v8::Local<v8::Object> self)
     using namespace ::v8;
 
     auto* isolate = Isolate::GetCurrent();
-    auto  context = isolate->GetCurrentContext();
+    auto context = isolate->GetCurrentContext();
 
     // make v8 object
     Local<ObjectTemplate> instance_template = _v8_template.Get(isolate)->InstanceTemplate();
-    Local<Object>         object =
+    Local<Object> object =
         self.IsEmpty() ?
-                    instance_template->NewInstance(context).ToLocalChecked() :
-                    self;
+        instance_template->NewInstance(context).ToLocalChecked() :
+        self;
 
     // make bind core
     V8BPValue* bind_proxy = this->isolate()->create_bind_proxy<V8BPValue>();
     bind_proxy->rttr_type = _rttr_type;
-    bind_proxy->isolate   = this->isolate();
-    bind_proxy->bind_tp   = this;
-    bind_proxy->address   = address;
+    bind_proxy->isolate = this->isolate();
+    bind_proxy->bind_tp = this;
+    bind_proxy->address = address;
     bind_proxy->v8_object.Reset(isolate, object);
 
     // setup gc callback
@@ -524,7 +520,7 @@ void V8BTValue::_call_ctor(const ::v8::FunctionCallbackInfo<::v8::Value>& info)
 {
     using namespace ::v8;
 
-    Isolate*    Isolate = info.GetIsolate();
+    Isolate* Isolate = info.GetIsolate();
     HandleScope HandleScope(Isolate);
 
     // get user data

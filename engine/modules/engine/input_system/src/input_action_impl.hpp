@@ -12,13 +12,13 @@ namespace input
 
 struct ActionEventStorage {
     skr::stl_function<void()> callback;
-    skr_guid_t event_id = kEventId_Invalid;
+    GUID event_id = kEventId_Invalid;
 };
 
 struct SKR_INPUT_SYSTEM_API InputActionImpl : public InputAction {
     InputActionImpl(EValueType type) SKR_NOEXCEPT
         : InputAction(type),
-          current_value(type, skr_float4_t{ 0.f, 0.f, 0.f, 0.f })
+          current_value(type, float4{ 0.f, 0.f, 0.f, 0.f })
     {
     }
     virtual ~InputActionImpl() SKR_NOEXCEPT;
@@ -29,7 +29,7 @@ struct SKR_INPUT_SYSTEM_API InputActionImpl : public InputAction {
         storage.event_id = id;
         if (storage.event_id == kEventId_Invalid)
         {
-            skr_make_guid(&storage.event_id);
+            skr_create_guid(&storage.event_id);
         }
         storage.callback = [event, this]() {
             event(current_value);
@@ -75,13 +75,13 @@ struct SKR_INPUT_SYSTEM_API InputActionImpl : public InputAction {
 
     void clear_value() SKR_NOEXCEPT final
     {
-        current_value = InputValueStorage(current_value.get_type(), skr_float4_t{ 0.f, 0.f, 0.f, 0.f });
+        current_value = InputValueStorage(current_value.get_type(), float4{ 0.f, 0.f, 0.f, 0.f });
     }
 
     void accumulate_value(InputValueStorage value) SKR_NOEXCEPT final
     {
-        skr_float4_t v = current_value.get_raw();
-        skr_float4_t v2 = value.get_raw();
+        float4 v = current_value.get_raw();
+        float4 v2 = value.get_raw();
         v.x += v2.x;
         v.y += v2.y;
         v.z += v2.z;

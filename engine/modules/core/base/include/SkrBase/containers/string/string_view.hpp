@@ -13,7 +13,8 @@
 namespace skr::container
 {
 template <typename TSize>
-struct U8StringView {
+struct U8StringView
+{
     // basic
     using DataType = skr_char8;
     using SizeType = TSize;
@@ -264,7 +265,8 @@ inline constexpr bool U8StringView<TSize>::operator>(const U8StringView& rhs) co
     if (_size < rhs._size) { return false; }
     else if (_size > rhs._size) { return true; }
     else if (_size == 0 && rhs._size == 0) { return false; }
-    else {
+    else
+    {
         return CharTraits::compare(_data, rhs._data, _size) > 0;
     }
 }
@@ -274,7 +276,8 @@ inline constexpr bool U8StringView<TSize>::operator<(const U8StringView& rhs) co
     if (_size > rhs._size) { return false; }
     else if (_size < rhs._size) { return true; }
     else if (_size == 0 && rhs._size == 0) { return false; }
-    else {
+    else
+    {
         return CharTraits::compare(_data, rhs._data, _size) < 0;
     }
 }
@@ -878,10 +881,11 @@ template <typename Buffer>
 inline constexpr typename U8StringView<TSize>::SizeType U8StringView<TSize>::split(Buffer& out, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return split(
-    out,
-    delimiter.is_valid() ? U8StringView{ &delimiter.data[0], delimiter.len } : U8StringView{},
-    cull_empty,
-    limit);
+        out,
+        delimiter.is_valid() ? U8StringView{ &delimiter.data[0], delimiter.len } : U8StringView{},
+        cull_empty,
+        limit
+    );
 }
 template <typename TSize>
 // template <std::invocable<const U8StringView<TSize>&> F>
@@ -889,10 +893,11 @@ template <typename F>
 inline constexpr typename U8StringView<TSize>::SizeType U8StringView<TSize>::split_each(F&& func, const UTF8Seq& delimiter, bool cull_empty, SizeType limit) const
 {
     return split_each(
-    std::forward<F>(func),
-    delimiter.is_valid() ? U8StringView{ &delimiter.data[0], delimiter.len } : U8StringView{},
-    cull_empty,
-    limit);
+        std::forward<F>(func),
+        delimiter.is_valid() ? U8StringView{ &delimiter.data[0], delimiter.len } : U8StringView{},
+        cull_empty,
+        limit
+    );
 }
 
 // convert size

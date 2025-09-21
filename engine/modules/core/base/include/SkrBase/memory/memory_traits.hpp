@@ -4,8 +4,25 @@
 // traits def
 namespace skr::memory
 {
+struct MemoryTraitsPOD
+{
+    static constexpr bool use_ctor        = false;
+    static constexpr bool use_dtor        = false;
+    static constexpr bool use_copy        = false;
+    static constexpr bool use_move        = false;
+    static constexpr bool use_assign      = false;
+    static constexpr bool use_move_assign = false;
+
+    static constexpr bool need_dtor_after_move = false;
+
+    static constexpr bool use_realloc = true;
+
+    static constexpr bool use_compare = false;
+};
+
 template <typename A, typename B = A>
-struct MemoryTraits {
+struct MemoryTraits
+{
     // need call ctor & dtor & move & copy & assign
     static constexpr bool use_ctor        = true;
     static constexpr bool use_dtor        = true;
@@ -24,7 +41,8 @@ struct MemoryTraits {
     static constexpr bool use_compare = true;
 };
 template <typename T>
-struct MemoryTraits<T, T> {
+struct MemoryTraits<T, T>
+{
     // need call ctor & dtor & move & copy & assign
     static constexpr bool use_ctor        = !std::is_trivially_constructible_v<T>;
     static constexpr bool use_dtor        = !std::is_trivially_destructible_v<T>;
@@ -43,7 +61,8 @@ struct MemoryTraits<T, T> {
     static constexpr bool use_compare = !std::is_trivial_v<T>;
 };
 template <typename T>
-struct MemoryTraits<T*, T*> {
+struct MemoryTraits<T*, T*>
+{
     // need call ctor & dtor & move & copy & assign
     static constexpr bool use_ctor        = false;
     static constexpr bool use_dtor        = false;
@@ -62,26 +81,30 @@ struct MemoryTraits<T*, T*> {
     static constexpr bool use_compare = false;
 };
 template <typename A, typename B>
-struct MemoryTraits<const A, B> : public MemoryTraits<A, B> {
+struct MemoryTraits<const A, B> : public MemoryTraits<A, B>
+{
 };
 } // namespace skr::memory
 
 // impl for basic type
 namespace skr::memory
 {
-#define SKR_IMPL_BASIC_MEM_POLICY(__DST, __SRC)         \
-    template <>                                         \
-    struct MemoryTraits<__DST, __SRC> {                 \
-        static constexpr bool call_ctor        = false; \
-        static constexpr bool call_dtor        = false; \
-        static constexpr bool call_copy        = false; \
-        static constexpr bool call_move        = false; \
-        static constexpr bool call_assign      = false; \
-        static constexpr bool call_move_assign = false; \
-                                                        \
-        static constexpr bool use_realloc = true;       \
-                                                        \
-        static constexpr bool call_compare = true;      \
+#define SKR_IMPL_BASIC_MEM_POLICY(__DST, __SRC)             \
+    template <>                                             \
+    struct MemoryTraits<__DST, __SRC>                       \
+    {                                                       \
+        static constexpr bool use_ctor        = false;      \
+        static constexpr bool use_dtor        = false;      \
+        static constexpr bool use_copy        = false;      \
+        static constexpr bool use_move        = false;      \
+        static constexpr bool use_assign      = false;      \
+        static constexpr bool use_move_assign = false;      \
+                                                            \
+        static constexpr bool need_dtor_after_move = false; \
+                                                            \
+        static constexpr bool use_realloc = true;           \
+                                                            \
+        static constexpr bool use_compare = true;           \
     };
 
 SKR_IMPL_BASIC_MEM_POLICY(uint8_t, int8_t)

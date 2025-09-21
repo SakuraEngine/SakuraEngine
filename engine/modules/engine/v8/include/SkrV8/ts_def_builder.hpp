@@ -4,7 +4,8 @@
 
 namespace skr
 {
-struct SKR_V8_API TSDefBuilder {
+struct SKR_V8_API TSDefBuilder
+{
     // codegen tools
     inline void $line()
     {
@@ -41,11 +42,11 @@ private:
 
 public:
     // codegen config
-    uint32_t               indent_size    = 2;
+    uint32_t indent_size = 2;
     const V8VirtualModule* virtual_module = nullptr;
 
 private:
     uint32_t _cur_indent = 0;
-    String   _result;
+    String _result;
 };
 } // namespace skr

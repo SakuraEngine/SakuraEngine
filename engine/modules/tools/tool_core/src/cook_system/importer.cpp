@@ -1,19 +1,17 @@
 #include "SkrToolCore/cook_system/cook_system.hpp"
 #include "SkrToolCore/cook_system/importer.hpp"
-#include "SkrSerde/json_serde.hpp"
 #include "SkrContainers/hashmap.hpp"
 
 namespace skd::asset
 {
 Importer::Importer()
 {
-    
 }
 
 struct ImporterRegistryImpl : public ImporterRegistry
 {
-    skr::RC<Importer> LoadImporter(skr::archive::JsonReader* json) override;
-    void StoreImporter(skr::archive::JsonWriter* writer, skr::RC<Importer> importer) override;
+    skr::RC<Importer> LoadImporter(skr::ArReadJson* json) override;
+    void StoreImporter(skr::ArWriteJson* writer, skr::RC<Importer> importer) override;
     uint32_t GetImporterVersion(skr::GUID type) override;
     void RegisterImporter(skr::GUID type, ImporterTypeInfo info) override;
 
@@ -26,28 +24,28 @@ ImporterRegistry* GetImporterRegistry()
     return &registry;
 }
 
-skr::RC<Importer> ImporterRegistryImpl::LoadImporter(skr::archive::JsonReader* json)
+skr::RC<Importer> ImporterRegistryImpl::LoadImporter(skr::ArReadJson* json)
 {
-    skr::GUID type;
-    json->StartObject();
-    {
-        json->Key(u8"importer_type");
-        skr::json_read(json, type);
-    }
-    json->EndObject();
+    Archive::ObjectScope obj_scope(*json);
+    SKR_FAST_CHECK(obj_scope.is_success(), nullptr);
 
+    skr::GUID type;
+    SKR_FAST_CHECK(json->key_value(u8"importer_type", type), nullptr);
+
+    // find importer type
     auto iter = importer_types.find(type);
     if (iter != importer_types.end())
     {
         auto importer = iter->second.Create();
-        json->Key(u8"importer");
-        if (iter->second.Load(json, importer))
-            return importer;
+        // read importer data
+        SKR_FAST_CHECK(json->key(u8"importer"), nullptr);
+        iter->second.Load(json, importer);
+        SKR_FAST_CHECK(json->checkpoint(), nullptr);
     }
     return nullptr;
 }
 
-void ImporterRegistryImpl::StoreImporter(skr::archive::JsonWriter* writer, skr::RC<Importer> importer) 
+void ImporterRegistryImpl::StoreImporter(skr::ArWriteJson* writer, skr::RC<Importer> importer)
 {
     auto iter = importer_types.find(importer->GetType());
     if (iter != importer_types.end())

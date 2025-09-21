@@ -10,7 +10,8 @@
 
 namespace skr
 {
-struct SKR_V8_API V8Value {
+struct SKR_V8_API V8Value
+{
     // ctor & dtor
     V8Value();
     V8Value(V8Context* context);
@@ -19,11 +20,11 @@ struct SKR_V8_API V8Value {
 
     // copy & move
     inline V8Value(const V8Value&) = delete;
-    inline V8Value(V8Value&&)      = default;
+    inline V8Value(V8Value&&) = default;
 
     // assign & move assign
     inline V8Value& operator=(const V8Value&) = delete;
-    inline V8Value& operator=(V8Value&&)      = default;
+    inline V8Value& operator=(V8Value&&) = default;
 
     // ops
     inline bool is_empty() const
@@ -126,7 +127,7 @@ struct SKR_V8_API V8Value {
 
     // get field
     V8Value get_field(StringView name) const;
-    bool    set_field_value(StringView name, const V8Value& value) const;
+    bool set_field_value(StringView name, const V8Value& value) const;
     template <typename T>
     bool set_field(StringView name, const T& v)
     {
@@ -151,7 +152,7 @@ struct SKR_V8_API V8Value {
         {
             if (!is_function()) { return Optional<Ret>{}; }
             Placeholder<Ret> result;
-            bool             success = _call(
+            bool success = _call(
                 { StackProxyMaker<Args>::Make(std::forward<Args>(args))... },
                 { .data = result.data(), .signature = type_signature_of<Ret>() }
             );
@@ -175,7 +176,7 @@ struct SKR_V8_API V8Value {
         {
             if (!is_object()) { return Optional<Ret>{}; }
             Placeholder<Ret> result;
-            bool             success = _call_method(
+            bool success = _call_method(
                 name,
                 { StackProxyMaker<Args>::Make(std::forward<Args>(args))... },
                 { .data = result.data(), .signature = type_signature_of<Ret>() }
@@ -187,24 +188,24 @@ struct SKR_V8_API V8Value {
 
     // getter
     inline const auto& v8_value() const { return _v8_value; }
-    inline V8Context*  context() const { return _context; }
+    inline V8Context* context() const { return _context; }
 
 private:
     void _get(TypeSignatureView sig, void* ptr) const;
     bool _is(TypeSignatureView sig) const;
     bool _set(TypeSignatureView sig, void* ptr);
     bool _call(
-        const span<const StackProxy> params,
-        StackProxy                   return_value
+        const Span<const StackProxy> params,
+        StackProxy return_value
     ) const;
     bool _call_method(
-        const StringView             name,
-        const span<const StackProxy> params,
-        StackProxy                   return_value
+        const StringView name,
+        const Span<const StackProxy> params,
+        StackProxy return_value
     ) const;
 
 private:
     v8::Global<v8::Value> _v8_value = {};
-    V8Context*            _context  = nullptr;
+    V8Context* _context = nullptr;
 };
 } // namespace skr

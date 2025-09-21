@@ -1,8 +1,8 @@
-#include "SkrRT/sugoi/entity_registry.hpp"
-#include "SkrRT/sugoi/chunk.hpp"
+#include "SkrRuntime/sugoi/entity_registry.hpp"
+#include "SkrRuntime/sugoi/chunk.hpp"
 
 #ifndef forloop
-#define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
+    #define forloop(i, z, n) for (auto i = std::decay_t<decltype(n)>(z); i < (n); ++i)
 #endif
 
 sugoi_entity_debug_proxy_t dummy;
@@ -75,7 +75,7 @@ void EntityRegistry::pack_entities(skr::Vector<EIndex>& out_map)
 void EntityRegistry::new_entities(sugoi_entity_t* dst, EIndex count)
 {
     SkrZoneScopedN("sugoi_storage_t::new_entities");
-    
+
     EIndex i = 0;
     // recycle entities
     auto fn = (EIndex)freeEntries.size();
@@ -113,7 +113,7 @@ void EntityRegistry::new_entities(sugoi_entity_t* dst, EIndex count)
 void EntityRegistry::free_entities(const sugoi_entity_t* dst, EIndex count)
 {
     SkrZoneScopedN("sugoi_storage_t::free_entities");
-    
+
     // build freelist in input order
     freeEntries.reserve(freeEntries.size() + count);
 
@@ -151,7 +151,7 @@ void EntityRegistry::fill_entities(const sugoi_chunk_view_t& view)
 void EntityRegistry::fill_entities(const sugoi_chunk_view_t& view, const sugoi_entity_t* src)
 {
     SkrZoneScopedN("sugoi_storage_t::fill_entities");
-    
+
     auto ents = (sugoi_entity_t*)view.chunk->get_entities() + view.start;
     memcpy(ents, src, view.count * sizeof(sugoi_entity_t));
     forloop (i, 0, view.count)
@@ -165,7 +165,7 @@ void EntityRegistry::fill_entities(const sugoi_chunk_view_t& view, const sugoi_e
 void EntityRegistry::fill_entities_external(const sugoi_chunk_view_t& view, const sugoi_entity_t* src)
 {
     SkrZoneScopedN("sugoi_storage_t::fill_entities_external");
-    
+
     auto ents = (sugoi_entity_t*)view.chunk->get_entities() + view.start;
     memcpy(ents, src, view.count * sizeof(sugoi_entity_t));
     forloop (i, 0, view.count)
@@ -205,28 +205,78 @@ void EntityRegistry::move_entities(const sugoi_chunk_view_t& view, EIndex srcInd
     std::memcpy((sugoi_entity_t*)view.chunk->get_entities() + view.start, toMove, view.count * sizeof(sugoi_entity_t));
 }
 
-void EntityRegistry::serialize(SBinaryWriter* writer)
+void EntityRegistry::serialize(skr::ArchiveWrite* w)
 {
-    visit_entries([&](const auto& entriesView){
-        skr::bin_write(writer, (uint32_t)entriesView.size());
-    });
-    visit_free_entries([&](const auto& freeEntriesView){
-        skr::bin_write(writer, (uint32_t)freeEntriesView.size());
-        writer->write(freeEntriesView.data(), sizeof(EIndex) * static_cast<uint32_t>(freeEntriesView.size()));
-    });
-}
+    SkrZoneScopedN("EntityRegistry::serialize");
 
-void EntityRegistry::deserialize(SBinaryReader* reader)
+    skr::Archive::ObjectScope obj_scope(*w);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // write entries
+    SKR_FAST_CHECK(w->key_value(u8"entries_count", (uint64_t)entries.size()), );
+
+    // write free entries
+    SKR_FAST_CHECK(w->key(u8"free_entries"), );
+    {
+        skr::Archive::ArrayScope arr_scope(*w);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // write free entries count
+        SKR_FAST_CHECK(w->array_size<uint64_t>((uint64_t)freeEntries.size()), );
+
+        // write free entries
+        if (w->is_structured())
+        {
+            for (auto freeEntry : freeEntries)
+            {
+                SKR_FAST_CHECK(w->value(freeEntry), );
+            }
+        }
+        else
+        { // optimize for binary writer
+            SKR_FAST_CHECK(w->bytes(freeEntries.data(), freeEntries.size() * sizeof(EIndex)), );
+        }
+    }
+}
+void EntityRegistry::deserialize(skr::ArchiveRead* r)
 {
-    // empty storage expected
-    SKR_ASSERT(entries.size() == 0);
-    uint32_t size = 0;
-    skr::bin_read(reader, size);
-    entries.resize_unsafe(size);
-    uint32_t freeSize = 0;
-    skr::bin_read(reader, freeSize);
-    freeEntries.resize_unsafe(freeSize);
-    reader->read((void*)freeEntries.data(), sizeof(EIndex) * freeSize);
-}
+    SkrZoneScopedN("EntityRegistry::deserialize");
 
+    skr::Archive::ObjectScope obj_scope(*r);
+    SKR_FAST_CHECK(obj_scope.is_success(), );
+
+    // read entries
+    uint64_t entries_count = 0;
+    SKR_FAST_CHECK(r->key_value_required(u8"entries_count", entries_count), );
+
+    // resize entries
+    entries.resize_unsafe((EIndex)entries_count);
+
+    // read free entries
+    SKR_FAST_CHECK(r->key_required(u8"free_entries"), );
+    {
+        skr::Archive::ArrayScope arr_scope(*r);
+        SKR_FAST_CHECK(arr_scope.is_success(), );
+
+        // read free entries count
+        uint64_t free_entries_count = 0;
+        SKR_FAST_CHECK(r->array_size<uint64_t>(free_entries_count), );
+
+        // resize free entries
+        freeEntries.resize_unsafe((EIndex)free_entries_count);
+
+        // read free entries
+        if (r->is_structured())
+        {
+            for (uint64_t i = 0; i < free_entries_count; i++)
+            {
+                SKR_FAST_CHECK(r->value(freeEntries[i]), );
+            }
+        }
+        else
+        { // optimize for binary reader
+            SKR_FAST_CHECK(r->bytes(freeEntries.data(), freeEntries.size() * sizeof(EIndex)), );
+        }
+    }
+}
 } // namespace sugoi
