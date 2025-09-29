@@ -4,7 +4,7 @@
 #include "SkrAnimTool/ozz/tools/import2ozz.h"
 #include "tinygltf/tiny_gltf.h"
 
-namespace skd
+namespace skr
 {
 
 class GltfOzzImporter : public ozz::animation::offline::OzzImporter
@@ -64,4 +64,4 @@ private:
     tinygltf::Model m_model;
 };
 
-} // namespace skd
+} // namespace skr

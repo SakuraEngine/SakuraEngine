@@ -1,15 +1,15 @@
 #pragma once
 // TODO. 移动到专门的 test 文件
 #include "SkrBase/config.h"
-#include "SkrRTTR/iobject.hpp"
+#include "SkrRTTR/irttr_basic.hpp"
 #include <SkrContainers/map.hpp>
 #include <SkrContainers/set.hpp>
 #include <SkrContainers/vector.hpp>
 #include <SkrContainers/variant.hpp>
 #include <SkrContainers/array.hpp>
 #include <SkrContainers/string.hpp>
+#include <SkrBase/math.hpp>
 #include "test_serde_types.generated.h"
-#include <SkrBase/math.h>
 
 namespace test_serde
 {

@@ -6,7 +6,7 @@
 namespace skr
 {
 
-struct [[secs_managed_component, sattr(
+struct [[secs_component, sattr(
     guid = "05622CB2-9D73-402B-B6C5-8075E13D5063";
     serde = @enable
 )]] SKR_ANIM_API SkeletonComponent

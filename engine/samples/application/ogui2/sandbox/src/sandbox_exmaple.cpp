@@ -94,7 +94,7 @@ int main(void)
         {
             SkrZoneScopedN("SystemEvents");
             SDL_Event e;
-            auto      sdl_window = sandbox->native_window()->window()->type_cast_fast<SkrNativeWindow>()->window();
+            auto      sdl_window = sandbox->native_window()->window()->rttr_cast<SkrNativeWindow>()->window();
             while (SDL_PollEvent(&e))
             {
                 switch (e.type)

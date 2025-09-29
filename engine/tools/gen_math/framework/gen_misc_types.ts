@@ -409,7 +409,7 @@ function _gen_transform(opt: GenMiscOption) {
 
       // ctor & dtor
       b.$line(`// ctor & dtor`)
-      b.$line(`inline ${transform_name}() = default;`)
+      b.$line(`inline ${transform_name}() : rotation(), position(), scale(1) {}`)
       b.$line(`inline ${transform_name}(MathNoInitType) : rotation(kMathNoInit), position(kMathNoInit), scale(kMathNoInit) {}`)
       {
         const ctor_params = [

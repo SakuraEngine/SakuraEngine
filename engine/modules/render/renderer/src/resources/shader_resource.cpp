@@ -4,7 +4,7 @@
 #include "SkrBase/misc/hash.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrCore/memory/memory.h"
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "option_utils.hpp"
 
 namespace skr

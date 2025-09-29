@@ -21,4 +21,27 @@ if (args.Length > 0 && args[0] == "SB")
     filteredArgs = args[1..];
 }
 
-return SB.Cli.ReflCommand.InvokeDefaultCommandFromDomain(AppDomain.CurrentDomain, filteredArgs);
+// notify prepare commandline stage for some basic setup
+BuildStage.UpdateStage(EBuildStage.PrepareCommandline);
+
+// now, invoke command
+Cli.Command cmd = new Cli.Command
+{
+    Name = "SB",
+    Help = "Sakura Build System (SB) - A fast, modern build system for C++ projects",
+    Usage = "SB [sub-commands] [options]"
+};
+var banner =
+@"
+
+    _____         _                        ____          _  _      _ 
+   / ____|       | |                      |  _ \        (_)| |    | |
+  | (___    __ _ | | __ _   _  _ __  __ _ | |_) | _   _  _ | |  __| |
+   \___ \  / _` || |/ /| | | || '__|/ _` ||  _ < | | | || || | / _` |
+   ____) || (_| ||   < | |_| || |  | (_| || |_) || |_| || || || (_| |
+  |_____/  \__,_||_|\_\ \__,_||_|   \__,_||____/  \__,_||_||_| \__,_|
+
+
+
+";
+return Cli.ReflCommand.InvokeDefaultCommandFromDomain(AppDomain.CurrentDomain, cmd, filteredArgs, banner);

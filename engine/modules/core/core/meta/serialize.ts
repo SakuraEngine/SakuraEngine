@@ -82,11 +82,14 @@ class _Gen {
           b.$line(``);
 
           // serde bases
-          // TODO. filter base without serde config?
           b.$line(`// serde bases`);
           record.bases.forEach((base) => {
-            b.$line(`Serialize<${base}>::read_fields(r, v);`);
-            b.$line(`SKR_FAST_CHECK(r.checkpoint(), );`);
+            b.$line(`if constexpr (::skr::concepts::HasSerdeReadFields<${base}>) {`)
+            b.$indent(_b => {
+              b.$line(`serde_read_fields<${base}>(r, v);`);
+              b.$line(`SKR_FAST_CHECK(r.checkpoint(), );`);
+            })
+            b.$line(`}`);
           });
           b.$line(``);
 
@@ -109,11 +112,14 @@ class _Gen {
           b.$line(``);
 
           // serde bases
-          // TODO. filter base without serde config?
           b.$line(`// serde bases`);
           record.bases.forEach((base) => {
-            b.$line(`Serialize<${base}>::write_fields(w, v);`);
-            b.$line(`SKR_FAST_CHECK(w.checkpoint(), );`);
+            b.$line(`if constexpr (::skr::concepts::HasSerdeWriteFields<${base}>) {`)
+            b.$indent(_b => {
+              b.$line(`serde_write_fields<${base}>(w, v);`);
+              b.$line(`SKR_FAST_CHECK(w.checkpoint(), );`);
+            })
+            b.$line(`}`);
           });
           b.$line(``);
 

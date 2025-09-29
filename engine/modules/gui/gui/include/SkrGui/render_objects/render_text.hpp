@@ -38,7 +38,6 @@ struct [[sattr(guid = "5179c185-bc7f-4f12-9c11-d979fc14e515"
 {
 public:
     SKR_GENERATE_BODY(RenderText)
-    using Super = RenderBox;
 
     RenderText();
     ~RenderText();

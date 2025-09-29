@@ -15,7 +15,7 @@ struct IDxcBlobUtf8;
 struct IDxcBlobWide;
 struct IDxcBlobEncoding;
 
-namespace skd::asset
+namespace skr
 {
 using namespace skr;
 
@@ -110,4 +110,4 @@ protected:
     skr::SharedLibrary dxil_library;
     void* pDxcCreateInstance = nullptr;
 };
-} // namespace skd::asset
+} // namespace skr

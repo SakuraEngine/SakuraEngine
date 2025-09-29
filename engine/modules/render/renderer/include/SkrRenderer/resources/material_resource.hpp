@@ -1,15 +1,18 @@
 #pragma once
-#include "SkrBase/config.h"
-#include "SkrRenderer/resources/shader_resource.hpp"
-#include "SkrRuntime/resource/resource_factory.h"
 #include "SkrGraphics/cgpux.h"
 #include "SkrRenderer/graphics/gpu_table.hpp"
+#include "SkrRenderer/graphics/shader_hash.hpp"
+#include "SkrRuntime/resource/resource_factory.hpp"
+#include "SkrRenderer/resources/texture_resource.h"
 #include "SkrRenderer/resources/material_resource.generated.h" // IWYU pragma: export
 
 SKR_DECLARE_TYPE_ID_FWD(skr, JobQueue, skr_job_queue)
 
 namespace skr
 {
+struct MaterialCooker;
+struct MaterialFactory;
+struct MaterialFactoryImpl;
 using MaterialPropertyNameView = skr::SerializeConstString;
 
 struct [[sattr(guid = "e2c14489-3223-489a-8e30-95d2014e99f2" serde = @enable)]]
@@ -101,35 +104,56 @@ MaterialOverrides
 };
 
 struct [[sattr(guid = "2efad635-b331-4fc6-8c52-2f8ca954823e" serde = @enable)]]
-MaterialResource
+SKR_RENDERER_API MaterialResource
 {
-    uint32_t material_type_version;
-    AsyncResource<MaterialTypeResource> material_type;
+public:
+    SKR_GENERATE_BODY(MaterialResource);
 
-    MaterialOverrides overrides;
+    template <typename T>
+    void SetParameterValue(skr::StringView name, const T& v);
 
-    typedef struct installed_shader
+    void SetBoolParameterValue(skr::StringView name, bool v);
+    void SetDoubleParameterValue(skr::StringView name, double v);
+    void SetFloatParameterValue(skr::StringView name, float v);
+    void SetFloat2ParameterValue(skr::StringView name, float2 v);
+    void SetFloat3ParameterValue(skr::StringView name, float3 v);
+    void SetFloat4ParameterValue(skr::StringView name, float4 v);
+    void SetTextureParameterValue(skr::StringView name, AsyncResource<TextureResource> tex);
+    void SetSamplerParameterValue(skr::StringView name, AsyncResource<TextureSamplerResource> sampler);
+    inline uint64_t GetMaterialIndex() const { return mat_id; }
+
+    struct InstalledShader
     {
         PlatformShaderIdentifier identifier;
         skr::StringView entry;
         ECGPUShaderStage stage;
-    } installed_shader;
-
-    typedef struct installed_pass
+    };
+    struct InstalledPass
     {
         skr::String name;
-        skr::Vector<installed_shader> shaders;
+        skr::Vector<InstalledShader> shaders;
         ESkrInstallStatus status;
         CGPURootSignatureId root_signature;
         skr_pso_map_key_id key;
         CGPURenderPipelineId pso;
         CGPUXBindTableId bind_table;
-    } installed_pass;
+    };
 
+private:
+    friend struct skr::MaterialFactoryImpl;
+    friend struct skr::MaterialCooker;
+    
+    void storeToGPUTable(gpu::TableInstance& table);
+
+    uint32_t material_type_version;
+    AsyncResource<MaterialTypeResource> material_type;
+    MaterialOverrides overrides;
     [[sattr(serde = @disable)]]
-    skr::Vector<installed_pass> installed_passes;
+    skr::Vector<InstalledPass> installed_passes;
     [[sattr(serde = @disable)]]
     uint64_t mat_id;
+    [[sattr(serde = @disable)]]
+    MaterialFactory* factory = nullptr;
 };
 
 struct SKR_RENDERER_API MaterialFactory : public ResourceFactory
@@ -148,9 +172,34 @@ struct SKR_RENDERER_API MaterialFactory : public ResourceFactory
 
     virtual CGPUDescriptorBufferId descriptor_buffer() = 0;
     virtual skr::RC<gpu::TableInstance> material_table() = 0;
-    virtual skr::render_graph::BufferHandle UpdateGPUTable(skr::render_graph::RenderGraph* graph) = 0;
+    virtual skr::RG::BufferHandle UpdateGPUTable(skr::RG::RenderGraph* graph) = 0;
+    virtual void MarkMaterialDirty(MaterialResource* mat) = 0;
 
     [[nodiscard]] static MaterialFactory* Create(const Root& root);
     static void Destroy(MaterialFactory* factory);
 };
+
+template <typename T>
+inline void MaterialResource::SetParameterValue(skr::StringView name, const T& v)
+{
+    if constexpr (std::is_same_v<T, float>)
+        SetFloatParameterValue(name, v);
+    else if constexpr (std::is_same_v<T, float2>)
+        SetFloat2ParameterValue(name, v);
+    else if constexpr (std::is_same_v<T, float3>)
+        SetFloat3ParameterValue(name, v);
+    else if constexpr (std::is_same_v<T, float4>)
+        SetFloat4ParameterValue(name, v);
+    else if constexpr (std::is_same_v<T, double>)
+        SetDoubleParameterValue(name, v);
+    else if constexpr (std::is_same_v<T, bool>)
+        SetBoolParameterValue(name, v);
+    else if constexpr (std::is_same_v<T, skr::GUID>)
+        SetTextureParameterValue(name, v);
+    else if constexpr (std::is_same_v<T, skr::GUID>)
+        SetSamplerParameterValue(name, v);
+    else
+        SKR_UNREACHABLE_CODE();
+}
+
 } // namespace skr

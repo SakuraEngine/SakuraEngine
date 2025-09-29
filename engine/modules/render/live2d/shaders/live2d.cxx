@@ -70,7 +70,6 @@ void model_fs(VSOut input, [[sv_render_target(0)]] float4& output_color)
     if (push_constants.use_mask)
     {
         float2 mask_uv = input.clip_pos.xy / input.clip_pos.w;
-        
         float4 clip_mask = (float4(1.f, 1.f, 1.f, 1.f) - mask_texture.Sample(color_sampler, mask_uv)) * push_constants.channel_flag;
         float mask_value = clip_mask.r + clip_mask.g + clip_mask.b + clip_mask.a;
         output_color = output_color * mask_value;

@@ -1,5 +1,5 @@
 #pragma once
-#include "resource_system.h"
+#include "resource_system.hpp"
 
 struct skr_vfs_t;
 namespace skr

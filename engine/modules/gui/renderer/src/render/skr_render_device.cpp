@@ -84,7 +84,7 @@ void SkrRenderDevice::init()
 
     // create rg
     _render_graph = RenderGraph::create(
-        [=, this](render_graph::RenderGraphBuilder& b) {
+        [=, this](RG::RenderGraphBuilder& b) {
             b.with_device(_cgpu_device)
                 .with_gfx_queue(_cgpu_queue);
         });
@@ -102,9 +102,9 @@ void SkrRenderDevice::init()
     _vertex_layout.attributes[3] = { u8"UV", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv_offset, sizeof(float2), CGPU_INPUT_RATE_VERTEX };
     _vertex_layout.attributes[4] = { u8"UV_Two", 1, CGPU_FORMAT_R32G32_SFLOAT, 0, uv2_offset, sizeof(float2), CGPU_INPUT_RATE_VERTEX };
     _vertex_layout.attributes[5] = { u8"COLOR", 1, CGPU_FORMAT_R8G8B8A8_UNORM, 0, color_offset, sizeof(float4), CGPU_INPUT_RATE_VERTEX };
-    _vertex_layout.attributes[6] = { u8"TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
-    _vertex_layout.attributes[7] = { u8"PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
-    _vertex_layout.attributes[8] = { u8"DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr_float4x4_t), CGPU_INPUT_RATE_INSTANCE };
+    _vertex_layout.attributes[6] = { u8"TRANSFORM", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 1, 0, sizeof(skr::float4x4), CGPU_INPUT_RATE_INSTANCE };
+    _vertex_layout.attributes[7] = { u8"PROJECTION", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 2, 0, sizeof(skr::float4x4), CGPU_INPUT_RATE_INSTANCE };
+    _vertex_layout.attributes[8] = { u8"DRAW_DATA", 4, CGPU_FORMAT_R32G32B32A32_SFLOAT, 3, 0, sizeof(skr::float4x4), CGPU_INPUT_RATE_INSTANCE };
     _vertex_layout.attribute_count = 9;
 
     // create sampler
@@ -277,7 +277,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //     return true;
 // }
 
-// void GDIRenderer_RenderGraph::updatePendingTextures(skr::render_graph::RenderGraph* graph) SKR_NOEXCEPT
+// void GDIRenderer_RenderGraph::updatePendingTextures(skr::RG::RenderGraph* graph) SKR_NOEXCEPT
 // {
 //     const auto                    frame_index = graph->get_frame_index();
 //     GDITextureUpdate_RenderGraph* update = nullptr;
@@ -338,7 +338,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //     }
 
 //     graph->add_copy_pass(
-//     [&](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
+//     [&](RG::RenderGraph& g, RG::CopyPassBuilder& builder) {
 //         SkrZoneScopedN("UpdateTextures");
 //         builder.set_name(u8"gdi_texture_update_pass")
 //         .can_be_lone();
@@ -347,7 +347,7 @@ CGPURenderPipelineId SkrRenderDevice::create_pipeline(ESkrPipelineFlag flags, EC
 //             builder.buffer_to_texture(copy->upload_buffer.range(0, 0), copy->texture_handle, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
 //         }
 //     },
-//     [=](render_graph::RenderGraph& g, render_graph::CopyPassContext& context) {
+//     [=](RG::RenderGraph& g, RG::CopyPassContext& context) {
 //         for (auto copy : copies)
 //         {
 //             auto       buffer = context.resolve(copy->upload_buffer);

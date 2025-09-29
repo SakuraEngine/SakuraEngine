@@ -4,7 +4,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 class TextureViewPool
 {
@@ -59,5 +59,5 @@ protected:
     CGPUDeviceId device;
     skr::Map<Key, PooledTextureView> views;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

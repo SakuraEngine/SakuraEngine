@@ -15,7 +15,7 @@ NotNull<RenderObject*> Flex::create_render_object() SKR_NOEXCEPT
 }
 void Flex::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    auto r_obj = render_object->type_cast_fast<RenderFlex>();
+    auto r_obj = render_object->rttr_cast<RenderFlex>();
 
     r_obj->set_flex_direction(flex_direction);
     r_obj->set_main_axis_alignment(main_axis_alignment);

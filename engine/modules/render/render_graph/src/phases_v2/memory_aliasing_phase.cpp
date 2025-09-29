@@ -8,7 +8,7 @@
 #include <algorithm>
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 bool MemoryRegion::overlaps_with(const MemoryRegion& other) const
 {
@@ -688,5 +688,5 @@ uint64_t MemoryAliasingPhase::calculate_bucket_waste(ResourceNode* resource, con
     return waste;
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

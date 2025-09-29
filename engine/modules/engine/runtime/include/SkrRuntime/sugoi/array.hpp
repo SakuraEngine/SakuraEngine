@@ -1,15 +1,10 @@
 #pragma once
-#include "SkrRuntime/sugoi/llvm/SmallVector.h" // IWYU pragma: export
-
-struct sugoi_array_comp_t : llvm_vecsmall::SmallVectorBase {
-    using SmallVectorBase::SmallVectorBase;
-};
+#include "SkrContainers/vector.hpp" // IWYU pragma: export
 
 namespace sugoi
 {
-template <class T, size_t N>
-struct ArrayComponent : public llvm_vecsmall::SmallVector<T, N>
-{
+using ArrayComponentBase = ::skr::VectorMemoryBase;
 
-};
+template <class T, size_t N>
+using ArrayComponent = ::skr::InlineVector<T, N>;
 } // namespace sugoi

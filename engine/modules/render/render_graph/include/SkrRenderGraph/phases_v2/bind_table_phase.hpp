@@ -5,7 +5,7 @@
 #include "resource_allocation_phase.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // Bind table information for a single pass
 struct PassBindTableInfo {
@@ -51,5 +51,5 @@ private:
     BindTableResult bind_table_result_;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

@@ -4,7 +4,7 @@
 #include "gltf2ozz.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
 
-namespace skd::asset
+namespace skr
 {
 void GltfAnimImporter::Destroy(void* data)
 {
@@ -18,7 +18,7 @@ void* GltfAnimImporter::Import(skr::io::IRAMService*, CookContext* context)
     GltfOzzImporter impl;
     ozz::animation::offline::OzzImporter& impoter = impl;
     auto& skeletonResource = context->GetStaticDependency(0);
-    ozz::animation::Skeleton& skeleton = *(ozz::animation::Skeleton*)skeletonResource.get_ptr();
+    ozz::animation::Skeleton& skeleton = *(ozz::animation::Skeleton*)skeletonResource.get_loaded();
     auto path = context->AddSourceFile(assetPath.c_str());
     auto fullAssetPath = context->GetAssetMetaFile()->GetProject()->GetAssetPath() / path;
     if (!impoter.Load(reinterpret_cast<const char*>(fullAssetPath.string().c_str())))
@@ -30,4 +30,4 @@ void* GltfAnimImporter::Import(skr::io::IRAMService*, CookContext* context)
     impoter.Import(animationName.c_str_raw(), skeleton, samplingRate, rawAnimation);
     return rawAnimation;
 }
-} // namespace skd::asset
+} // namespace skr

@@ -1,5 +1,4 @@
 using SB;
-using Cli = SB.Cli;
 
 namespace SB;
 
@@ -10,6 +9,9 @@ public class BuildCommand : CommandBase
 
     [Cli.Option(Name = "target", Help = "Build a single target", IsRequired = false)]
     public string? SingleTarget { get; set; }
+    
+    [Cli.Option(Name = "build-dir", ShortName = 'o', Help = "Set build directory")]
+    public string BuildDir { get; set; } = "";
 
     public override int OnExecute()
     {

@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
-namespace skr::render_graph
+namespace skr::RG
 {
 
 template<typename T>
@@ -78,4 +78,4 @@ private:
     T resources[RG_MAX_FRAME_IN_FLIGHT];
 };
 
-} // namespace skr::render_graph
+} // namespace skr::RG

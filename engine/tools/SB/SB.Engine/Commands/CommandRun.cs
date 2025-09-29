@@ -3,7 +3,6 @@ using SB.Core;
 using Serilog;
 using Serilog.Events;
 using System.Diagnostics;
-using Cli = SB.Cli;
 using BS = SB.BuildSystem;
 using System.Collections;
 namespace SB;

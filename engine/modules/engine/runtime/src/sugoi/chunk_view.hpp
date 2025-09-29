@@ -1,10 +1,6 @@
 #pragma once
 #include "SkrRuntime/sugoi/sugoi.h"
 
-
-#define for_buffer(i, array, size) \
-    for (char* i = (char*)array->BeginX; i != array->EndX; i += size)
-
 namespace sugoi
 {
     void construct_view(const sugoi_chunk_view_t& view) noexcept;

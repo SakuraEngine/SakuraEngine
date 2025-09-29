@@ -4,7 +4,7 @@
 #include "cgltf/cgltf.h"
 #include "SkrMeshTool/mesh_asset.hpp"
 
-namespace skd::asset
+namespace skr
 {
 bool SkinCooker::Cook(CookContext* ctx)
 {
@@ -44,4 +44,4 @@ bool SkinCooker::Cook(CookContext* ctx)
     std::memcpy((void*)resource.inverse_bind_poses.data(), matrix, sizeof(cgltf_float) * components * rawSkin->joints_count);
     return ctx->Save(resource);
 }
-} // namespace skd::asset
+} // namespace skr

@@ -4,7 +4,7 @@
 #include "gltf2ozz.h"
 #include "SkrAnim/ozz/base/memory/allocator.h"
 
-namespace skd::asset
+namespace skr
 {
 void GltfSkelImporter::Destroy(void* data)
 {
@@ -31,4 +31,4 @@ void* GltfSkelImporter::Import(skr::io::IRAMService*, CookContext* context)
     impoter.Import(rawSkeleton, types);
     return rawSkeleton;
 }
-} // namespace skd::asset
+} // namespace skr

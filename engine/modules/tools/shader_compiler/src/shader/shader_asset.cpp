@@ -11,7 +11,7 @@
 
 #include "SkrProfile/profile.h"
 
-namespace skd::asset
+namespace skr
 {
 ShaderSourceCode::~ShaderSourceCode() SKR_NOEXCEPT
 {
@@ -108,14 +108,14 @@ bool ShaderCooker::Cook(CookContext* ctx)
     {
         const auto guid = switch_asset.get_guid();
         auto idx = ctx->AddStaticDependency(guid, true);
-        auto opts_resource = static_cast<ShaderOptionsResource*>(ctx->GetStaticDependency(idx).get_ptr());
+        auto opts_resource = static_cast<ShaderOptionsResource*>(ctx->GetStaticDependency(idx).get_installed());
         switch_assets.add(opts_resource);
     }
     for (auto option_asset : importer->option_assets)
     {
         const auto guid = option_asset.get_guid();
         auto idx = ctx->AddStaticDependency(guid, true);
-        auto opts_resource = static_cast<ShaderOptionsResource*>(ctx->GetStaticDependency(idx).get_ptr());
+        auto opts_resource = static_cast<ShaderOptionsResource*>(ctx->GetStaticDependency(idx).get_installed());
         option_assets.add(opts_resource);
     }
 
@@ -136,7 +136,7 @@ bool ShaderCooker::Cook(CookContext* ctx)
         ECGPUShaderBytecodeType::CGPU_SHADER_BYTECODE_TYPE_SPIRV
     };
     // begin compile
-    // auto system = skd::asset::GetCookSystem();
+    // auto system = skr::GetCookSystem();
     skr::Vector<MultiShaderResource> allOutResources(static_variants.size());
     // foreach variants
     {
@@ -319,4 +319,4 @@ uint32_t ShaderCooker::Version()
     return kDevelopmentVersion;
 }
 
-} // namespace skd::asset
+} // namespace skr

@@ -6,10 +6,10 @@
 #include "SkrContainersDef/map.hpp"
 
 // Forward declarations
-namespace skr { namespace render_graph { class PassDependencyAnalysis; } }
+namespace skr { namespace RG { class PassDependencyAnalysis; } }
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // 队列类型定义
 enum class ERenderGraphQueueType : uint8_t 
@@ -115,5 +115,5 @@ inline const char8_t* get_queue_type_name(ERenderGraphQueueType type)
     }
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

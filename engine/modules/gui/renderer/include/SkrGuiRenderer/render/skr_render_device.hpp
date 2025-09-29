@@ -9,7 +9,7 @@
 
 namespace skr::gui
 {
-using skr::render_graph::RenderGraph;
+using skr::RG::RenderGraph;
 struct SkrRenderWindow;
 struct IUpdatableImage;
 

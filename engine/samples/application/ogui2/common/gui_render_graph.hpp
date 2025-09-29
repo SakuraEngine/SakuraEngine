@@ -10,9 +10,9 @@ struct gui_render_graph_t
     bool initialize(render_application_t& render_app)
     {
         // initialize render graph
-        namespace render_graph = skr::render_graph;
-        graph = render_graph::RenderGraph::create(
-        [=](render_graph::RenderGraphBuilder& builder) {
+        namespace RG = skr::RG;
+        graph = RG::RenderGraph::create(
+        [=](RG::RenderGraphBuilder& builder) {
             builder.with_device(render_app.device)
             .with_gfx_queue(render_app.gfx_queue);
         });
@@ -21,7 +21,7 @@ struct gui_render_graph_t
 
     void declare_render_resources(render_application_t& render_app)
     {
-        namespace render_graph = skr::render_graph;
+        namespace RG = skr::RG;
         // acquire frame
         {
             SkrZoneScopedN("WaitPresent");
@@ -38,14 +38,14 @@ struct gui_render_graph_t
         if (sample_count != CGPU_SAMPLE_COUNT_1)
         {
             back_buffer = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     builder.set_name(SKR_UTF8("presentbuffer"))
                     .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
                     .allow_render_target();
                 });
             const auto back_desc = graph->resolve_descriptor(back_buffer);
             auto msaaTarget = graph->create_texture(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+            [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
                 builder.set_name(SKR_UTF8("backbuffer"))
                     .extent(back_desc->width, back_desc->height)
                     .format(back_desc->format)
@@ -57,14 +57,14 @@ struct gui_render_graph_t
         else
         {
             back_buffer = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     builder.set_name(SKR_UTF8("backbuffer"))
                     .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
                     .allow_render_target();
                 });
         }
         depth_buffer = graph->create_texture(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+            [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
                 const auto texInfo = render_app.swapchain->back_buffers[0]->info;
                 builder.set_name(SKR_UTF8("depth"))
                     .extent(texInfo->width, texInfo->height)
@@ -77,10 +77,10 @@ struct gui_render_graph_t
 
     void submit_render_graph(render_application_t& render_app)
     {
-        namespace render_graph = skr::render_graph;
+        namespace RG = skr::RG;
         // do present
         graph->add_present_pass(
-            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::PresentPassBuilder& builder) {
                 builder.set_name(SKR_UTF8("present"))
                 .swapchain(render_app.swapchain, render_app.backbuffer_index)
                 .texture(back_buffer, true);
@@ -99,13 +99,13 @@ struct gui_render_graph_t
 
     void finalize()
     {
-        namespace render_graph = skr::render_graph;
-        render_graph::RenderGraph::destroy(graph);
+        namespace RG = skr::RG;
+        RG::RenderGraph::destroy(graph);
     }
 
     ECGPUSampleCount sample_count = CGPU_SAMPLE_COUNT_1;
-    skr::render_graph::RenderGraph* graph;
-    skr::render_graph::TextureHandle back_buffer;
-    skr::render_graph::TextureHandle depth_buffer;
+    skr::RG::RenderGraph* graph;
+    skr::RG::TextureHandle back_buffer;
+    skr::RG::TextureHandle depth_buffer;
     uint64_t frame_index = 0;
 };

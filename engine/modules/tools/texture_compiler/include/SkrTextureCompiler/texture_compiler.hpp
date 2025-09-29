@@ -4,7 +4,7 @@
 #include "SkrContainersDef/string.hpp"
 #include "SkrTextureCompiler/texture_compiler.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 struct [[sattr(
     guid = "a26c2436-9e5f-43c4-b4d7-e5373d353bae"
@@ -26,4 +26,4 @@ struct [[sattr(
     uint32_t Version() override;
 };
 
-} // namespace skd::asset
+} // namespace skr

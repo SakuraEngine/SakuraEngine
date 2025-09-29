@@ -4,7 +4,7 @@
 #include "SkrContainersDef/hashmap.hpp"
 #include "SkrToolCore/project/project.generated.h" // IWYU pragma: export
 
-namespace skd
+namespace skr
 {
 
 using URI = skr::Path;
@@ -57,4 +57,4 @@ private:
     skr::String name;
     skr::ParallelFlatHashMap<skr::String, skr::String, skr::Hash<skr::String>> env;
 };
-} // namespace skd
+} // namespace skr

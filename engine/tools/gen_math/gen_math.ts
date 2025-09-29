@@ -100,8 +100,8 @@ fwd_builder.write_file(fwd_out_path);
 // write c decls
 const c_decl_cpp_out_path = path.join(gen_dir, "gen_math_c_decl.hpp");
 const c_decl_c_out_path = path.join(gen_dir, "gen_math_c_decl.h");
-c_decl_cpp_builder.write_file(c_decl_cpp_out_path);
-c_decl_c_builder.write_file(c_decl_c_out_path);
+// c_decl_cpp_builder.write_file(c_decl_cpp_out_path);
+// c_decl_c_builder.write_file(c_decl_c_out_path);
 
 // write traits
 traits_builder.$line("}");

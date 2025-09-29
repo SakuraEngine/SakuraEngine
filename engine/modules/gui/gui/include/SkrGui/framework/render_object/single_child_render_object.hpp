@@ -8,7 +8,7 @@ namespace skr::gui
 {
 struct [[sattr(
     guid = "5349672b-bfc5-46a9-9a02-40ef563c196d"
-)]] SKR_GUI_API ISingleChildRenderObject : virtual public skr::IObject
+)]] SKR_GUI_API ISingleChildRenderObject : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(ISingleChildRenderObject)
     virtual ~ISingleChildRenderObject() = default;
@@ -30,7 +30,7 @@ struct SingleChildRenderObjectMixin
     inline void set_child(TSelf& self, NotNull<RenderObject*> child) SKR_NOEXCEPT
     {
         if (_child) _child->unmount();
-        _child = child->type_cast_fast<TChild>();
+        _child = child->rttr_cast<TChild>();
         _child->mount(&self);
     }
     inline void remove_child(TSelf& self) SKR_NOEXCEPT

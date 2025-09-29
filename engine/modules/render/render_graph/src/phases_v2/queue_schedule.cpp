@@ -8,7 +8,7 @@
 #define QUEUE_SCHEDULE_LOG(...)
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 QueueSchedule::QueueSchedule(const PassDependencyAnalysis& dependency_analysis, 
                                   const QueueScheduleConfig& cfg)
@@ -304,5 +304,5 @@ void QueueSchedule::dump_timeline_result(const char8_t* title, const TimelineSch
 }
 
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

@@ -37,16 +37,18 @@ struct RC
     RC(RC<U>&& rhs);
 
     // assign & move assign
-    RC& operator=(std::nullptr_t);
-    RC& operator=(T* ptr);
     RC& operator=(const RC& rhs);
     RC& operator=(RC&& rhs);
-    template <concepts::RCConvertible<T> U>
-    RC& operator=(U* ptr);
     template <concepts::RCConvertible<T> U>
     RC& operator=(const RC<U>& rhs);
     template <concepts::RCConvertible<T> U>
     RC& operator=(RC<U>&& rhs);
+
+    // pointer assign & unique move assign
+    RC& operator=(std::nullptr_t);
+    RC& operator=(T* ptr);
+    template <concepts::RCConvertible<T> U>
+    RC& operator=(U* ptr);
     template <concepts::RCConvertible<T> U>
     RC& operator=(RCUnique<U>&& rhs);
 
@@ -117,14 +119,16 @@ struct RCUnique
     RCUnique(RCUnique<U>&& rhs);
 
     // assign & move assign
-    RCUnique& operator=(std::nullptr_t);
-    RCUnique& operator=(T* ptr);
     RCUnique& operator=(const RCUnique& rhs) = delete;
     RCUnique& operator=(RCUnique&& rhs);
     template <concepts::RCConvertible<T> U>
-    RCUnique& operator=(U* ptr);
-    template <concepts::RCConvertible<T> U>
     RCUnique& operator=(RCUnique<U>&& rhs);
+
+    // pointer assign
+    RCUnique& operator=(std::nullptr_t);
+    RCUnique& operator=(T* ptr);
+    template <concepts::RCConvertible<T> U>
+    RCUnique& operator=(U* ptr);
 
     // factory
     template <typename... Args>
@@ -233,16 +237,18 @@ struct RCWeak
     RCWeak(RCWeak<U>&& rhs);
 
     // assign & move assign
-    RCWeak& operator=(std::nullptr_t);
-    RCWeak& operator=(T* ptr);
     RCWeak& operator=(const RCWeak& rhs);
     RCWeak& operator=(RCWeak&& rhs);
-    template <concepts::RCConvertible<T> U>
-    RCWeak& operator=(U* ptr);
     template <concepts::RCConvertible<T> U>
     RCWeak& operator=(const RCWeak<U>& rhs);
     template <concepts::RCConvertible<T> U>
     RCWeak& operator=(RCWeak<U>&& rhs);
+
+    // pointer assign & RC assign
+    RCWeak& operator=(std::nullptr_t);
+    RCWeak& operator=(T* ptr);
+    template <concepts::RCConvertible<T> U>
+    RCWeak& operator=(U* ptr);
     template <concepts::RCConvertible<T> U>
     RCWeak& operator=(const RC<U>& rhs);
     template <concepts::RCConvertible<T> U>
@@ -400,32 +406,12 @@ inline RC<T>::RC(RC<U>&& rhs)
 
 // assign & move assign
 template <typename T>
-inline RC<T>& RC<T>::operator=(std::nullptr_t)
-{
-    reset();
-    return *this;
-}
-template <typename T>
-inline RC<T>& RC<T>::operator=(T* ptr)
-{
-    reset(ptr);
-    return *this;
-}
-template <typename T>
 inline RC<T>& RC<T>::operator=(const RC& rhs)
 {
     if (this != &rhs)
     {
         reset(rhs._ptr);
     }
-    return *this;
-}
-template <typename T>
-template <concepts::RCConvertible<T> U>
-inline RC<T>& RC<T>::operator=(U* ptr)
-{
-    static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
-    reset(ptr);
     return *this;
 }
 template <typename T>
@@ -454,7 +440,6 @@ inline RC<T>& RC<T>::operator=(const RC<U>& rhs)
     }
     return *this;
 }
-
 template <typename T>
 template <concepts::RCConvertible<T> U>
 inline RC<T>& RC<T>::operator=(RC<U>&& rhs)
@@ -469,6 +454,28 @@ inline RC<T>& RC<T>::operator=(RC<U>&& rhs)
         reset(static_cast<T*>(rhs.get()));
         rhs.reset();
     }
+    return *this;
+}
+
+// pointer assign & unique move assign
+template <typename T>
+inline RC<T>& RC<T>::operator=(std::nullptr_t)
+{
+    reset();
+    return *this;
+}
+template <typename T>
+inline RC<T>& RC<T>::operator=(T* ptr)
+{
+    reset(ptr);
+    return *this;
+}
+template <typename T>
+template <concepts::RCConvertible<T> U>
+inline RC<T>& RC<T>::operator=(U* ptr)
+{
+    static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
+    reset(ptr);
     return *this;
 }
 template <typename T>
@@ -827,18 +834,6 @@ inline RCUnique<T>::RCUnique(RCUnique<U>&& rhs)
 
 // assign & move assign
 template <typename T>
-inline RCUnique<T>& RCUnique<T>::operator=(std::nullptr_t)
-{
-    reset();
-    return *this;
-}
-template <typename T>
-inline RCUnique<T>& RCUnique<T>::operator=(T* ptr)
-{
-    reset(ptr);
-    return *this;
-}
-template <typename T>
 inline RCUnique<T>& RCUnique<T>::operator=(RCUnique&& rhs)
 {
     if (this != &rhs)
@@ -847,14 +842,6 @@ inline RCUnique<T>& RCUnique<T>::operator=(RCUnique&& rhs)
         _ptr = rhs._ptr;
         rhs._ptr = nullptr;
     }
-    return *this;
-}
-template <typename T>
-template <concepts::RCConvertible<T> U>
-inline RCUnique<T>& RCUnique<T>::operator=(U* ptr)
-{
-    static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
-    reset(ptr);
     return *this;
 }
 template <typename T>
@@ -870,6 +857,28 @@ inline RCUnique<T>& RCUnique<T>::operator=(RCUnique<U>&& rhs)
     {
         reset(static_cast<T*>(rhs.release()));
     }
+    return *this;
+}
+
+// pointer assign
+template <typename T>
+inline RCUnique<T>& RCUnique<T>::operator=(std::nullptr_t)
+{
+    reset();
+    return *this;
+}
+template <typename T>
+inline RCUnique<T>& RCUnique<T>::operator=(T* ptr)
+{
+    reset(ptr);
+    return *this;
+}
+template <typename T>
+template <concepts::RCConvertible<T> U>
+inline RCUnique<T>& RCUnique<T>::operator=(U* ptr)
+{
+    static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
+    reset(ptr);
     return *this;
 }
 
@@ -1385,18 +1394,6 @@ inline RCWeak<T>::RCWeak(RCWeak<U>&& rhs)
 
 // assign & move assign
 template <typename T>
-inline RCWeak<T>& RCWeak<T>::operator=(std::nullptr_t)
-{
-    reset();
-    return *this;
-}
-template <typename T>
-inline RCWeak<T>& RCWeak<T>::operator=(T* ptr)
-{
-    reset(ptr);
-    return *this;
-}
-template <typename T>
 inline RCWeak<T>& RCWeak<T>::operator=(const RCWeak& rhs)
 {
     if (this != &rhs)
@@ -1416,14 +1413,6 @@ inline RCWeak<T>& RCWeak<T>::operator=(RCWeak&& rhs)
         rhs._ptr = nullptr;
         rhs._counter = nullptr;
     }
-    return *this;
-}
-template <typename T>
-template <concepts::RCConvertible<T> U>
-inline RCWeak<T>& RCWeak<T>::operator=(U* ptr)
-{
-    static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
-    reset(ptr);
     return *this;
 }
 template <typename T>
@@ -1453,6 +1442,28 @@ inline RCWeak<T>& RCWeak<T>::operator=(RCWeak<U>&& rhs)
         _counter->add_ref();
         rhs.reset();
     }
+    return *this;
+}
+
+// pointer assign & RC assign
+template <typename T>
+inline RCWeak<T>& RCWeak<T>::operator=(std::nullptr_t)
+{
+    reset();
+    return *this;
+}
+template <typename T>
+inline RCWeak<T>& RCWeak<T>::operator=(T* ptr)
+{
+    reset(ptr);
+    return *this;
+}
+template <typename T>
+template <concepts::RCConvertible<T> U>
+inline RCWeak<T>& RCWeak<T>::operator=(U* ptr)
+{
+    static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
+    reset(ptr);
     return *this;
 }
 template <typename T>

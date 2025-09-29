@@ -1,12 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrRTTR/iobject.hpp"
-#include <SkrRTTR/iobject.hpp>
+#include <SkrRTTR/irttr_basic.hpp>
 #include "test_rttr_types.generated.h"
-
-// TODO. test invoke & field visit
-// TODO. default value
-// TODO. test iobject
 
 // test attr
 namespace skr::attr::test_rttr
@@ -221,7 +216,7 @@ namespace test_rttr
 {
 struct [[sattr(
     guid = "dc14be19-8a13-4ca3-841d-9f41bd784185"
-)]] ITestInterfaceA : virtual skr::IObject
+)]] ITestInterfaceA : virtual skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(ITestInterfaceA)
     virtual ~ITestInterfaceA() = default;
@@ -229,7 +224,7 @@ struct [[sattr(
 
 struct [[sattr(
     guid = "25188c1c-fd6f-41af-b11a-7c4260118746"
-)]] ITestInterfaceB : virtual skr::IObject
+)]] ITestInterfaceB : virtual skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(ITestInterfaceB)
     virtual ~ITestInterfaceB() = default;

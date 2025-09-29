@@ -43,7 +43,7 @@ void Sandbox::set_content(NotNull<Widget*> content)
 void Sandbox::show(const WindowDesc& desc)
 {
     // create native window
-    auto native_window = _device->create_window()->type_cast_fast<INativeWindow>();
+    auto native_window = _device->create_window()->rttr_cast<INativeWindow>();
     native_window->init_normal(desc);
 
     // init root render native window
@@ -63,12 +63,12 @@ void Sandbox::show(const WindowDesc& desc)
 
     // init element
     // 使用 root_widget 创建 root_element，并先行初始化
-    _root_element = root_widget->create_element()->type_cast_fast<RenderNativeWindowElement>();
+    _root_element = root_widget->create_element()->rttr_cast<RenderNativeWindowElement>();
     _root_element->setup_owner(_build_owner);
     _root_element->prepare_initial_frame();
 
     // init layer
-    _root_layer = _root_render_object->layer()->type_cast_fast<NativeWindowLayer>();
+    _root_layer = _root_render_object->layer()->rttr_cast<NativeWindowLayer>();
 }
 
 void Sandbox::update(uint32_t time_stamp)

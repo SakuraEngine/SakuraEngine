@@ -125,7 +125,7 @@ void SkrNativeWindow::set_absolute_size(Sizef absolute) SKR_NOEXCEPT
 }
 void SkrNativeWindow::update_content(WindowLayer* root_layer) SKR_NOEXCEPT
 {
-    _native_layer = root_layer->type_cast_fast<NativeWindowLayer>();
+    _native_layer = root_layer->rttr_cast<NativeWindowLayer>();
 }
 void SkrNativeWindow::take_focus() SKR_NOEXCEPT
 {

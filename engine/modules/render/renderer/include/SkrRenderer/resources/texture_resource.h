@@ -2,7 +2,7 @@
 #include "SkrRTTR/enum_tools.hpp"
 #include "SkrRuntime/io/ram_io.hpp"
 #include "SkrRuntime/io/vram_io.hpp"
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "SkrRenderer/fwd_types.h"
 #include "SkrRenderer/resources/texture_resource.generated.h" // IWYU pragma: export
 

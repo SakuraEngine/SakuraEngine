@@ -7,12 +7,12 @@
 
 struct Live2DRenderPass 
 {
-    static void create_frame_resources(skr::render_graph::RenderGraph* render_graph)
+    static void create_frame_resources(skr::RG::RenderGraph* render_graph)
     {
         auto backbuffer = render_graph->get_texture(u8"backbuffer");
         const auto back_desc = render_graph->resolve_descriptor(backbuffer);
         auto msaaTarget = render_graph->create_texture(
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+        [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
             double sample_level = 1.0;
             g.get_blackboard().value(u8"l2d_msaa", sample_level);
 
@@ -25,7 +25,7 @@ struct Live2DRenderPass
         });(void)msaaTarget;
         
         auto depth = render_graph->create_texture(
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+        [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
             double sample_level = 1.0;
             g.get_blackboard().value(u8"l2d_msaa", sample_level);
 
@@ -38,7 +38,7 @@ struct Live2DRenderPass
         });(void)depth;
     }
 
-    static void execute(skr::render_graph::RenderGraph* render_graph, skr::Span<skr_primitive_draw_t> drawcalls)
+    static void execute(skr::RG::RenderGraph* render_graph, skr::Span<skr_primitive_draw_t> drawcalls)
     {
         auto backbuffer = render_graph->get_texture(u8"backbuffer");
         const auto back_desc = render_graph->resolve_descriptor(backbuffer);
@@ -50,7 +50,7 @@ struct Live2DRenderPass
         CGPURootSignatureId root_signature = nullptr;
         root_signature = drawcalls[0].pipeline->root_signature;
         render_graph->add_render_pass(
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
+        [=](skr::RG::RenderGraph& g, skr::RG::RenderPassBuilder& builder) {
             double sample_level = 1.0;
             bool useMSAA = g.get_blackboard().value(u8"l2d_msaa", sample_level); useMSAA &= (sample_level > 1.0);
             const auto depth_buffer = render_graph->get_texture(u8"depth");
@@ -67,7 +67,7 @@ struct Live2DRenderPass
                 builder.resolve_msaa(0, backbuffer);
             }
         },
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
+        [=](skr::RG::RenderGraph& g, skr::RG::RenderPassContext& pass_context) {
             SkrZoneScopedN("DrawLive2D");
             skr::InlineMap<CGPUXBindTableId, CGPUXMergedBindTableId, 8> merged_tables;
             cgpu_render_encoder_set_viewport(pass_context.encoder,

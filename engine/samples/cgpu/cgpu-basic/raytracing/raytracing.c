@@ -196,8 +196,6 @@ void ComputeFunc(void* usrdata)
         .usages = CGPU_BUFFER_USAGE_NONE,
         .start_state = CGPU_RESOURCE_STATE_COPY_DEST,
         .memory_usage = CGPU_MEM_USAGE_GPU_TO_CPU,
-        //.element_stride = buffer_desc.element_stride,
-        // .element_count = buffer_desc.element_count,
         .size = buffer_desc.size
     };
     CGPUBufferId readback_buffer = cgpu_create_buffer(device, &rb_desc);

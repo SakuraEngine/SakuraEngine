@@ -2,7 +2,7 @@
 #include "SkrToolCore/fwd_types.hpp"
 #include "SkrToolCore/cook_system/cooker.generated.h"
 
-namespace skd::asset
+namespace skr
 {
 struct [[sattr(
     guid = "ff344604-b522-411c-b9a5-1ec4b5970c02"
@@ -22,6 +22,6 @@ template <class T>
 void RegisterCooker(bool isDefault, skr::GUID cookerGuid, skr::GUID resGuid)
 {
     static T instance;
-    skd::asset::RegisterCookerToSystem(GetCookSystem(), isDefault, cookerGuid, resGuid, &instance);
+    skr::RegisterCookerToSystem(GetCookSystem(), isDefault, cookerGuid, resGuid, &instance);
 }
-} // namespace skd::asset
+} // namespace skr

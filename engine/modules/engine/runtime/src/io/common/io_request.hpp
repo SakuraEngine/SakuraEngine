@@ -48,7 +48,7 @@ public:
     }
     virtual ~IORequestMixin() SKR_NOEXCEPT = default;
 
-    [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT override
+    [[nodiscard]] virtual const IORequestComponent* get_component(skr::GUID tid) const SKR_NOEXCEPT override
     {
         SkrZoneScopedN("IORequestMixin::get_component");
         auto&  map  = acquire_cmap();
@@ -60,7 +60,7 @@ public:
         return nullptr;
     }
 
-    [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT override
+    [[nodiscard]] virtual IORequestComponent* get_component(skr::GUID tid) SKR_NOEXCEPT override
     {
         SkrZoneScopedN("IORequestMixin::get_component");
         auto& map = acquire_cmap();

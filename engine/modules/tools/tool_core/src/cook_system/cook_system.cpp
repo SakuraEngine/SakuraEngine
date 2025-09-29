@@ -12,9 +12,9 @@
 #include "SkrToolCore/project/project.hpp"
 #include "SkrContainers/hashmap.hpp"
 
-namespace skd::asset
+namespace skr
 {
-struct CookSystemImpl : public skd::asset::CookSystem
+struct CookSystemImpl : public skr::CookSystem
 {
     friend struct ::SkrToolCoreModule;
     using AssetMap = skr::ParallelFlatHashMap<skr::GUID, skr::RC<AssetMetaFile>, skr::Hash<skr::GUID>>;
@@ -62,13 +62,13 @@ protected:
     skr::FlatHashMap<skr::GUID, Cooker*, skr::Hash<skr::GUID>> cookers;
     skr::io::IRAMService* ioServices[ioServicesMaxCount];
 };
-} // namespace skd::asset
+} // namespace skr
 
-namespace skd::asset
+namespace skr
 {
 CookSystem* GetCookSystem()
 {
-    static skd::asset::CookSystemImpl cook_system;
+    static skr::CookSystemImpl cook_system;
     return &cook_system;
 }
 
@@ -371,7 +371,7 @@ void CookSystemImpl::ParallelForEachAsset(uint32_t batch, skr::FunctionRef<void(
     });
 }
 
-} // namespace skd::asset
+} // namespace skr
 
 struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
 {
@@ -379,7 +379,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
     skr::JobQueue* io_callback_job_queue = nullptr;
     virtual void on_load(int argc, char8_t** argv) override
     {
-        auto cook_system = (skd::asset::CookSystemImpl*)skd::asset::GetCookSystem();
+        auto cook_system = (skr::CookSystemImpl*)skr::GetCookSystem();
         skr_init_mutex(&cook_system->ioMutex);
 
         auto jqDesc = make_zeroed<skr::JobQueueDesc>();
@@ -410,7 +410,7 @@ struct TOOL_CORE_API SkrToolCoreModule : public skr::IDynamicModule
 
     virtual void on_unload() override
     {
-        auto cook_system = (skd::asset::CookSystemImpl*)skd::asset::GetCookSystem();
+        auto cook_system = (skr::CookSystemImpl*)skr::GetCookSystem();
         skr_destroy_mutex(&cook_system->ioMutex);
         for (auto ioService : cook_system->ioServices)
         {

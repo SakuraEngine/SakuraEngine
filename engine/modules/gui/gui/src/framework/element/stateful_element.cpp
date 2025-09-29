@@ -24,7 +24,7 @@ Widget* StatefulElement::build() SKR_NOEXCEPT
 void StatefulElement::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT
 {
     Super::update(new_widget);
-    _state->_widget = new_widget->type_cast_fast<StatefulWidget>();
+    _state->_widget = new_widget->rttr_cast<StatefulWidget>();
     rebuild(true);
 }
 

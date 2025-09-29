@@ -754,7 +754,7 @@ TEST_CASE("test export defines")
     SKR_DEFER({ isolate.destroy_context(context); });
 
     context->build_export([&](skr::V8VirtualModule& module) {
-        skr::each_types_of_module(u8"V8Test", [&](const skr::RTTRType* type) -> bool {
+        skr::each_types_of_module(u8"TestV8", [&](const skr::RTTRType* type) -> bool {
             module.raw_register_type(type->type_id());
             return true;
         });

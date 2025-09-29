@@ -4,15 +4,14 @@
 #include "SkrTask/parallel_for.hpp"
 #include "SkrContainers/stl_vector.hpp"
 #include "SkrToolCore/cook_system/cook_system.hpp"
-#include "SkrToolCore/project/project.hpp"
 #include "SkrMeshTool/mesh_asset.hpp"
-#include "SkrMeshTool/mesh_processing.hpp"
+#include "SkrMeshTool/gltf_processing.hpp"
 #include "MeshOpt/meshoptimizer.h"
 
 #include "SkrProfile/profile.h"
 #include "SkrRTTR/type.hpp"
 
-namespace skd::asset
+namespace skr
 {
 bool MeshCooker::Cook(CookContext* ctx)
 {
@@ -81,7 +80,7 @@ bool MeshCooker::Cook(CookContext* ctx)
         SKR_DEFER({ ctx->Destroy(pBuiltInMesh); });
 
         GUID shuffle_layout_id = mesh_asset.vertexType;
-        pBuiltInMesh->generate_resource(mesh, blobs, shuffle_layout_id);
+        pBuiltInMesh->generate_resource(mesh, blobs, shuffle_layout_id, ctx);
     }
     else
     {
@@ -186,4 +185,4 @@ uint32_t MeshCooker::Version()
 {
     return kDevelopmentVersion;
 }
-} // namespace skd::asset
+} // namespace skr

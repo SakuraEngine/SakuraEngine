@@ -31,16 +31,22 @@ public abstract class CommandBase
     [Cli.Option(Name = "proxy", Help = "Set HTTP proxy for downloads")]
     public string Proxy { get; set; } = "";
 
+    [Cli.Option(Name = "plat", ShortName = 'p', Help = "Set build platform")]
+    public string Platform { get; set; } = "";
+
+    [Cli.Option(Name = "arch", ShortName = 'a', Help = "Set build architecture")]
+    public string Architecture { get; set; } = "";
+
     [Cli.ExecCmd]
     public int Exec()
     {
         Stopwatch timer = Stopwatch.StartNew();
 
         // setup log level
-        Engine.InitializeLogger(Verbose ? LogEventLevel.Verbose : LogEventLevel.Information);
+        Sakura.Logging.InitializeLogger(Verbose ? LogEventLevel.Verbose : LogEventLevel.Information);
 
         // notify prepare commandline stage for some basic setup
-        BuildStage.UpdateStage(EBuildStage.PrepareCommandline);
+        BuildStage.UpdateStage(EBuildStage.PrepareCallCommandLine);
 
         // setup proxy
         if (!string.IsNullOrEmpty(Proxy))

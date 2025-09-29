@@ -12,19 +12,19 @@
 #include "SkrRenderGraph/phases_v2/memory_aliasing_phase.hpp"
 #include "SkrRenderGraph/phases_v2/barrier_generation_phase.hpp"
 
-namespace skr::render_graph
+namespace skr::RG
 {
 
 void GraphViz::generate_graphviz_visualization(
-    skr::render_graph::RenderGraph* graph,
-    const skr::render_graph::PassInfoAnalysis& info_analysis,
-    const skr::render_graph::QueueSchedule& queue_schedule,
-    const skr::render_graph::CrossQueueSyncAnalysis& ssis_phase,
-    const skr::render_graph::BarrierGenerationPhase& barrier_phase,
-    const skr::render_graph::MemoryAliasingPhase& aliasing_phase,
-    const skr::render_graph::ResourceLifetimeAnalysis& lifetime_analysis)
+    skr::RG::RenderGraph* graph,
+    const skr::RG::PassInfoAnalysis& info_analysis,
+    const skr::RG::QueueSchedule& queue_schedule,
+    const skr::RG::CrossQueueSyncAnalysis& ssis_phase,
+    const skr::RG::BarrierGenerationPhase& barrier_phase,
+    const skr::RG::MemoryAliasingPhase& aliasing_phase,
+    const skr::RG::ResourceLifetimeAnalysis& lifetime_analysis)
 {
-    using namespace skr::render_graph;
+    using namespace skr::RG;
 
     std::stringstream dot;
 
@@ -456,4 +456,4 @@ void GraphViz::generate_graphviz_visualization(
     SKR_LOG_INFO(u8"   Run: dot -Tpng render_graph_execution.dot -o render_graph_execution.png");
 }
 
-} // namespace skr::render_graph
+} // namespace skr::RG

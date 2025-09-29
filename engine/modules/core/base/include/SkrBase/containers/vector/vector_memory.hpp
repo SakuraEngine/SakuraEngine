@@ -28,6 +28,36 @@ struct VectorMemoryBase
     // setter
     inline void set_size(SizeType value) noexcept { _size = value; }
 
+    // unsafe getter
+    inline void* unsafe_data() const noexcept { return _data; }
+
+    // unsafe setter
+    inline void unsafe_set_capacity(SizeType value) noexcept { _capacity = value; }
+    inline void unsafe_set_data(void* p) noexcept { _data = p; }
+
+    // calc align memory offset
+    inline static constexpr SizeType calc_inline_data_offset(SizeType item_align)
+    {
+        return int_div_ceil(SizeType(sizeof(VectorMemoryBase)), item_align) * item_align;
+    }
+    inline static constexpr SizeType calc_inline_memory_size(SizeType item_size, SizeType item_align, SizeType inline_count)
+    {
+        auto no_padded_size = calc_inline_data_offset(item_align) + item_size * inline_count;
+        auto align          = std::max(item_align, (SizeType)alignof(VectorMemoryBase));
+        return int_div_ceil(no_padded_size, align) * align;
+    }
+    inline void* calc_inline_data_ptr(SizeType item_align) const
+    {
+        uint64_t offset = calc_inline_data_offset(item_align);
+        return ((uint8_t*)this) + offset;
+    }
+    inline void unsafe_setup_inline(SizeType item_align, SizeType inline_count)
+    {
+        _data     = calc_inline_data_ptr(item_align);
+        _size     = 0;
+        _capacity = inline_count;
+    }
+
 private:
     // helper for generic
     inline void* _item_at(SizeType index, SizeType item_size) const
@@ -239,6 +269,15 @@ struct VectorMemory : public Base
     inline DataType*       data() noexcept { return reinterpret_cast<DataType*>(Base::_data); }
     inline const DataType* data() const noexcept { return reinterpret_cast<const DataType*>(Base::_data); }
 
+    // extract memory, take out the memory buffer, reset self
+    inline void extract_memory(void*& out_data, SizeType& out_size, SizeType& out_capacity) noexcept
+    {
+        out_data     = Base::_data;
+        out_size     = Base::_size;
+        out_capacity = Base::_capacity;
+        _reset();
+    }
+
 private:
     // helper functions
     inline void _reset() noexcept
@@ -267,6 +306,7 @@ struct FixedVectorMemory : public Base
     // ctor & dtor
     inline FixedVectorMemory(AllocatorCtorParam) noexcept
     {
+        SKR_ASSERT(Base::calc_inline_data_ptr(alignof(DataType)) == &_placeholder);
         _init_setup();
     }
     inline ~FixedVectorMemory() noexcept
@@ -402,6 +442,7 @@ struct InlineVectorMemory : public Base
         : Base()
         , Allocator(std::move(param))
     {
+        SKR_ASSERT(Base::calc_inline_data_ptr(alignof(DataType)) == &_placeholder);
         _reset();
     }
     inline ~InlineVectorMemory() noexcept

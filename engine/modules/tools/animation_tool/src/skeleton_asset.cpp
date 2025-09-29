@@ -10,7 +10,7 @@
 #include "SkrCore/log.hpp"
 #include "SkrAnim/resources/skeleton_resource.hpp"
 
-namespace skd::asset
+namespace skr
 {
 bool SkelCooker::Cook(CookContext* ctx)
 {
@@ -48,4 +48,4 @@ bool SkelCooker::Cook(CookContext* ctx)
     ctx->Save(resource);
     return true;
 }
-} // namespace skd::asset
+} // namespace skr

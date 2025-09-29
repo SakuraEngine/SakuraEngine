@@ -10,7 +10,7 @@
 namespace skr
 {
 struct [[sattr(guid = "7c34fd55-b858-4a79-bd03-69164d4e6f82")]]
-V8BindProxy : skr::IObject
+V8BindProxy : skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(V8BindProxy);
     SKR_DELETE_COPY_MOVE(V8BindProxy);
@@ -58,7 +58,6 @@ struct [[sattr(guid = "7c46f696-8ee0-4922-a255-78d25b38e305")]]
 V8BPValue : V8BPRecord
 {
     SKR_GENERATE_BODY(V8BPValue);
-    using Super = V8BPRecord;
 
     V8BPValue() = default;
 
@@ -71,7 +70,6 @@ struct [[sattr(guid = "185076da-2a1d-417f-b57e-0d27914a91d7")]]
 V8BPObject : V8BPRecord
 {
     SKR_GENERATE_BODY(V8BPObject);
-    using Super = V8BPRecord;
 
     V8BPObject() = default;
 

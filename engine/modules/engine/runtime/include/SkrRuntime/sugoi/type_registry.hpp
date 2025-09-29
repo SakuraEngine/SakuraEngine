@@ -15,13 +15,14 @@ static constexpr type_index_t kDirtyComponent = type_index_t(5, false, false, fa
 
 using type_description_t = sugoi_type_description_t;
 
-struct SKR_RUNTIME_API TypeRegistry {
+struct SKR_RUNTIME_API TypeRegistry
+{
     struct Impl;
     TypeRegistry(Impl& impl);
     TypeRegistry(const TypeRegistry&) = delete;
 
     static TypeRegistry& get();
-    
+
     type_index_t register_type(const sugoi_type_description_t& desc);
     type_index_t get_type(const guid_t& guid);
     type_index_t get_type(skr::StringView name);
@@ -38,13 +39,13 @@ struct SKR_RUNTIME_API TypeRegistry {
     };
     template <BuilderType Type, size_t N = 0>
     struct TypeBuilder;
-    
+
     template <typename T>
     auto new_type() SKR_NOEXCEPT;
 
     template <typename T, size_t N>
     auto new_array() SKR_NOEXCEPT;
-    
+
     auto new_tag() SKR_NOEXCEPT;
 
 protected:
@@ -65,7 +66,8 @@ enum class TypeRegisterError
 using TypeRegisterResult = skr::Expected<TypeRegisterError, type_index_t>;
 
 template <TypeRegistry::BuilderType Type, size_t N>
-struct TypeRegistry::TypeBuilder {
+struct TypeRegistry::TypeBuilder
+{
 public:
     TypeBuilder(TypeRegistry& registry) SKR_NOEXCEPT
         : registry(registry)
@@ -86,7 +88,7 @@ public:
 
     TypeBuilder& element_size(uint32_t size) SKR_NOEXCEPT requires(Type == BuilderType::Array)
     {
-        desc.elementSize = size;
+        desc.arrElementSize = size;
         return *this;
     }
 
@@ -108,7 +110,8 @@ public:
         return *this;
     }
 
-#define ERROR_CASE(cond, err) if (cond) return err
+#define ERROR_CASE(cond, err) \
+    if (cond) return err
 
     TypeRegisterResult commit() SKR_NOEXCEPT
     {
@@ -119,11 +122,14 @@ public:
         else if constexpr (Type == BuilderType::Array)
         {
             ERROR_CASE(desc.size != 0, TypeRegisterError::UnknownError);
-            ERROR_CASE(desc.elementSize == 0, TypeRegisterError::ZeroSize);
+            ERROR_CASE(desc.arrElementSize == 0, TypeRegisterError::ZeroSize);
             ERROR_CASE(_element_count == 0, TypeRegisterError::ZeroArrayLength);
-            const uint16_t alignment = std::max((uint16_t)alignof(sugoi_array_comp_t), desc.alignment);
-            desc.size = desc.elementSize * _element_count + sizeof(sugoi_array_comp_t);
-            desc.size = static_cast<uint16_t>((static_cast<uint16_t>(desc.size) + (alignment - 1)) & ~(alignment - 1));
+            desc.size = ArrayComponentBase::calc_inline_memory_size(
+                desc.size,
+                desc.alignment,
+                _element_count
+            );
+            desc.arrInlineCount = static_cast<uint16_t>(_element_count);
         }
         ERROR_CASE(desc.guid.is_zero(), TypeRegisterError::InvalidGUID);
         ERROR_CASE(desc.name == nullptr, TypeRegisterError::InvalidName);
@@ -140,23 +146,26 @@ protected:
     size_t _element_count = N;
 };
 
-template<typename T>
-inline auto TypeRegistry::new_type() SKR_NOEXCEPT {
+template <typename T>
+inline auto TypeRegistry::new_type() SKR_NOEXCEPT
+{
     return TypeBuilder<TypeRegistry::BuilderType::Plain>(*this)
-                .align(alignof(T))
-                .size(sizeof(T));
+        .align(alignof(T))
+        .size(sizeof(T));
 }
 
-template<typename T, size_t N>
-inline auto TypeRegistry::new_array() SKR_NOEXCEPT {
+template <typename T, size_t N>
+inline auto TypeRegistry::new_array() SKR_NOEXCEPT
+{
     using ArrayType = sugoi::ArrayComponent<T, N>;
     return TypeBuilder<TypeRegistry::BuilderType::Array, N>(*this)
-                .align(alignof(ArrayType))
-                .element_size(sizeof(T))
-                .element_count(N);
+        .align(alignof(ArrayType))
+        .element_size(sizeof(T))
+        .element_count(N);
 }
 
-inline auto TypeRegistry::new_tag() SKR_NOEXCEPT {
+inline auto TypeRegistry::new_tag() SKR_NOEXCEPT
+{
     return TypeBuilder<TypeRegistry::BuilderType::Tag>(*this);
 }
 

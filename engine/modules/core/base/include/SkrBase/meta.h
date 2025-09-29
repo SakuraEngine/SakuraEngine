@@ -23,6 +23,18 @@
     #define SKR_GENERATE_BODY(__MARK) _SKR_GENERATE_BODY_NAME(SKR_FILE_ID, __MARK)
 #endif
 
+// filter marco
+#ifdef __meta__
+    #define SKR_IFNOT_META(...)
+#else
+    #define SKR_IFNOT_META(...) __VA_ARGS__
+#endif
+#ifdef __meta__
+    #define SKR_IF_META(...) __VA_ARGS__
+#else
+    #define SKR_IF_META(...)
+#endif
+
 // param flag
 #define sparam_in sattr(rttr.flags += "In")
 #define sparam_out sattr(rttr.flags += "Out")

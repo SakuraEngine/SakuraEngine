@@ -1,7 +1,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 IRenderGraphPhase::~IRenderGraphPhase() SKR_NOEXCEPT
 {
@@ -23,5 +23,5 @@ skr::Vector<PassNode*>& IRenderGraphPhase::get_passes(RenderGraph* graph) SKR_NO
     return graph->passes;
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <BaseIntermediateOutputPath>build/.sb/SB/obj</BaseIntermediateOutputPath>
     <BaseOutputPath>build/.sb/SB/bin</BaseOutputPath>
-    <DefaultItemExcludes>$(DefaultItemExcludes);build\**；.git\**;vscode\**;vs\**;idea\**;engine\tools\SB\**;engine\tools\.tools\**;agent_docs\**;**\node_modules\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);build\**;.git\**;vscode\**;vs\**;idea\**;engine\tools\SB\**;engine\tools\.tools\**;agent_docs\**;**\node_modules\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <!-- Target configure -->
@@ -33,7 +33,7 @@
     <Compile Include="engine/tests/**/build.cs" />
 
     <!-- Engine tools, no scan, just enumerate files for better performance -->
-    <Compile Include="engine/tools/build.cs" />
+    <Compile Include="engine/tools/**/build.cs" />
 
     <!-- D5 -->
     <Compile Include="d5_render/**/build.cs" />

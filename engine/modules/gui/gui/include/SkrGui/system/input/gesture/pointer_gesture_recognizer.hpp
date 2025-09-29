@@ -10,8 +10,7 @@ struct [[sattr(guid = "e4db9750-96ba-4558-8a14-402d1f9a2c7a"
 )]] SKR_GUI_API PointerGestureRecognizer : public GestureRecognizer
 {
     SKR_GENERATE_BODY(PointerGestureRecognizer)
-    using Super = GestureRecognizer;
-    using Super::Super;
+    SKR_IFNOT_META(using Super::Super);
 
     // 监听 pointer
     void add_pointer(NotNull<Event*> event) override;

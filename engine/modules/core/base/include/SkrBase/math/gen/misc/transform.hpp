@@ -16,7 +16,7 @@ struct TransformF {
     alignas(16) float3 scale;
     
     // ctor & dtor
-    inline TransformF() = default;
+    inline TransformF() : rotation(), position(), scale(1) {}
     inline TransformF(MathNoInitType) : rotation(kMathNoInit), position(kMathNoInit), scale(kMathNoInit) {}
     inline TransformF(const QuatF& rotation, const float3& position, const float3& scale) : rotation(rotation), position(position), scale(scale) {}
     inline ~TransformF() = default;
@@ -63,7 +63,7 @@ struct TransformD {
     alignas(16) double3 scale;
     
     // ctor & dtor
-    inline TransformD() = default;
+    inline TransformD() : rotation(), position(), scale(1) {}
     inline TransformD(MathNoInitType) : rotation(kMathNoInit), position(kMathNoInit), scale(kMathNoInit) {}
     inline TransformD(const QuatD& rotation, const double3& position, const double3& scale) : rotation(rotation), position(position), scale(scale) {}
     inline ~TransformD() = default;

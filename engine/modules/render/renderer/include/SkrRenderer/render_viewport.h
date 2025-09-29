@@ -1,6 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
-#include "SkrSceneCore/transform_system.h"
+#include "SkrScene/transform_system.hpp"
+#include <SkrBase/math.hpp>
 #include "SkrRenderer/render_viewport.generated.h" // IWYU pragma: export
 
 struct [[sattr(
@@ -15,7 +16,7 @@ struct [[sattr(
     // derived from camera
     uint32_t viewport_height;
 
-    skr_float4x4_t view_projection;
+    skr::float4x4 view_projection;
 };
 typedef struct skr_render_viewport_t skr_render_viewport_t;
 
@@ -33,7 +34,3 @@ struct SKR_RENDERER_API SViewportManager
     virtual ~SViewportManager() SKR_NOEXCEPT;
 #endif
 };
-
-SKR_EXTERN_C SKR_RENDERER_API void skr_resolve_camera_to_viewport(const skr::scene::CameraComponent* camera, const skr::scene::PositionComponent* translation, skr_render_viewport_t* viewport);
-
-SKR_EXTERN_C SKR_RENDERER_API void skr_resolve_cameras_to_viewport(struct SViewportManager* viewport_manager, sugoi_storage_t* storage);

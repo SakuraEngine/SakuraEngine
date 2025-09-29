@@ -65,11 +65,11 @@ sugoi::archetype_t* sugoi_storage_t::constructArchetype(const sugoi_type_set_t& 
         }
     forloop (i, 0, 3)
         write_const(archetype.offsets[i], atypeArena.allocate<uint32_t>(archetype.type.length));
-    write_const(archetype.elemSizes, atypeArena.allocate<uint32_t>(archetype.type.length));
+    write_const(archetype.arrElemSizes, atypeArena.allocate<uint32_t>(archetype.type.length));
+    write_const(archetype.arrInlineCounts, atypeArena.allocate<uint32_t>(archetype.type.length));
     write_const(archetype.callbackFlags, atypeArena.allocate<uint32_t>(archetype.type.length));
     write_const(archetype.aligns, atypeArena.allocate<uint32_t>(archetype.type.length));
     write_const(archetype.sizes, atypeArena.allocate<uint32_t>(archetype.type.length));
-    write_const(archetype.resourceFields, atypeArena.allocate<sugoi::resource_fields_t>(archetype.type.length));
     write_const(archetype.callbacks, atypeArena.allocate<sugoi_callback_v>(archetype.type.length));
     ::memset((void*)archetype.callbacks, 0, sizeof(sugoi_callback_v) * archetype.type.length);
     write_const(archetype.stableOrder, atypeArena.allocate<SIndex>(archetype.type.length));
@@ -89,7 +89,6 @@ sugoi::archetype_t* sugoi_storage_t::constructArchetype(const sugoi_type_set_t& 
             callbackFlag |= SUGOI_CALLBACK_FLAG_MOVE;
         write_const(archetype.callbackFlags[i], callbackFlag);
         write_const(archetype.callbacks[i], desc.callback);
-        write_const(archetype.resourceFields[i], resource_fields_t{ desc.resourceFields, desc.resourceFieldsCount });
     }
     auto guids = localStack.allocate<guid_t>(archetype.type.length);
     write_const(archetype.entitySize,sizeof(sugoi_entity_t));
@@ -104,7 +103,8 @@ sugoi::archetype_t* sugoi_storage_t::constructArchetype(const sugoi_type_set_t& 
         auto ti = type_index_t(t);
         auto& desc = *registry.get_type_desc(ti.index());
         write_const(archetype.sizes[i], desc.size);
-        write_const(archetype.elemSizes[i], desc.elementSize);
+        write_const(archetype.arrElemSizes[i], desc.arrInlineCount);
+        write_const(archetype.arrInlineCounts[i], desc.arrElementSize);
         guids[i] = desc.guid;
         write_const(archetype.aligns[i], desc.alignment);
         write_const(archetype.stableOrder[i], i);
@@ -188,16 +188,16 @@ sugoi::archetype_t* sugoi_storage_t::cloneArchetype(archetype_t *src)
         write_const(archetype.offsets[i], archetypeArena.allocate<uint32_t>(archetype.type.length));
         memcpy((void*)archetype.offsets[i], src->offsets[i], sizeof(uint32_t) * archetype.type.length);
     }
-    write_const(archetype.elemSizes, archetypeArena.allocate<uint32_t>(archetype.type.length));
-    memcpy((void*)archetype.elemSizes, src->elemSizes, sizeof(uint32_t) * archetype.type.length);
+    write_const(archetype.arrElemSizes, archetypeArena.allocate<uint32_t>(archetype.type.length));
+    memcpy((void*)archetype.arrElemSizes, src->arrElemSizes, sizeof(uint32_t) * archetype.type.length);
+    write_const(archetype.arrInlineCounts, archetypeArena.allocate<uint32_t>(archetype.type.length));
+    memcpy((void*)archetype.arrInlineCounts, src->arrInlineCounts, sizeof(uint32_t) * archetype.type.length);
     write_const(archetype.callbackFlags, archetypeArena.allocate<uint32_t>(archetype.type.length));
     memcpy((void*)archetype.callbackFlags, src->callbackFlags, sizeof(uint32_t) * archetype.type.length);
     write_const(archetype.aligns, archetypeArena.allocate<uint32_t>(archetype.type.length));
     memcpy((void*)archetype.aligns, src->aligns, sizeof(uint32_t) * archetype.type.length);
     write_const(archetype.sizes, archetypeArena.allocate<uint32_t>(archetype.type.length));
     memcpy((void*)archetype.sizes, src->sizes, sizeof(uint32_t) * archetype.type.length);
-    write_const(archetype.resourceFields, archetypeArena.allocate<sugoi::resource_fields_t>(archetype.type.length));
-    memcpy((void*)archetype.resourceFields, src->resourceFields, sizeof(sugoi::resource_fields_t) * archetype.type.length);
     write_const(archetype.callbacks, archetypeArena.allocate<sugoi_callback_v>(archetype.type.length));
     memcpy((void*)archetype.callbacks, src->callbacks, sizeof(sugoi_callback_v) * archetype.type.length);
     write_const(archetype.stableOrder, archetypeArena.allocate<SIndex>(archetype.type.length));

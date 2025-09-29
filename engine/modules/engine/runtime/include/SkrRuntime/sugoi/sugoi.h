@@ -79,22 +79,20 @@ typedef struct sugoi_type_description_t
     SugoiTypeFlags flags SKR_IF_CPP(= 0);
     /**
      * the storage size in chunk of this component, generally it is sizeof(T)
-     * when this is a array component, it could be sizeof(T) * I + sizeof(sugoi_array_comp_t) where I means the inline element count of the array
-     * @see sugoi_array_comp_t
+     * when this is a array component, it could be sizeof(T) * I + sizeof(ArrayComponentBase) where I means the inline element count of the array
+     * @see ArrayComponentBase
      */
     uint16_t size SKR_IF_CPP(= 0);
     /**
      * element size of this component, when this is a array component it would be equal to sizeof(T), otherwise it should be set to zero
      *
      */
-    uint16_t elementSize SKR_IF_CPP(= 0);
+    uint16_t arrElementSize SKR_IF_CPP(= 0);
+    uint16_t arrInlineCount SKR_IF_CPP(= 0);
     uint16_t alignment SKR_IF_CPP(= 0);
     // entity field is used to guarantee references between entities are keeping valid after operations like instantiate, merge world, deserialize etc.
     intptr_t* entityFields SKR_IF_CPP(= nullptr);
     uint32_t entityFieldsCount SKR_IF_CPP(= 0);
-    // resource field is used to track resource lifetime
-    intptr_t* resourceFields SKR_IF_CPP(= nullptr);
-    uint32_t resourceFieldsCount SKR_IF_CPP(= 0);
     // lifetime callbacks of this component
     sugoi_callback_v callback;
 } sugoi_type_description_t;
@@ -197,9 +195,6 @@ typedef struct sugoi_meta_filter_t
     uint64_t timestamp;
 } sugoi_meta_filter_t;
 
-// header data of a array component
-typedef struct sugoi_array_comp_t sugoi_array_comp_t;
-
 typedef uint32_t sugoi_mask_comp_t;
 typedef uint32_t sugoi_dirty_comp_t;
 
@@ -222,10 +217,7 @@ SKR_RUNTIME_API sugoi_context_t* sugoi_get_context();
  */
 SKR_RUNTIME_API void sugoi_shutdown();
 
-SKR_RUNTIME_API void sugoi_make_guid(skr_guid_t* guid);
-
-SKR_RUNTIME_API void* sugoiA_begin(sugoi_array_comp_t* array);
-SKR_RUNTIME_API void* sugoiA_end(sugoi_array_comp_t* array);
+SKR_RUNTIME_API void sugoi_make_guid(skr::GUID* guid);
 
 typedef void (*sugoi_view_callback_t)(void* u, sugoi_chunk_view_t* view);
 typedef void (*sugoi_group_callback_t)(void* u, sugoi_group_t* view);

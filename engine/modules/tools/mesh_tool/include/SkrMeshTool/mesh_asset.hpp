@@ -3,12 +3,12 @@
 #include "SkrToolCore/cook_system/cooker.hpp"
 #include "SkrContainersDef/string.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
-#include "SkrMeshCore/mesh_processing.hpp"
+#include "SkrMeshCore/mesh_asset.hpp"
 #include "SkrMeshTool/mesh_asset.generated.h" // IWYU pragma: export
 
 struct cgltf_data;
 
-namespace skd::asset
+namespace skr
 {
 
 struct [[sattr(
@@ -17,7 +17,7 @@ struct [[sattr(
 )]] MESH_TOOL_API ProceduralMesh
 {
     virtual void configure(const MeshAsset* args) {}
-    virtual void generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr::GUID shuffle_layout_id) = 0;
+    virtual void generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr::GUID shuffle_layout_id, CookContext* context) = 0;
     virtual ~ProceduralMesh() = default;
 };
 
@@ -26,7 +26,7 @@ struct [[sattr(
     serde = @enable
 )]] MESH_TOOL_API SimpleTriangleMesh final : public ProceduralMesh
 {
-    virtual void generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr::GUID shuffle_layout_id) override;
+    virtual void generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr::GUID shuffle_layout_id, CookContext* context) override;
     virtual ~SimpleTriangleMesh() = default;
 };
 
@@ -35,7 +35,7 @@ struct [[sattr(
     serde = @enable
 )]] MESH_TOOL_API SimpleCubeMesh final : public ProceduralMesh
 {
-    virtual void generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr::GUID shuffle_layout_id) override;
+    virtual void generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr::GUID shuffle_layout_id, CookContext* context) override;
     virtual ~SimpleCubeMesh() = default;
 };
 
@@ -55,7 +55,7 @@ struct [[sattr(
 )]] MESH_TOOL_API SimpleGridMesh final : public ProceduralMesh
 {
     virtual void configure(const MeshAsset* args) override;
-    void generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr::GUID shuffle_layout_id) override;
+    void generate_resource(skr::MeshResource& out_resource, skr::Vector<skr::Vector<uint8_t>>& out_bins, skr::GUID shuffle_layout_id, CookContext* context) override;
     virtual ~SimpleGridMesh() = default;
     uint32_t x_segments = 1;
     uint32_t y_segments = 1;
@@ -105,4 +105,4 @@ struct [[sattr(
     bool Cook(CookContext* ctx) override;
     uint32_t Version() override;
 };
-} // namespace skd::asset
+} // namespace skr

@@ -97,7 +97,7 @@ namespace SB
                 var _Args = new string[]
                 {
                     $"--permutation={Permutation.Key}",
-                    $"--extra-arg=-I{BuildDirs.EngineDir}/engine/tools/shader_compiler/ShaderSTL",
+                    $"--extra-arg=-I{BuildDirs.EngineDir}/engine/tools/LLVMTools/shader_compiler/ShaderSTL",
                     SourceFile
                 };
                 Arguments.AddRange(_Args);
@@ -191,7 +191,7 @@ namespace SB
                     "-fms-extensions",
                     "-fms-compatibility-version=17.1.1",
                     "-Wno-microsoft-union-member-reference",
-                    $"-I{BuildDirs.EngineDir}/engine/tools/shader_compiler/ShaderSTL"
+                    $"-I{BuildDirs.EngineDir}/engine/tools/LLVMTools/shader_compiler/ShaderSTL"
                 }
             };
             CMD.arguments.AddRange(CompilerArgsList);

@@ -65,63 +65,63 @@ PointerEvent : public Event
 };
 
 // Down/Up/Move
-struct [[sattr(guid = "91343bb8-4b20-4734-b491-23362b76aa17")]]
-PointerDownEvent : public PointerEvent
+struct [[sattr(guid = "91343bb8-4b20-4734-b491-23362b76aa17"
+)]] SKR_GUI_API PointerDownEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerDownEvent)
 };
 
-struct [[sattr(guid = "8817dd2b-7e0d-47f5-8ee5-72790bbf3f09")]]
-PointerUpEvent : public PointerEvent
+struct [[sattr(guid = "8817dd2b-7e0d-47f5-8ee5-72790bbf3f09"
+)]] SKR_GUI_API PointerUpEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerUpEvent)
 };
 
-struct [[sattr(guid = "453f7052-9740-4136-9831-55e8188827d2")]]
-PointerMoveEvent : public PointerEvent
+struct [[sattr(guid = "453f7052-9740-4136-9831-55e8188827d2"
+)]] SKR_GUI_API PointerMoveEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerMoveEvent)
 };
 
 // Enter/Exit
-struct [[sattr(guid = "6cddd04b-749c-4a5e-99b0-27396ef84d50")]]
-PointerEnterEvent : public PointerEvent
+struct [[sattr(guid = "6cddd04b-749c-4a5e-99b0-27396ef84d50"
+)]] SKR_GUI_API PointerEnterEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerEnterEvent)
 };
 
-struct [[sattr(guid = "f41e2f74-b813-411d-b065-5df10f5edaeb")]]
-PointerExitEvent : public PointerEvent
+struct [[sattr(guid = "f41e2f74-b813-411d-b065-5df10f5edaeb"
+)]] SKR_GUI_API PointerExitEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerExitEvent)
 };
 
 // Scroll/Scale
-struct [[sattr(guid = "1da2a830-544a-44c4-8ba7-2f313194bced")]]
-PointerScrollEvent : public PointerEvent
+struct [[sattr(guid = "1da2a830-544a-44c4-8ba7-2f313194bced"
+)]] SKR_GUI_API PointerScrollEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerScrollEvent)
     Offsetf scroll_delta = {};
 };
-struct [[sattr(guid = "51778097-47ab-4eb3-9193-3cecffedf8a0")]]
-PointerScaleEvent : public PointerEvent
+struct [[sattr(guid = "51778097-47ab-4eb3-9193-3cecffedf8a0"
+)]] SKR_GUI_API PointerScaleEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerScaleEvent)
 };
 
 // Pan/Zoom
-struct [[sattr(guid = "5d3aeff7-4cd5-41d2-93ba-0d0cdd14b9b0")]]
-PointerPanZoomStartEvent : public PointerEvent
+struct [[sattr(guid = "5d3aeff7-4cd5-41d2-93ba-0d0cdd14b9b0"
+)]] SKR_GUI_API PointerPanZoomStartEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerPanZoomStartEvent)
 };
-struct [[sattr(guid = "f25e3d34-4fae-4be8-8f17-385b960a95f8")]]
-PointerPanZoomUpdateEvent : public PointerEvent
+struct [[sattr(guid = "f25e3d34-4fae-4be8-8f17-385b960a95f8"
+)]] SKR_GUI_API PointerPanZoomUpdateEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerPanZoomUpdateEvent)
 };
-struct [[sattr(guid = "d8ee52fd-2f4e-4a62-a922-d3cb2467883b")]]
-PointerPanZoomEndEvent : public PointerEvent
+struct [[sattr(guid = "d8ee52fd-2f4e-4a62-a922-d3cb2467883b"
+)]] SKR_GUI_API PointerPanZoomEndEvent : public PointerEvent
 {
     SKR_GENERATE_BODY(PointerPanZoomEndEvent)
 };

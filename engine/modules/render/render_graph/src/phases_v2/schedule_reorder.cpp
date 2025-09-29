@@ -5,7 +5,7 @@
 #include <cstdint>
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // Constructor
 ExecutionReorderPhase::ExecutionReorderPhase(
@@ -295,5 +295,5 @@ float ExecutionReorderPhase::calculate_resource_affinity_from_shared(PassNode* p
 }
 
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

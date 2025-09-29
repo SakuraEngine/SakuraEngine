@@ -17,7 +17,7 @@ void RenderObjectElement::first_mount(NotNull<Element*> parent, Slot slot) SKR_N
     }
 
     // create render object and mount
-    auto render_object_widget = widget()->type_cast_fast<RenderObjectWidget>();
+    auto render_object_widget = widget()->rttr_cast<RenderObjectWidget>();
     if (render_object_widget)
     {
         _render_object = render_object_widget->create_render_object();
@@ -49,7 +49,7 @@ void RenderObjectElement::destroy() SKR_NOEXCEPT
         Super::destroy();
         return;
     }
-    auto old_widget = widget()->type_cast_fast<RenderObjectWidget>();
+    auto old_widget = widget()->rttr_cast<RenderObjectWidget>();
     if (old_widget)
     {
         if (_render_object)
@@ -133,7 +133,7 @@ void RenderObjectElement::_update_render_object() SKR_NOEXCEPT
         _cancel_dirty();
         return;
     }
-    auto render_object_widget = widget()->type_cast_fast<RenderObjectWidget>();
+    auto render_object_widget = widget()->rttr_cast<RenderObjectWidget>();
     if (render_object_widget)
     {
         render_object_widget->update_render_object(this, _render_object);
@@ -147,11 +147,11 @@ void RenderObjectElement::_update_render_object() SKR_NOEXCEPT
 RenderObjectElement* RenderObjectElement::_find_ancestor_render_object_element() const SKR_NOEXCEPT
 {
     Element* ancestor = parent();
-    while (ancestor && !ancestor->type_is<RenderObjectElement>())
+    while (ancestor && !ancestor->rttr_is<RenderObjectElement>())
     {
         ancestor = ancestor->parent();
     }
-    return ancestor ? ancestor->type_cast_fast<RenderObjectElement>() : nullptr;
+    return ancestor ? ancestor->rttr_cast<RenderObjectElement>() : nullptr;
 }
 
 } // namespace skr::gui

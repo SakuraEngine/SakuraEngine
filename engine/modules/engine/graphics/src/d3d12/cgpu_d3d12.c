@@ -1804,13 +1804,15 @@ void cgpu_cmd_transfer_texture_to_texture_d3d12(CGPUCommandBufferId cmd, const s
 
     uint32_t src_subresource = CALC_SUBRESOURCE_INDEX(
         desc->src_subresource.mip_level, desc->src_subresource.base_array_layer,
-        0, 1,
-        desc->src_subresource.layer_count
+        0, 
+        Src->super.info->mip_levels,
+        Src->super.info->array_size
     );
     uint32_t dst_subresource = CALC_SUBRESOURCE_INDEX(
         desc->dst_subresource.mip_level, desc->dst_subresource.base_array_layer,
-        0, 1,
-        desc->dst_subresource.layer_count
+        0, 
+        Dst->super.info->mip_levels,
+        Dst->super.info->array_size
     );
     D3D12_RESOURCE_DESC srcResourceDesc = { 0 };
     COM_CALL(GetDesc, Src->pDxResource, &srcResourceDesc);
@@ -1820,12 +1822,12 @@ void cgpu_cmd_transfer_texture_to_texture_d3d12(CGPUCommandBufferId cmd, const s
     D3D12_TEXTURE_COPY_LOCATION src = {};
     D3D12_TEXTURE_COPY_LOCATION dst = {};
     COM_CALL(GetCopyableFootprints, D->pDxDevice,
-        &srcResourceDesc, src_subresource, 1,
+        &srcResourceDesc, src_subresource, desc->src_subresource.layer_count,
         0, &src.PlacedFootprint,
         NULL, NULL, NULL
     );
     COM_CALL(GetCopyableFootprints, D->pDxDevice,
-        &dstResourceDesc, dst_subresource, 1,
+        &dstResourceDesc, dst_subresource, desc->dst_subresource.layer_count,
         0, &dst.PlacedFootprint,
         NULL, NULL, NULL
     );
@@ -1853,8 +1855,10 @@ void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const st
     uint32_t subresource = CALC_SUBRESOURCE_INDEX(
         desc->dst_subresource.mip_level,
         desc->dst_subresource.base_array_layer,
-        0, 1,
-        desc->dst_subresource.layer_count);
+        0, 
+        Dst->super.info->mip_levels,
+        Dst->super.info->array_size
+    );
     D3D12_RESOURCE_DESC resourceDesc = { 0 };
     COM_CALL(GetDesc, Dst->pDxResource, &resourceDesc);
 
@@ -1863,7 +1867,7 @@ void cgpu_cmd_transfer_buffer_to_texture_d3d12(CGPUCommandBufferId cmd, const st
     src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
     src.pResource = Src->pDxResource;
     COM_CALL(GetCopyableFootprints, D->pDxDevice,
-        &resourceDesc, subresource, 1,
+        &resourceDesc, subresource, desc->dst_subresource.layer_count,
         desc->src_offset, &src.PlacedFootprint,
         NULL, NULL, NULL);
     src.PlacedFootprint.Offset = desc->src_offset;

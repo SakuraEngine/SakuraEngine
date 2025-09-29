@@ -1,6 +1,6 @@
 #pragma once
 #include <cmath>
-#include <SkrBase/math.h>
+#include <SkrBase/math.hpp>
 
 namespace skr::gui
 {

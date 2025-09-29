@@ -7,7 +7,7 @@
 #include "SkrContainersDef/map.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // 内存区域描述（基于SSIS算法）
 struct MemoryRegion
@@ -182,5 +182,5 @@ private:
     MemoryAliasingResult aliasing_result_;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

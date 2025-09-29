@@ -1,6 +1,6 @@
 // test suite for linear algebra operations
 #include "SkrTestFramework/framework.hpp"
-#include "SkrBase/math.h"
+#include "SkrBase/math.hpp"
 #include <type_traits>
 
 TEST_CASE("VectorOps")

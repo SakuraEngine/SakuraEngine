@@ -152,7 +152,7 @@ uint32_t TableInstanceBase::GetComponentOffset(TableSegmentID component_id, Tabl
     return 0;
 }
 
-skr::render_graph::BufferHandle TableInstanceBase::UpdateTableBuffer(skr::render_graph::RenderGraph* graph, uint64_t required_instances)
+skr::RG::BufferHandle TableInstanceBase::UpdateTableBuffer(skr::RG::RenderGraph* graph, uint64_t required_instances)
 {
     SkrZoneScopedN("GPUScene::AdjustBuffer");
     auto& frame_ctx = frame_ctxs.get(graph);
@@ -181,7 +181,7 @@ skr::render_graph::BufferHandle TableInstanceBase::UpdateTableBuffer(skr::render
         {
             // Import old buffer for copy source
             auto old_buffer_handle = graph->create_buffer(
-                [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+                [=](skr::RG::RenderGraph& g, skr::RG::BufferBuilder& builder) {
                     builder.set_name(u8"old_scene_buffer")
                         .import(old_buffer, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
                 });
@@ -202,7 +202,7 @@ skr::render_graph::BufferHandle TableInstanceBase::UpdateTableBuffer(skr::render
     return frame_ctx.buffer_handle;
 }
 
-skr::render_graph::BufferHandle TableInstanceBase::UpdateTableBufferStructured(skr::render_graph::RenderGraph* graph, uint64_t required_instances)
+skr::RG::BufferHandle TableInstanceBase::UpdateTableBufferStructured(skr::RG::RenderGraph* graph, uint64_t required_instances)
 {
     SkrZoneScopedN("GPUScene::AdjustBuffer");
     auto& frame_ctx = frame_ctxs.get(graph);
@@ -231,7 +231,7 @@ skr::render_graph::BufferHandle TableInstanceBase::UpdateTableBufferStructured(s
         {
             // Import old buffer for copy source
             auto old_buffer_handle = graph->create_buffer(
-                [=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+                [=](skr::RG::RenderGraph& g, skr::RG::BufferBuilder& builder) {
                     builder.set_name(u8"old_scene_buffer")
                         .import(old_buffer, CGPU_RESOURCE_STATE_SHADER_RESOURCE);
                 });
@@ -298,16 +298,16 @@ CGPUBufferId TableInstanceBase::Resize(uint32_t new_instance_capacity)
     return old_buffer;
 }
 
-void TableInstanceBase::CopySegments(skr::render_graph::RenderGraph* graph,
-    skr::render_graph::BufferHandle src_buffer,
-    skr::render_graph::BufferHandle dst_buffer,
+void TableInstanceBase::CopySegments(skr::RG::RenderGraph* graph,
+    skr::RG::BufferHandle src_buffer,
+    skr::RG::BufferHandle dst_buffer,
     uint64_t old_buffer_size) const
 {
     if (old_buffer_size == 0)
         return;
 
     graph->add_copy_pass(
-        [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassBuilder& builder) {
+        [=, this](skr::RG::RenderGraph& g, skr::RG::CopyPassBuilder& builder) {
             builder.set_name(skr::format(u8"TableInstanceBase_Copy-{}", (uint64_t)this).c_str());
 
             builder.buffer_to_buffer(
@@ -379,12 +379,12 @@ void TableInstanceBase::StoreInternal(uint64_t dst_offset, const void* data, uin
     }
 }
 
-void TableInstanceBase::DispatchSparseUpload(skr::render_graph::RenderGraph* graph, const render_graph::ComputePassExecuteFunction& on_exec)
+void TableInstanceBase::DispatchSparseUpload(skr::RG::RenderGraph* graph, const RG::ComputePassExecuteFunction& on_exec)
 {
     SkrZoneScopedN("GPUScene::DispatchSparseUpload");
 
     auto upload_buffer = graph->create_buffer(
-        [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+        [=, this](skr::RG::RenderGraph& g, skr::RG::BufferBuilder& builder) {
             builder.set_name(skr::format(u8"GPUTable{}-UploadData", config.name).c_str())
                 .size(kBatchBytesSize)
                 .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
@@ -394,7 +394,7 @@ void TableInstanceBase::DispatchSparseUpload(skr::render_graph::RenderGraph* gra
         });
 
     auto ops_buffer = graph->create_buffer(
-        [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+        [=, this](skr::RG::RenderGraph& g, skr::RG::BufferBuilder& builder) {
             builder.set_name(skr::format(u8"GPUTable{}-UploadOps", config.name).c_str())
                 .size(sizeof(Upload) * kBatchBytesSize / kStridePerOp)
                 .memory_usage(CGPU_MEM_USAGE_CPU_TO_GPU)
@@ -404,14 +404,14 @@ void TableInstanceBase::DispatchSparseUpload(skr::render_graph::RenderGraph* gra
         });
 
     graph->add_compute_pass(
-        [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::ComputePassBuilder& builder) {
+        [=, this](skr::RG::RenderGraph& g, skr::RG::ComputePassBuilder& builder) {
             builder.set_name(skr::format(u8"GPUTable{}-DataSparseUploadPass", config.name).c_str())
                 .set_pipeline(manager->GetSparseUploadPipeline())
                 .read(u8"upload_buffer", upload_buffer)
                 .read(u8"upload_operations", ops_buffer)
                 .readwrite(u8"target_buffer", frame_ctxs.get(&g).buffer_handle);
         },
-        [this, ops_buffer, upload_buffer, exec = on_exec](skr::render_graph::RenderGraph& g, skr::render_graph::ComputePassContext& ctx) {
+        [this, ops_buffer, upload_buffer, exec = on_exec](skr::RG::RenderGraph& g, skr::RG::ComputePassContext& ctx) {
             SkrZoneScopedN("GPUTable::SparseUploadScene");
 
             if (exec)
@@ -492,13 +492,13 @@ CGPUBufferId TableInstanceBase::createBufferWithCapacity(uint32_t capacity)
     return new_buffer;
 }
 
-skr::render_graph::BufferHandle TableInstanceBase::importBuffer(skr::render_graph::RenderGraph* graph, const char8_t* name)
+skr::RG::BufferHandle TableInstanceBase::importBuffer(skr::RG::RenderGraph* graph, const char8_t* name)
 {
     if (!buffer || !graph)
         return {};
 
     auto handle = graph->create_buffer(
-        [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+        [=, this](skr::RG::RenderGraph& g, skr::RG::BufferBuilder& builder) {
             builder.set_name(name)
                 .import(buffer, state_tracker.get_last_state())
                 .allow_shader_readwrite();
@@ -508,13 +508,13 @@ skr::render_graph::BufferHandle TableInstanceBase::importBuffer(skr::render_grap
     return handle;
 }
 
-skr::render_graph::BufferHandle TableInstanceBase::importBufferStructured(skr::render_graph::RenderGraph* graph, const char8_t* name)
+skr::RG::BufferHandle TableInstanceBase::importBufferStructured(skr::RG::RenderGraph* graph, const char8_t* name)
 {
     if (!buffer || !graph)
         return {};
 
     auto handle = graph->create_buffer(
-        [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+        [=, this](skr::RG::RenderGraph& g, skr::RG::BufferBuilder& builder) {
             builder.set_name(name)
                 .import(buffer, state_tracker.get_last_state())
                 .structured(0, instance_capacity, config.segments_[0].stride)
@@ -598,7 +598,7 @@ skr::RC<TableInstance> TableManager::CreateTable(const TableConfig& cfg)
     return table;
 }
 
-void TableManager::UploadToGPU(skr::render_graph::RenderGraph& graph)
+void TableManager::UploadToGPU(skr::RG::RenderGraph& graph)
 {
     tables_mtx.lock();
     tables.remove_all_if([](RCWeak<TableInstance> t) { return t.is_expired(); });

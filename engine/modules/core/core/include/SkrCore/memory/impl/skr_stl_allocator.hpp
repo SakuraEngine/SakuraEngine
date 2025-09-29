@@ -2,20 +2,22 @@
 #include "./skr_new_delete.hpp"
 
 template <class T>
-struct skr_stl_allocator {
-    typedef T                 value_type;
-    typedef std::size_t       size_type;
-    typedef std::ptrdiff_t    difference_type;
-    typedef value_type&       reference;
+struct skr_stl_allocator
+{
+    typedef T value_type;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    typedef value_type& reference;
     typedef value_type const& const_reference;
-    typedef value_type*       pointer;
+    typedef value_type* pointer;
     typedef value_type const* const_pointer;
     template <class U>
-    struct rebind {
+    struct rebind
+    {
         typedef skr_stl_allocator<U> other;
     };
 
-    inline skr_stl_allocator() SKR_NOEXCEPT                         = default;
+    inline skr_stl_allocator() SKR_NOEXCEPT = default;
     inline skr_stl_allocator(const skr_stl_allocator&) SKR_NOEXCEPT = default;
     template <class U>
     inline skr_stl_allocator(const skr_stl_allocator<U>&) SKR_NOEXCEPT
@@ -49,8 +51,8 @@ struct skr_stl_allocator {
 #if ((__cplusplus >= 201103L) || (_MSC_VER > 1900)) // C++11
     using propagate_on_container_copy_assignment = std::true_type;
     using propagate_on_container_move_assignment = std::true_type;
-    using propagate_on_container_swap            = std::true_type;
-    using is_always_equal                        = std::true_type;
+    using propagate_on_container_swap = std::true_type;
+    using is_always_equal = std::true_type;
     template <class U, class... Args>
     inline void construct(U* p, Args&&... args)
     {

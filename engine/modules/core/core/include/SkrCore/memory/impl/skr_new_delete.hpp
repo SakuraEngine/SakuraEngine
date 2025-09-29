@@ -11,9 +11,10 @@
 
 //=======================new core=======================
 #if defined(SKR_PROFILE_ENABLE) && defined(TRACY_TRACE_ALLOCATION)
-struct SkrNewCore {
+struct SkrNewCore
+{
     const std::string_view sourcelocation;
-    const char*            poolname;
+    const char* poolname;
     SkrNewCore(std::string_view sourcelocation) noexcept
         : sourcelocation(sourcelocation)
         , poolname(NULL)
@@ -57,12 +58,13 @@ struct SkrNewCore {
         }
     }
 };
-#define SKR_MAKE_NEW_CORE \
-    SkrNewCore { SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__), SKR_ALLOC_STRINGFY(__LINE__)) }
-#define SKR_MAKE_NEW_CORE_N(__N) \
-    SkrNewCore { SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__), SKR_ALLOC_STRINGFY(__LINE__)), __N }
+    #define SKR_MAKE_NEW_CORE \
+        SkrNewCore { SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__), SKR_ALLOC_STRINGFY(__LINE__)) }
+    #define SKR_MAKE_NEW_CORE_N(__N) \
+        SkrNewCore { SKR_ALLOC_CAT(SKR_ALLOC_STRINGFY(__FILE__), SKR_ALLOC_STRINGFY(__LINE__)), __N }
 #else
-struct SkrNewCore {
+struct SkrNewCore
+{
     template <class T>
     [[nodiscard]] SKR_FORCEINLINE T* Alloc()
     {
@@ -89,10 +91,10 @@ struct SkrNewCore {
         }
     }
 };
-#define SKR_MAKE_NEW_CORE \
-    SkrNewCore {}
-#define SKR_MAKE_NEW_CORE_N(__N) \
-    SkrNewCore {}
+    #define SKR_MAKE_NEW_CORE \
+        SkrNewCore {}
+    #define SKR_MAKE_NEW_CORE_N(__N) \
+        SkrNewCore {}
 #endif
 
 //=======================new/delete flag=======================
@@ -102,13 +104,14 @@ enum SkrNewFlag
 };
 enum SkrDeleteFlag
 {
-    SkrDeleteFlag_None    = 0,
+    SkrDeleteFlag_None = 0,
     SkrDeleteFlag_No_Dtor = 1 << 0,
 };
 
 //=======================delete traits=======================
 template <typename T>
-struct SkrDeleteTraits {
+struct SkrDeleteTraits
+{
     SKR_FORCEINLINE static void* get_free_ptr(T* p)
     {
         return reinterpret_cast<void*>(p);
@@ -122,8 +125,9 @@ struct SkrDeleteTraits {
     #define SKR_DEBUG_NEW_SOURCE_LINE
 #endif
 template <typename T>
-struct SkrNewImpl {
-    SkrNewCore      core;
+struct SkrNewImpl
+{
+    SkrNewCore core;
     SKR_FORCEINLINE SkrNewImpl(SkrNewCore core)
         : core(core)
     {
@@ -132,7 +136,7 @@ struct SkrNewImpl {
     template <typename... Args>
     [[nodiscard]] SKR_FORCEINLINE T* New(Args&&... args)
     {
-        T*                                       p = core.Alloc<T>();
+        T* p = core.Alloc<T>();
         return new (p) SKR_DEBUG_NEW_SOURCE_LINE T{ std::forward<Args>(args)... };
     }
     template <typename... Args>
@@ -161,8 +165,9 @@ struct SkrNewImpl {
 #undef SKR_DEBUG_NEW_SOURCE_LINE
 
 //=======================impl SkrNew/SkrDelete=======================
-struct SkrNewWrapper {
-    SkrNewCore      core;
+struct SkrNewWrapper
+{
+    SkrNewCore core;
     SKR_FORCEINLINE SkrNewWrapper(SkrNewCore core)
         : core(core)
     {

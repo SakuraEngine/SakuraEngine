@@ -14,7 +14,7 @@ bool Widget::can_update(NotNull<Widget*> old_widget, NotNull<Widget*> new_widget
     {
         return false;
     }
-    if (old_widget->iobject_get_typeid() != new_widget->iobject_get_typeid())
+    if (old_widget->rttr_get_typeid() != new_widget->rttr_get_typeid())
     {
         return false;
     }

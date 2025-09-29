@@ -41,8 +41,8 @@ typedef enum ESkrIOFinishPoint
     SKR_IO_FINISH_POINT_MAX_ENUM = UINT32_MAX
 } ESkrIOFinishPoint;
 
-typedef skr_guid_t skr_io_decompress_method_t;
-typedef skr_guid_t skr_io_request_resolve_pass_t;
+typedef skr::GUID skr_io_decompress_method_t;
+typedef skr::GUID skr_io_request_resolve_pass_t;
 
 typedef struct skr_io_future_t {
     SAtomicU32 status         SKR_IF_CPP(= 0);
@@ -88,8 +88,8 @@ struct IIOService;
 struct SKR_RUNTIME_API IIORequest : public skr::IRCAble {
     virtual ~IIORequest() SKR_NOEXCEPT;
 
-    virtual IORequestComponent*       get_component(skr_guid_t tid) SKR_NOEXCEPT       = 0;
-    virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT = 0;
+    virtual IORequestComponent*       get_component(skr::GUID tid) SKR_NOEXCEPT       = 0;
+    virtual const IORequestComponent* get_component(skr::GUID tid) const SKR_NOEXCEPT = 0;
     virtual IIOService*               get_service() const SKR_NOEXCEPT                 = 0;
 
     #pragma region PathSrcComponent

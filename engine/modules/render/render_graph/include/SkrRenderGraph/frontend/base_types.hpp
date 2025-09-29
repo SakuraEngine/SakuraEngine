@@ -14,7 +14,7 @@ enum
 
 struct CGPUXBindTable;
 struct CGPUXMergedBindTable;
-namespace skr::render_graph
+namespace skr::RG
 {
 // fwd declartions
 class ResourceNode;
@@ -435,7 +435,7 @@ struct RenderGraphEdge : public DependencyGraphEdge {
 
 struct SKR_RENDER_GRAPH_API PassContext {
     PassNode* pass = nullptr;
-    skr::render_graph::RenderGraphBackend* graph = nullptr;
+    skr::RG::RenderGraphBackend* graph = nullptr;
     CGPUCommandBufferId cmd;
     skr::Span<std::pair<BufferHandle, CGPUBufferId>> resolved_buffers;
     skr::Span<std::pair<TextureHandle, CGPUTextureId>> resolved_textures;
@@ -481,15 +481,15 @@ struct SKR_RENDER_GRAPH_API CopyPassContext : public PassContext {
     friend struct PassExecutionPhase;
     CGPUCommandBufferId cmd;
 };
-} // namespace skr::render_graph
+} // namespace skr::RG
 
 namespace skr
 {
-template<render_graph::EObjectType type>
-struct Hash<render_graph::ObjectHandle<type>>{
-    inline size_t operator()(const render_graph::ObjectHandle<type>& handle) const SKR_NOEXCEPT
+template<RG::EObjectType type>
+struct Hash<RG::ObjectHandle<type>>{
+    inline size_t operator()(const RG::ObjectHandle<type>& handle) const SKR_NOEXCEPT
     {
-        return Hash<render_graph::HandleStorage>()(handle);
+        return Hash<RG::HandleStorage>()(handle);
     }
 };
-}
+} // namespace skr

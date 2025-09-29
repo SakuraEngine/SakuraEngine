@@ -31,7 +31,7 @@ class SVMemCCModule : public skr::IDynamicModule
     // imgui
     skr::UPtr<skr::ImGuiApp> imgui_app = nullptr;
 
-    skr::render_graph::RenderGraph* graph = nullptr;
+    skr::RG::RenderGraph* graph = nullptr;
 };
 
 IMPLEMENT_DYNAMIC_MODULE(SVMemCCModule, VMemController);
@@ -169,7 +169,7 @@ int SVMemCCModule::main_module_exec(int argc, char8_t** argv)
     {
         using namespace skr;
 
-        skr::render_graph::RenderGraphBuilder graph_builder;
+        skr::RG::RenderGraphBuilder graph_builder;
         graph_builder.with_device(device)
             .with_gfx_queue(gfx_queue)
             .enable_memory_aliasing();

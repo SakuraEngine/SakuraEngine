@@ -10,7 +10,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 PassExecutionPhase::PassExecutionPhase(
@@ -659,5 +659,5 @@ void PassExecutionPhase::end_debug_marker(RenderGraphFrameExecutor* executor) SK
     cgpu_cmd_end_event(executor->gfx_cmd_buf);
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

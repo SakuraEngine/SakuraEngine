@@ -3,7 +3,7 @@
 #include "SkrBase/misc/integer_tools.hpp"
 #include "SkrBase/memory/memory_traits.hpp"
 #include "SkrBase/misc/swap.hpp"
-#include "SkrBase/types/guid.h"
+#include "SkrBase/types/guid.hpp"
 
 // generic id for generic system use
 namespace skr

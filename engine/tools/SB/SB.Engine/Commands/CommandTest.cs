@@ -2,7 +2,6 @@ using SB;
 using SB.Core;
 using Serilog;
 using System.Diagnostics;
-using Cli = SB.Cli;
 
 namespace SB;
 

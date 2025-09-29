@@ -8,7 +8,7 @@
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/hashmap.hpp>
 
-namespace skr::render_graph
+namespace skr::RG
 {
 struct BlackboardImpl final : public Blackboard
 {
@@ -421,4 +421,4 @@ void RenderGraph::finalize() SKR_NOEXCEPT
     NodeAndEdgeFactory::Destroy(node_factory);
     DependencyGraph::Destroy(graph);
 }
-} // namespace skr::render_graph
+} // namespace skr::RG

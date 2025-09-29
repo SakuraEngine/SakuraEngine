@@ -1,0 +1,572 @@
+#include "SkrGraphics/flags.h"
+#include "cube_geometry.h"
+#include "common/utils.h"
+#include "gbuffer_pipeline.h"
+#include "lighting_pipeline.h"
+#include "blit_pipeline.h"
+
+#include "SkrProfile/profile.h"
+#include "SkrOS/thread.h"
+#include "SkrOS/filesystem.hpp"
+#include "SkrCore/memory/sp.hpp"
+#include "SkrCore/module/module_manager.hpp"
+#include "SkrRenderGraph/frontend/render_graph.hpp"
+#include "SkrRenderer/skr_renderer.h"
+#include "SkrImGui/imgui_app.hpp"
+#include "pass_profiler.h"
+
+#include "skybox_pipeline.h"
+#include "camera_helper.h"
+
+CubeGeometry::InstanceData CubeGeometry::instance_data;
+
+#if _WIN32
+thread_local ECGPUBackend backend = CGPU_BACKEND_D3D12;
+#else
+thread_local ECGPUBackend backend = CGPU_BACKEND_VULKAN;
+#endif
+
+thread_local SRenderDeviceId render_device;
+thread_local CGPUSamplerId static_sampler;
+
+thread_local CGPUBufferId index_buffer;
+thread_local CGPUBufferId vertex_buffer;
+thread_local CGPUBufferId instance_buffer;
+thread_local CGPUTextureId skybox;
+
+thread_local CGPURenderPipelineId blit_pipeline;
+thread_local CGPURenderPipelineId gbuffer_pipeline;
+thread_local CGPURenderPipelineId lighting_pipeline;
+thread_local CGPUComputePipelineId lighting_cs_pipeline;
+thread_local CGPUComputePipelineId skybox_cs_pipeline;
+
+void create_render_pipeline()
+{
+    render_device = SkrRendererModule::Get()->get_render_device();
+    auto device = render_device->get_cgpu_device();
+    auto gfx_queue = render_device->get_gfx_queue();
+
+    // Sampler
+    CGPUSamplerDescriptor sampler_desc = {};
+    sampler_desc.address_u = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.address_v = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.address_w = CGPU_ADDRESS_MODE_REPEAT;
+    sampler_desc.mipmap_mode = CGPU_MIPMAP_MODE_LINEAR;
+    sampler_desc.min_filter = CGPU_FILTER_TYPE_LINEAR;
+    sampler_desc.mag_filter = CGPU_FILTER_TYPE_LINEAR;
+    sampler_desc.compare_func = CGPU_CMP_NEVER;
+    static_sampler = cgpu_create_sampler(device, &sampler_desc);
+
+    // upload
+    CGPUBufferDescriptor upload_buffer_desc = {};
+    upload_buffer_desc.name = u8"UploadBuffer";
+    upload_buffer_desc.flags = CGPU_BUFFER_FLAG_PERSISTENT_MAP_BIT;
+    upload_buffer_desc.usages = CGPU_BUFFER_USAGE_NONE;
+    upload_buffer_desc.memory_usage = CGPU_MEM_USAGE_CPU_ONLY;
+    upload_buffer_desc.size = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices) + sizeof(CubeGeometry::InstanceData);
+    auto upload_buffer = cgpu_create_buffer(device, &upload_buffer_desc);
+    CGPUBufferDescriptor vb_desc = {};
+    vb_desc.name = u8"VertexBuffer";
+    vb_desc.flags = CGPU_BUFFER_FLAG_NONE;
+    vb_desc.usages = CGPU_BUFFER_USAGE_VERTEX_BUFFER;
+    vb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+    vb_desc.size = sizeof(CubeGeometry);
+    vertex_buffer = cgpu_create_buffer(device, &vb_desc);
+    CGPUBufferDescriptor ib_desc = {};
+    ib_desc.name = u8"IndexBuffer";
+    ib_desc.flags = CGPU_BUFFER_FLAG_NONE;
+    ib_desc.usages = CGPU_BUFFER_USAGE_INDEX_BUFFER;
+    ib_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+    ib_desc.size = sizeof(CubeGeometry::g_Indices);
+    index_buffer = cgpu_create_buffer(device, &ib_desc);
+    CGPUBufferDescriptor inb_desc = {};
+    inb_desc.name = u8"InstanceBuffer";
+    inb_desc.flags = CGPU_BUFFER_FLAG_NONE;
+    inb_desc.usages = CGPU_BUFFER_USAGE_VERTEX_BUFFER;
+    inb_desc.memory_usage = CGPU_MEM_USAGE_GPU_ONLY;
+    inb_desc.size = sizeof(CubeGeometry::InstanceData);
+    instance_buffer = cgpu_create_buffer(device, &inb_desc);
+    auto pool_desc = CGPUCommandPoolDescriptor();
+    auto cmd_pool = cgpu_create_command_pool(gfx_queue, &pool_desc);
+    auto cmd_desc = CGPUCommandBufferDescriptor();
+    auto cpy_cmd = cgpu_create_command_buffer(cmd_pool, &cmd_desc);
+    {
+        auto geom = CubeGeometry();
+        memcpy(upload_buffer->info->cpu_mapped_address, &geom, upload_buffer_desc.size);
+    }
+    cgpu_cmd_begin(cpy_cmd);
+    CGPUBufferToBufferTransfer vb_cpy = {};
+    vb_cpy.dst = vertex_buffer;
+    vb_cpy.dst_offset = 0;
+    vb_cpy.src = upload_buffer;
+    vb_cpy.src_offset = 0;
+    vb_cpy.size = sizeof(CubeGeometry);
+    cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &vb_cpy);
+    {
+        memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry), CubeGeometry::g_Indices, sizeof(CubeGeometry::g_Indices));
+    }
+    CGPUBufferToBufferTransfer ib_cpy = {};
+    ib_cpy.dst = index_buffer;
+    ib_cpy.dst_offset = 0;
+    ib_cpy.src = upload_buffer;
+    ib_cpy.src_offset = sizeof(CubeGeometry);
+    ib_cpy.size = sizeof(CubeGeometry::g_Indices);
+    cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &ib_cpy);
+    // wvp
+    const auto transform = skr::TransformF(skr::QuatF(skr::RotatorF()), skr::float3(0), skr::float3(2));
+    const auto matrix = skr::transpose(transform.to_matrix());
+    CubeGeometry::instance_data.world = *(skr::float4x4*)&matrix;
+    {
+        memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices), &CubeGeometry::instance_data, sizeof(CubeGeometry::InstanceData));
+    }
+    CGPUBufferToBufferTransfer istb_cpy = {};
+    istb_cpy.dst = instance_buffer;
+    istb_cpy.dst_offset = 0;
+    istb_cpy.src = upload_buffer;
+    istb_cpy.src_offset = sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices);
+    istb_cpy.size = sizeof(CubeGeometry::instance_data);
+    cgpu_cmd_transfer_buffer_to_buffer(cpy_cmd, &istb_cpy);
+    CGPUBufferBarrier barriers[3] = {};
+    CGPUBufferBarrier& vb_barrier = barriers[0];
+    vb_barrier.buffer = vertex_buffer;
+    vb_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+    vb_barrier.dst_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+    CGPUBufferBarrier& ib_barrier = barriers[1];
+    ib_barrier.buffer = index_buffer;
+    ib_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+    ib_barrier.dst_state = CGPU_RESOURCE_STATE_INDEX_BUFFER;
+    CGPUBufferBarrier& ist_barrier = barriers[2];
+    ist_barrier.buffer = instance_buffer;
+    ist_barrier.src_state = CGPU_RESOURCE_STATE_COPY_DEST;
+    ist_barrier.dst_state = CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+    CGPUResourceBarrierDescriptor barrier_desc = {};
+    barrier_desc.buffer_barriers = barriers;
+    barrier_desc.buffer_barriers_count = 3;
+    cgpu_cmd_resource_barrier(cpy_cmd, &barrier_desc);
+    cgpu_cmd_end(cpy_cmd);
+    CGPUQueueSubmitDescriptor cpy_submit = {};
+    cpy_submit.cmds = &cpy_cmd;
+    cpy_submit.cmds_count = 1;
+    cgpu_submit_queue(gfx_queue, &cpy_submit);
+    cgpu_wait_queue_idle(gfx_queue);
+    cgpu_free_buffer(upload_buffer);
+    cgpu_free_command_buffer(cpy_cmd);
+    cgpu_free_command_pool(cmd_pool);
+
+    gbuffer_pipeline = create_gbuffer_render_pipeline(device, static_sampler);
+    lighting_pipeline = create_lighting_render_pipeline(device, static_sampler, CGPU_FORMAT_R8G8B8A8_UNORM);
+    lighting_cs_pipeline = create_lighting_compute_pipeline(device);
+    blit_pipeline = create_blit_render_pipeline(device, static_sampler, CGPU_FORMAT_R8G8B8A8_UNORM);
+
+    skybox_cs_pipeline = create_skybox_compute_pipeline(device, static_sampler);
+}
+
+void finalize()
+{
+    // Free cgpu objects
+    cgpu_free_buffer(index_buffer);
+    cgpu_free_buffer(vertex_buffer);
+    cgpu_free_buffer(instance_buffer);
+    cgpu_free_texture(skybox);
+
+    free_pipeline_and_signature(gbuffer_pipeline);
+    free_pipeline_and_signature(lighting_pipeline);
+    free_pipeline_and_signature(lighting_cs_pipeline);
+    free_pipeline_and_signature(blit_pipeline);
+    free_pipeline_and_signature(skybox_cs_pipeline);
+    cgpu_free_sampler(static_sampler);
+}
+
+struct LightingPushConstants
+{
+    int bFlipUVX = 0;
+    int bFlipUVY = 0;
+};
+static LightingPushConstants lighting_data = {};
+struct LightingCSPushConstants
+{
+    skr::float2 viewportSize = { BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT };
+    skr::float2 viewportOrigin = { 0, 0 };
+};
+static LightingCSPushConstants lighting_cs_data = {};
+bool fragmentLightingPass = false;
+bool lockFPS = true;
+bool DPIAware = false;
+
+#include "SkrRuntime/runtime_module.h"
+
+struct RenderGraphSkyboxModule : public skr::IDynamicModule
+{
+    virtual void on_load(int argc, char8_t** argv) override;
+    virtual int main_module_exec(int argc, char8_t** argv) override;
+    virtual void on_unload() override;
+};
+IMPLEMENT_DYNAMIC_MODULE(RenderGraphSkyboxModule, RenderGraphSkyboxSample);
+
+void RenderGraphSkyboxModule::on_load(int argc, char8_t** argv)
+{
+    DPIAware = skr_runtime_is_dpi_aware();
+    create_render_pipeline();
+}
+
+int RenderGraphSkyboxModule::main_module_exec(int argc, char8_t** argv)
+{
+    // init rendering
+    namespace RG = skr::RG;
+    PassProfiler profilers[RG_MAX_FRAME_IN_FLIGHT];
+    skr::UPtr<skr::ImGuiApp> imgui_app = nullptr;
+    {
+        // init render graph
+        auto device = render_device->get_cgpu_device();
+        auto gfx_queue = render_device->get_gfx_queue();
+
+        // init pass profiler
+        for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
+        {
+            profilers[i].initialize(device);
+        }
+
+        // init imgui backend
+        {
+            using namespace skr;
+
+            skr::RG::RenderGraphBuilder graph_builder;
+            graph_builder.with_device(device)
+                .with_gfx_queue(gfx_queue)
+                .enable_memory_aliasing();
+            skr::SystemWindowCreateInfo window_config = {
+                .size = { BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT },
+                .is_resizable = false
+            };
+            imgui_app = UPtr<ImGuiApp>::New(window_config, render_device, graph_builder);
+            imgui_app->initialize();
+            imgui_app->enable_docking();
+
+            // load font
+            const char8_t* font_path = u8"./../resources/font/SourceSansPro-Regular.ttf";
+            uint32_t *font_bytes, font_length;
+            read_bytes(font_path, &font_bytes, &font_length);
+            ImFontConfig cfg = {};
+            cfg.SizePixels = 16.f;
+            cfg.OversampleH = cfg.OversampleV = 1;
+            cfg.PixelSnapH = true;
+            ImGui::GetIO().Fonts->AddFontFromMemoryTTF(
+                font_bytes,
+                font_length,
+                cfg.SizePixels,
+                &cfg
+            );
+            ImGui::GetIO().Fonts->Build();
+        }
+    }
+    auto graph = imgui_app->render_graph();
+
+    utils::Camera camera;
+    utils::CameraController ctrl;
+    ctrl.set_camera(&camera);
+    {
+        auto device = render_device->get_cgpu_device();
+        auto gfx_queue = render_device->get_gfx_queue();
+        CGPUTextureDescriptor desc = {};
+        desc.name = u8"skybox";
+        desc.width = 512;
+        desc.height = 512;
+        desc.depth = 1;
+        desc.usages = CGPU_TEXTURE_USAGE_SHADER_READWRITE | CGPU_TEXTURE_USAGE_RENDER_TARGET | CGPU_TEXTURE_USAGE_CUBEMAP;
+        desc.array_size = 6;
+        desc.flags = CGPU_TEXTURE_FLAG_NONE;
+        desc.mip_levels = 1;
+        desc.format = CGPU_FORMAT_R8G8B8A8_UNORM;
+        desc.start_state = CGPU_RESOURCE_STATE_COPY_DEST;
+        skybox = cgpu_create_texture(device, &desc);
+    }
+
+    // loop
+    while (!imgui_app->want_exit().comsume())
+    {
+        imgui_app->pump_message();
+        {
+            ctrl.imgui_control_frame();
+        }
+
+        // draw imgui
+        SkrZoneScopedN("FrameTime");
+        static uint64_t frame_index = 0;
+        {
+            SkrZoneScopedN("ImGui");
+            ImGui::Begin("RenderGraphProfile");
+            if (ImGui::Button(fragmentLightingPass ? "SwitchToComputeLightingPass" : "SwitchToFragmentLightingPass"))
+            {
+                fragmentLightingPass = !fragmentLightingPass;
+            }
+            if (ImGui::Button(lockFPS ? "UnlockFPS" : "LockFPS"))
+            {
+                lockFPS = !lockFPS;
+            }
+            if (frame_index > RG_MAX_FRAME_IN_FLIGHT)
+            {
+                auto profiler_index = (frame_index - 1) % RG_MAX_FRAME_IN_FLIGHT;
+                auto&& profiler = profilers[profiler_index];
+                if (profiler.times_ms.size() == profiler.query_names.size())
+                {
+                    // text
+                    ImGui::Text("frame: %llu(%llu frames before)", profiler.frame_index, frame_index - profiler.frame_index);
+                    float total_ms = 0.f;
+                    for (uint32_t i = 1; i < profiler.times_ms.size(); i++)
+                    {
+                        auto text = profiler.query_names[i];
+                        text.append(u8": %.4f ms");
+                        ImGui::Text(text.c_str_raw(), profiler.times_ms[i]);
+                        total_ms += profiler.times_ms[i];
+                    }
+                    ImGui::Text("GPU Time: %f(ms)", total_ms);
+                    // plot
+                    auto max_scale = std::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
+                    auto min_scale = std::max_element(profiler.times_ms.begin(), profiler.times_ms.end());
+                    (void)min_scale;
+                    ImVec2 size = { 200, 200 };
+                    ImGui::PlotHistogram("##ms", profiler.times_ms.data() + 1, (int)profiler.times_ms.size() - 1, 0, NULL, 0.0001f, *max_scale * 1.1f, size);
+                }
+            }
+            ImGui::End();
+        }
+
+        {
+            imgui_app->acquire_frames();
+        }
+
+        // rendering
+        auto backbuffer = graph->get_texture(u8"backbuffer");
+        imgui_app->set_load_action(CGPU_LOAD_ACTION_LOAD);
+        {
+            SkrZoneScopedN("GraphSetup");
+
+            const auto back_desc = graph->resolve_descriptor(backbuffer);
+            RG::TextureHandle composite_buffer = graph->create_texture(
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
+                    builder.set_name(u8"composite_buffer")
+                        .extent(back_desc->width, back_desc->height)
+                        .format(CGPU_FORMAT_R8G8B8A8_UNORM)
+                        .heap_dedicated()
+                        .allow_render_target();
+                }
+            );
+            auto gbuffer_color = graph->create_texture(
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
+                    builder.set_name(u8"gbuffer_color")
+                        .extent(back_desc->width, back_desc->height)
+                        .format(gbuffer_formats[0])
+                        .heap_dedicated()
+                        .allow_render_target();
+                }
+            );
+            auto gbuffer_depth = graph->create_texture(
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
+                    builder.set_name(u8"gbuffer_depth")
+                        .extent(back_desc->width, back_desc->height)
+                        .format(gbuffer_depth_format)
+                        .heap_dedicated()
+                        .allow_depth_stencil();
+                }
+            );
+            auto gbuffer_normal = graph->create_texture(
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
+                    builder.set_name(u8"gbuffer_normal")
+                        .extent(back_desc->width, back_desc->height)
+                        .format(gbuffer_formats[1])
+                        .heap_dedicated()
+                        .allow_render_target();
+                }
+            );
+            auto lighting_buffer = graph->create_texture(
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
+                    builder.set_name(u8"lighting_buffer")
+                        .extent(back_desc->width, back_desc->height)
+                        .format(lighting_buffer_format)
+                        .heap_dedicated()
+                        .allow_readwrite();
+                }
+            );
+            auto skybox_texture = graph->create_texture(
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
+                    builder.set_name(u8"skybox_texture")
+                        .import(skybox, CGPU_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+                }
+            );
+
+            // compute sky
+            graph->add_compute_pass(
+                [=](RG::RenderGraph& g, RG::ComputePassBuilder& builder) {
+                    builder.set_name(u8"build_sky")
+                        .set_pipeline(skybox_cs_pipeline)
+                        .readwrite(u8"skybox", skybox_texture.readwrite_cube(0, 6));
+                },
+                [=](RG::RenderGraph& g, RG::ComputePassContext& ctx) {
+                    cgpu_compute_encoder_set_threadgroup_size(ctx.encoder, 16, 16, 1);
+                    cgpu_compute_encoder_dispatch(ctx.encoder, 512, 512, 6);
+                }
+            );
+            // camera
+
+            auto view = skr::float4x4::view_at(
+                camera.pos,
+                camera.pos + camera.front,
+                camera.up
+            );
+            auto proj = skr::float4x4::perspective_fov(
+                skr::camera_fov_y_from_x(camera.fov, camera.aspect),
+                camera.aspect,
+                camera.near_plane,
+                camera.far_plane
+            );
+            auto _view_proj = skr::mul(view, proj);
+            auto view_proj = skr::transpose(_view_proj);
+
+            graph->add_render_pass(
+                [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
+                    builder.set_name(u8"gbuffer_pass")
+                        .set_pipeline(gbuffer_pipeline)
+                        .read(u8"skybox", skybox_texture)
+                        .write(0, gbuffer_color, CGPU_LOAD_ACTION_CLEAR)
+                        .write(1, gbuffer_normal, CGPU_LOAD_ACTION_CLEAR)
+                        .set_depth_stencil(gbuffer_depth.clear_depth(1.f));
+                },
+                [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
+                    cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)back_desc->width, (float)back_desc->height, 0.f, 1.f);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
+                    CGPUBufferId vertex_buffers[5] = {
+                        vertex_buffer, vertex_buffer, vertex_buffer, vertex_buffer, instance_buffer
+                    };
+                    const uint32_t strides[5] = {
+                        sizeof(skr::float3), sizeof(skr::float2), sizeof(uint32_t), sizeof(uint32_t), sizeof(CubeGeometry::InstanceData::world)
+                    };
+                    const uint32_t offsets[5] = {
+                        offsetof(CubeGeometry, g_Positions), offsetof(CubeGeometry, g_TexCoords), offsetof(CubeGeometry, g_Normals), offsetof(CubeGeometry, g_Tangents), offsetof(CubeGeometry::InstanceData, world)
+                    };
+                    cgpu_render_encoder_bind_index_buffer(stack.encoder, index_buffer, sizeof(uint32_t), 0);
+                    cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 5, vertex_buffers, strides, offsets);
+                    cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, u8"push_constants", &view_proj);
+                    cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
+                }
+            );
+            if (fragmentLightingPass)
+            {
+                graph->add_render_pass(
+                    [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
+                        builder.set_name(u8"light_pass_fs")
+                            .set_pipeline(lighting_pipeline)
+                            .read(u8"gbuffer_color", gbuffer_color.read_mip(0, 1))
+                            .read(u8"gbuffer_normal", gbuffer_normal)
+                            .read(u8"gbuffer_depth", gbuffer_depth)
+                            .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
+                    },
+                    [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
+                        cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)back_desc->width, (float)back_desc->height, 0.f, 1.f);
+                        cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
+                        cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, u8"push_constants", &lighting_data);
+                        cgpu_render_encoder_draw(stack.encoder, 3, 0);
+                    }
+                );
+            }
+            else
+            {
+                graph->add_compute_pass(
+                    [=](RG::RenderGraph& g, RG::ComputePassBuilder& builder) {
+                        builder.set_name(u8"light_pass_cs")
+                            .set_pipeline(lighting_cs_pipeline)
+                            .read(u8"gbuffer_color", gbuffer_color)
+                            .read(u8"gbuffer_normal", gbuffer_normal)
+                            .read(u8"gbuffer_depth", gbuffer_depth)
+                            .readwrite(u8"lighting_output", lighting_buffer);
+                    },
+                    [=](RG::RenderGraph& g, RG::ComputePassContext& ctx) {
+                        lighting_cs_data = {
+                            .viewportSize{
+                                (float)back_desc->width, (float)back_desc->height }
+                        };
+                        cgpu_compute_encoder_push_constants(ctx.encoder, lighting_cs_pipeline->root_signature, u8"push_constants", &lighting_cs_data);
+                        cgpu_compute_encoder_set_threadgroup_size(ctx.encoder, 16, 16, 1);
+                        cgpu_compute_encoder_dispatch(ctx.encoder, back_desc->width, back_desc->height, 1);
+                    }
+                );
+                graph->add_render_pass(
+                    [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
+                        builder.set_name(u8"lighting_buffer_blit")
+                            .set_pipeline(blit_pipeline)
+                            .read(u8"input_color", lighting_buffer)
+                            .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
+                    },
+                    [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
+                        cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)back_desc->width, (float)back_desc->height, 0.f, 1.f);
+                        cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
+                        cgpu_render_encoder_draw(stack.encoder, 3, 0);
+                    }
+                );
+            }
+            graph->add_render_pass(
+                [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
+                    builder.set_name(u8"final_blit")
+                        .set_pipeline(blit_pipeline)
+                        .read(u8"input_color", composite_buffer)
+                        .write(0, backbuffer, CGPU_LOAD_ACTION_CLEAR);
+                },
+                [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
+                    cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)back_desc->width, (float)back_desc->height, 0.f, 1.f);
+                    cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
+                    cgpu_render_encoder_draw(stack.encoder, 3, 0);
+                }
+            );
+            imgui_app->render_imgui();
+        }
+
+        // compile and draw rg
+        {
+            SkrZoneScopedN("GraphExecute");
+            auto profiler_index = frame_index % RG_MAX_FRAME_IN_FLIGHT;
+            frame_index = graph->execute(profilers + profiler_index);
+        }
+        {
+            SkrZoneScopedN("CollectGarbage");
+            if (frame_index >= RG_MAX_FRAME_IN_FLIGHT * 10)
+                graph->collect_garbage(frame_index - RG_MAX_FRAME_IN_FLIGHT * 10);
+        }
+
+        // present
+        {
+            SkrZoneScopedN("Present");
+            imgui_app->present_all();
+            if (lockFPS) skr_thread_sleep(16);
+        }
+    }
+
+    // wait rendering done
+    cgpu_wait_queue_idle(render_device->get_gfx_queue());
+
+    // clean up
+    for (uint32_t i = 0; i < RG_MAX_FRAME_IN_FLIGHT; i++)
+    {
+        profilers[i].finalize();
+    }
+    imgui_app->shutdown();
+    return 0;
+}
+
+void RenderGraphSkyboxModule::on_unload()
+{
+    finalize();
+}
+
+int main(int argc, char* argv[])
+{
+    auto moduleManager = skr_get_module_manager();
+    auto root = skr::fs::current_directory();
+    {
+        FrameMark;
+        SkrZoneScopedN("Initialize");
+        moduleManager->mount(root.string().c_str());
+        moduleManager->make_module_graph(u8"RenderGraphSkyboxSample", true);
+        moduleManager->init_module_graph(argc, argv);
+        moduleManager->destroy_module_graph();
+    }
+    return 0;
+}

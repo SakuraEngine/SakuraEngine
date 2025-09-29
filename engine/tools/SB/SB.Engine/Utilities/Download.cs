@@ -9,7 +9,7 @@ namespace SB
     public static class Download
     {
         public const int StageOrder = -1000;
-        [AfterStage(EBuildStage.PrepareCommandline, StageOrder)]
+        [AfterStage(EBuildStage.PrepareCallCommandLine, StageOrder)]
         static void _AfterSetupPaths()
         {
             Directory.CreateDirectory(BuildDirs.DownloadDir);
@@ -18,7 +18,7 @@ namespace SB
             if (Sources.Count == 0)
             {
                 var githubSource = "https://github.com/SakuraEngine/Sakura.Resources/releases/download/SDKs/";
-                Log.Information("Download source: {githubSource}", githubSource);
+                Log.Information("Use default download source: {githubSource}", githubSource);
                 AddSource("skr_github", githubSource);
             }
         }

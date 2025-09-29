@@ -2,7 +2,7 @@
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // Pass节点的Timeline扩展
 class SKR_RENDER_GRAPH_API PassNodeTimelineExtension
@@ -82,5 +82,5 @@ inline void enable_lone_copy(CopyPassNode* pass)
     pass->set_can_be_lone(true);
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

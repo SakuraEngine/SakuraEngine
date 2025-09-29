@@ -12,7 +12,7 @@ NotNull<RenderObject*> Text::create_render_object() SKR_NOEXCEPT
 
 void Text::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    auto r_obj = render_object->type_cast_fast<RenderText>();
+    auto r_obj = render_object->rttr_cast<RenderText>();
 
     r_obj->set_text(text);
 }

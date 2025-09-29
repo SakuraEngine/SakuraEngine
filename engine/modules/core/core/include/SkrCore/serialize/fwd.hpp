@@ -25,6 +25,14 @@ concept HasSerdeRead = requires(ArchiveRead& r, T& v) {
     { ::skr::Serialize<T>::read(r, v) } -> std::same_as<void>;
 };
 template <typename T>
+concept HasSerdeWriteFields = requires(ArchiveWrite& w, const T& v) {
+    { ::skr::Serialize<T>::write_fields(w, v) } -> std::same_as<void>;
+};
+template <typename T>
+concept HasSerdeReadFields = requires(ArchiveRead& r, T& v) {
+    { ::skr::Serialize<T>::read_fields(r, v) } -> std::same_as<void>;
+};
+template <typename T>
 concept IsSerdePrimitive = std::is_same_v<T, bool> ||
 
     std::is_same_v<T, int8_t> || std::is_same_v<T, int16_t> ||

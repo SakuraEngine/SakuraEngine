@@ -11,7 +11,6 @@ struct [[sattr(guid = "cd94cf66-7511-418e-aef1-1e7f2dd219e7"
 )]] SKR_GUI_API RawGestureDetector : public StatefulWidget
 {
     SKR_GENERATE_BODY(RawGestureDetector)
-    using Super = StatefulWidget;
     using GestureRecognizerFactory = Function<GestureRecognizer*()>;
 
     Widget* child = nullptr;

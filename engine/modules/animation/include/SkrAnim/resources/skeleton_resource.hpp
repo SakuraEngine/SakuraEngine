@@ -2,7 +2,7 @@
 #include "SkrAnim/ozz/skeleton.h"
 #include "SkrBase/types.h"
 #include "SkrBase/types.h"
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "SkrAnim/resources/skeleton_resource.generated.h" // IWYU pragma: export
 
 namespace skr

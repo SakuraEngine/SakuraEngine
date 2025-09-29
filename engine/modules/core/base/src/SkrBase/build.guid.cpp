@@ -1,5 +1,5 @@
 #include "SkrBase/config.h"
-#include "SkrBase/types/guid.h"
+#include "SkrBase/types/guid.hpp"
 
 #if SKR_PLAT_WINDOWS
     #include <combaseapi.h>
@@ -26,29 +26,9 @@ static void _make_guid(::skr::GUID* out)
 // guid
 namespace skr
 {
-GUID GUID::Create()
+// create new
+void GUID::create()
 {
-    GUID out;
-    _make_guid(&out);
-    return out;
+    _make_guid(this);
 }
 } // namespace skr
-
-// guid capi
-SKR_EXTERN_C void skr_create_guid(skr_guid_t* out_guid)
-{
-    _make_guid(out_guid);
-}
-SKR_EXTERN_C bool skr_decode_guid(skr_guid_t* out_guid, const skr_char8* str, uint64_t len)
-{
-    auto opt_guid = ::skr::GUID::DecodeAuto(str, len);
-    if (opt_guid.has_value()) [[likely]]
-    {
-        *out_guid = opt_guid.value();
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}

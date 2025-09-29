@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/math.h"
+#include "SkrBase/math.hpp"
 #include "SkrBase/atomic/atomic.h"
 #include "SkrBase/atomic/atomic_mutex.hpp"
 #include "SkrContainersDef/bitset.hpp"
@@ -161,11 +161,7 @@ public:
             return Range{}; // 无效长度或超出单段限制
         }
         
-        // 使用线程ID哈希选择起始段，分散访问
-        std::hash<std::thread::id> hasher;
-        uint32_t start_segment = hasher(std::this_thread::get_id()) % segments_.size();
-        
-        // 尝试从多个段分配
+        uint32_t start_segment = 0;
         for (uint32_t i = 0; i < segments_.size(); ++i) {
             uint32_t segment_id = (start_segment + i) % segments_.size();
             Range range = tryAllocateFromSegment(segment_id, length);

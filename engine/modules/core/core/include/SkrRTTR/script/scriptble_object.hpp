@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRTTR/iobject.hpp"
+#include "SkrRTTR/irttr_basic.hpp"
 #include "./stack_proxy.hpp"
 #include "SkrRTTR/script/scriptble_object.generated.h"
 
@@ -16,7 +16,7 @@ enum class [[sattr(guid = "a0393643-9f1b-423a-8754-f504bab41420"
 };
 
 struct [[sattr(guid = "66181cbc-69a0-41a5-899c-51c1c6d4ea3e"
-)]] SKR_CORE_API IScriptMixinCore : virtual public skr::IObject
+)]] SKR_CORE_API IScriptMixinCore : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(IScriptMixinCore)
     virtual ~IScriptMixinCore() = default;
@@ -31,7 +31,7 @@ struct [[sattr(guid = "66181cbc-69a0-41a5-899c-51c1c6d4ea3e"
 };
 
 struct [[sattr(guid = "ecb7851e-f6c5-4814-8fba-a35668a2f277"
-)]] SKR_CORE_API ScriptbleObject : virtual public skr::IObject
+)]] SKR_CORE_API ScriptbleObject : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(ScriptbleObject)
     virtual ~ScriptbleObject();

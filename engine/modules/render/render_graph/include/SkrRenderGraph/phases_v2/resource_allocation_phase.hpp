@@ -9,7 +9,7 @@
 #include "SkrContainersDef/hashmap.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 template <typename T>
 struct AllocatedReosurce
@@ -87,5 +87,5 @@ private:
     RenderGraphBackend* graph = nullptr;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

@@ -7,10 +7,10 @@
 
 struct Live2DMaskPass 
 {
-    static void create_frame_resources(skr::render_graph::RenderGraph* render_graph)
+    static void create_frame_resources(skr::RG::RenderGraph* render_graph)
     {
         auto live2d_mask_msaa = render_graph->create_texture(
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+        [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
             double sample_level = 1.0;
             g.get_blackboard().value(u8"l2d_msaa", sample_level);
 
@@ -23,7 +23,7 @@ struct Live2DMaskPass
         });(void)live2d_mask_msaa;
 
         auto mask = render_graph->create_texture(
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+        [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
             builder.set_name(u8"live2d_mask")
                 .extent(Csm::kMaskResolution, Csm::kMaskResolution)
                 .format(live2d_mask_format)
@@ -32,7 +32,7 @@ struct Live2DMaskPass
         });(void)mask;
         
         auto depth = render_graph->create_texture(
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+        [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
             double sample_level = 1.0;
             g.get_blackboard().value(u8"l2d_msaa", sample_level);
 
@@ -45,14 +45,14 @@ struct Live2DMaskPass
         });(void)depth;
     }
 
-    static void execute(skr::render_graph::RenderGraph* render_graph, skr::Span<skr_primitive_draw_t> drawcalls)
+    static void execute(skr::RG::RenderGraph* render_graph, skr::Span<skr_primitive_draw_t> drawcalls)
     {
         if (!drawcalls.size()) return;
 
         CGPURenderPipelineId pipeline = drawcalls[0].pipeline;
 
         render_graph->add_render_pass(
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassBuilder& builder) {
+        [=](skr::RG::RenderGraph& g, skr::RG::RenderPassBuilder& builder) {
             double sample_level = 1.0;
             bool useMSAA = g.get_blackboard().value(u8"l2d_msaa", sample_level); useMSAA &= (sample_level > 1.0);
             
@@ -69,7 +69,7 @@ struct Live2DMaskPass
                 builder.resolve_msaa(0, mask);
             }
         },
-        [=](skr::render_graph::RenderGraph& g, skr::render_graph::RenderPassContext& pass_context) {
+        [=](skr::RG::RenderGraph& g, skr::RG::RenderPassContext& pass_context) {
             SkrZoneScopedN("DrawLive2DMasks");
             skr::InlineMap<CGPUXBindTableId, CGPUXMergedBindTableId, 8> merged_tables;
             cgpu_render_encoder_set_viewport(pass_context.encoder,

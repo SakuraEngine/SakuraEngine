@@ -7,7 +7,7 @@
 #include "schedule_reorder.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // 屏障类型
 enum class EBarrierType : uint8_t
@@ -134,5 +134,5 @@ private:
     StackMap<PassNode*, StackVector<BarrierBatch>> pass_barriers_;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

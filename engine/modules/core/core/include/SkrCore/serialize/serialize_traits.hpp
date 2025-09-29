@@ -4,7 +4,32 @@
 #include <SkrBase/config.h>
 #include <SkrBase/types.h>
 #include <SkrBase/type_info.hpp>
-#include <SkrBase/math.h>
+#include <SkrBase/math.hpp>
+
+// help functions
+namespace skr
+{
+template <typename  T>
+inline void serde_read(ArchiveRead& r, T& v)
+{
+    Serialize<T>::read(r, v);
+}
+template <typename T>
+inline void serde_write(ArchiveWrite& w, const T& v)
+{
+    Serialize<T>::write(w, v);
+}
+template <typename T>
+inline void serde_read_fields(ArchiveRead& r, T& v)
+{
+    Serialize<T>::read_fields(r, v);
+}
+template <typename T>
+inline void serde_write_fields(ArchiveWrite& w, const T& v)
+{
+    Serialize<T>::write_fields(w, v);
+}
+} // namespace skr
 
 // primitive types serde
 namespace skr

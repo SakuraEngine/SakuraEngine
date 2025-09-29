@@ -10,8 +10,8 @@ namespace skr
 struct SKR_RENDERER_API RenderApp : public skr::SystemApp
 {
 public:
-    using RenderGraph = skr::render_graph::RenderGraph;
-    RenderApp(SRenderDeviceId render_device, skr::render_graph::RenderGraphBuilder& builder);
+    using RenderGraph = skr::RG::RenderGraph;
+    RenderApp(SRenderDeviceId render_device, skr::RG::RenderGraphBuilder& builder);
     ~RenderApp();
 
     virtual bool initialize(const char* backend = nullptr) override;
@@ -64,7 +64,7 @@ protected:
     ECGPUFormat _backbuffer_format = CGPU_FORMAT_R8G8B8A8_UNORM;
     skr::SparseVector<skr::SystemWindow*> _windows;
     SRenderDeviceId _render_device;
-    skr::render_graph::RenderGraphBuilder _graph_builder;
+    skr::RG::RenderGraphBuilder _graph_builder;
     RenderGraph* _graph = nullptr;
 };
 } // namespace skr

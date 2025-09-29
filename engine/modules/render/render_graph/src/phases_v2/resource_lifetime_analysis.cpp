@@ -5,7 +5,7 @@
 #include "SkrProfile/profile.h"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 ResourceLifetimeAnalysis::ResourceLifetimeAnalysis(
     const PassInfoAnalysis& pass_info_analysis,
@@ -138,5 +138,5 @@ bool ResourceLifetime::conflicts_with(const ResourceLifetime& other) const
              other.end_dependency_level < start_dependency_level);
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

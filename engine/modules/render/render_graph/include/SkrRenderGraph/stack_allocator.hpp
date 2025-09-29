@@ -5,7 +5,7 @@
 #include "SkrContainersDef/map.hpp"
 #include "SkrContainersDef/set.hpp"
 
-namespace skr::render_graph
+namespace skr::RG
 {
 
 struct SKR_RENDER_GRAPH_API RenderGraphStackAllocator {
@@ -161,4 +161,4 @@ using StackHashMap = skr::FlatHashMap<K, V,
     RenderGraphSTLAllocator<phmap::priv::Pair<const K, V>>
 >;
 
-} // namespace skr::render_graph
+} // namespace skr::RG

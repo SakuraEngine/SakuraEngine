@@ -1,6 +1,6 @@
 #pragma once
 #include <SkrContainers/string.hpp>
-#include <SkrRTTR/iobject.hpp>
+#include <SkrRTTR/irttr_basic.hpp>
 #include <SkrCore/memory/rc.hpp>
 
 #include "SkrV8/v8_vfs.generated.h"
@@ -9,7 +9,7 @@ namespace skr
 {
 struct [[sattr(
     guid = "71d1b125-2e17-4a92-b162-64297f0d41e5"
-)]] SKR_V8_API IV8VFS : virtual IObject
+)]] SKR_V8_API IV8VFS : virtual IRTTRBasic
 {
     SKR_GENERATE_BODY(IV8VFS)
     SKR_RC_IMPL();

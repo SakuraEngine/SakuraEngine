@@ -7,7 +7,7 @@
 namespace skr::gui
 {
 struct [[sattr(guid = "1e50e00c-6c0a-435c-817a-3970cf8b90cb"
-)]] SKR_GUI_API State : virtual public skr::IObject
+)]] SKR_GUI_API State : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(State)
 

@@ -6,7 +6,7 @@
 #include "SkrTask/parallel_for.hpp"
 #include "SkrContainers/stl_vector.hpp"
 #include "SkrCore/module/module_manager.hpp"
-#include "SkrRuntime/resource/resource_system.h"
+#include "SkrRuntime/resource/resource_system.hpp"
 #include <functional>
 #include "SkrRuntime/resource/local_resource_registry.hpp"
 
@@ -37,7 +37,7 @@ skr::LocalResourceRegistry* registry = nullptr;
 skr::SkelFactory* skelFactory = nullptr;
 skr::AnimFactory* animFactory = nullptr;
 
-void InitializeResourceSystem(skd::SProject& proj)
+void InitializeResourceSystem(skr::SProject& proj)
 {
     using namespace skr::literals;
     auto resource_system = skr::GetResourceSystem();
@@ -73,7 +73,7 @@ void InitializeResourceSystem(skd::SProject& proj)
     }
 }
 
-void DestroyResourceSystem(skd::SProject& proj)
+void DestroyResourceSystem(skr::SProject& proj)
 {
     skr::MaterialTypeFactory::Destroy(matTypeFactory);
     skr::ShaderOptionsFactory::Destroy(shaderOptionsFactory);
@@ -86,7 +86,7 @@ void DestroyResourceSystem(skd::SProject& proj)
     SkrDelete(registry);
 }
 
-skr::Vector<skd::SProject*> open_projects(int argc, char** argv)
+skr::Vector<skr::SProject*> open_projects(int argc, char** argv)
 {
     skr::cmd::parser parser(argc, argv);
     parser.add(u8"project", u8"project path", u8"-p", false);
@@ -98,9 +98,9 @@ skr::Vector<skd::SProject*> open_projects(int argc, char** argv)
     }
     auto workspace = parser.get<skr::String>(u8"workspace");
     auto projectPath = parser.get_optional<skr::String>(u8"project");
-    skr::Vector<skd::SProject*> result;
+    skr::Vector<skr::SProject*> result;
     {
-        auto project = SkrNew<skd::SProject>();
+        auto project = SkrNew<skr::SProject>();
         project->SetEnv(u8"workspace", workspace);
         project->OpenProject(projectPath->c_str());
         result.add(project);
@@ -108,9 +108,9 @@ skr::Vector<skd::SProject*> open_projects(int argc, char** argv)
     return result;
 }
 
-int compile_project(skd::SProject* project)
+int compile_project(skr::SProject* project)
 {
-    auto& system = *skd::asset::GetCookSystem();
+    auto& system = *skr::GetCookSystem();
     InitializeResourceSystem(*project);
     //----- scan project directory
     skr::stl_vector<skr::Path> paths;
@@ -154,7 +154,7 @@ int compile_project(skd::SProject* project)
     //----- schedule cook tasks (checking dependencies)
     {
         system.ParallelForEachAsset(1,
-            [&](skr::Span<skr::RC<skd::asset::AssetMetaFile>> assets) {
+            [&](skr::Span<skr::RC<skr::AssetMetaFile>> assets) {
                 SkrZoneScopedN("Cook");
                 for (auto asset : assets)
                 {
@@ -186,7 +186,7 @@ int compile_all(int argc, char** argv)
     skr::task::scheduler_t scheduler;
     scheduler.initialize(skr::task::scheudler_config_t());
     scheduler.bind();
-    auto& system = *skd::asset::GetCookSystem();
+    auto& system = *skr::GetCookSystem();
     system.Initialize();
     //----- register project
     auto projects = open_projects(argc, argv);

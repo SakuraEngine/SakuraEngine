@@ -3,10 +3,9 @@
 #include "SkrRenderGraph/frontend/pass_node.hpp"
 #include "SkrRenderGraph/frontend/node_and_edge_factory.hpp"
 
-namespace skr
+namespace skr::RG
 {
-namespace render_graph
-{
+
 // graph builder
 RenderGraph::RenderPassBuilder::RenderPassBuilder(RenderGraph& graph, RenderPassNode& pass) SKR_NOEXCEPT
     : graph(graph),
@@ -849,5 +848,4 @@ AccelerationStructureHandle RenderGraph::get_imported(CGPUAccelerationStructureI
     return AccelerationStructureHandle();
 }
 
-} // namespace render_graph
-} // namespace skr
+} // namespace skr::RG

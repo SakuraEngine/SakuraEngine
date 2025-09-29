@@ -1,6 +1,6 @@
 // Math Operations on 3D Coordinate Transformations
 #include "SkrTestFramework/framework.hpp"
-#include "SkrBase/math.h"
+#include "SkrBase/math.hpp"
 
 TEST_CASE("DefaultCoordinate")
 {

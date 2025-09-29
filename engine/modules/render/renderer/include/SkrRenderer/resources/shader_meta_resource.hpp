@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "SkrRenderer/fwd_types.h"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/span.hpp"

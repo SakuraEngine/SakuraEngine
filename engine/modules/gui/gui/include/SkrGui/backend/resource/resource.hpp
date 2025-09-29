@@ -43,7 +43,7 @@ enum class EResourceState : uint32_t
 
 struct [[sattr(
     guid = "1d4ba81f-09b7-4186-b35a-f380c49302e4"
-)]] SKR_GUI_API IResource : virtual public skr::IObject
+)]] SKR_GUI_API IResource : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(IResource)
     virtual ~IResource() = default;

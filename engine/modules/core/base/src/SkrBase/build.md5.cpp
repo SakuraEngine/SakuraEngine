@@ -1,4 +1,4 @@
-#include "SkrBase/types/md5.h"
+#include "SkrBase/types/md5.hpp"
 #include "crypt/WjCryptLib_Md5.h"
 
 // check
@@ -37,22 +37,3 @@ MD5 MD5Builder::finalize(bool reset)
     return result;
 }
 } // namespace skr
-
-// capi
-SKR_EXTERN_C bool skr_parse_md5(const char8_t* str32, skr_md5_t* out_md5)
-{
-    auto opt_md5 = skr::MD5::DecodeAuto(str32);
-    if (opt_md5) [[likely]]
-    {
-        *out_md5 = *opt_md5;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-SKR_EXTERN_C void skr_make_md5(const char8_t* str, uint32_t str_size, skr_md5_t* out_md5)
-{
-    *out_md5 = skr::MD5::Build(str, str_size);
-}

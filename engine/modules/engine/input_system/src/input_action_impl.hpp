@@ -29,7 +29,7 @@ struct SKR_INPUT_SYSTEM_API InputActionImpl : public InputAction {
         storage.event_id = id;
         if (storage.event_id == kEventId_Invalid)
         {
-            skr_create_guid(&storage.event_id);
+            storage.event_id = skr::GUID::Create();
         }
         storage.callback = [event, this]() {
             event(current_value);

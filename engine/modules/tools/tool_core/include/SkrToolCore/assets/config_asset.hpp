@@ -4,7 +4,7 @@
 #include "SkrToolCore/cook_system/cooker.hpp"
 #include "SkrToolCore/assets/config_asset.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 struct [[sattr(
     guid = "D5970221-1A6B-42C4-B604-DA0559E048D6"
@@ -24,4 +24,4 @@ struct [[sattr(
     bool Cook(CookContext* ctx) override;
     uint32_t Version() override;
 };
-} // namespace skd::asset
+} // namespace skr

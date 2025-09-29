@@ -8,7 +8,7 @@
 #include "SkrContainersDef/hashmap.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // Configuration for reorder phase
 struct ExecutionReorderConfig {
@@ -85,5 +85,5 @@ private:
     ExecutionReorderResult result;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

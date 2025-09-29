@@ -109,7 +109,7 @@ void create_render_pipeline()
     // wvp
     const auto transform = skr::TransformF(skr::QuatF(skr::RotatorF()), skr::float3(0), skr::float3(2));
     const auto matrix = skr::transpose(transform.to_matrix());
-    CubeGeometry::instance_data.world = *(skr_float4x4_t*)&matrix;
+    CubeGeometry::instance_data.world = *(skr::float4x4*)&matrix;
     {
         memcpy((char8_t*)upload_buffer->info->cpu_mapped_address + sizeof(CubeGeometry) + sizeof(CubeGeometry::g_Indices), &CubeGeometry::instance_data, sizeof(CubeGeometry::InstanceData));
     }
@@ -201,7 +201,7 @@ void RenderGraphDeferredModule::on_load(int argc, char8_t** argv)
 int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
 {
     // init rendering
-    namespace render_graph = skr::render_graph;
+    namespace RG = skr::RG;
     PassProfiler profilers[RG_MAX_FRAME_IN_FLIGHT];
     skr::UPtr<skr::ImGuiApp> imgui_app = nullptr;
     {
@@ -219,7 +219,7 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
         {
             using namespace skr;
 
-            skr::render_graph::RenderGraphBuilder graph_builder;
+            skr::RG::RenderGraphBuilder graph_builder;
             graph_builder.with_device(device)
                 .with_gfx_queue(gfx_queue)
                 .enable_memory_aliasing();
@@ -243,7 +243,8 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                 font_bytes,
                 font_length,
                 cfg.SizePixels,
-                &cfg);
+                &cfg
+            );
             ImGui::GetIO().Fonts->Build();
         }
     }
@@ -307,46 +308,51 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
             SkrZoneScopedN("GraphSetup");
 
             const auto back_desc = graph->resolve_descriptor(backbuffer);
-            render_graph::TextureHandle composite_buffer = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            RG::TextureHandle composite_buffer = graph->create_texture(
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     builder.set_name(u8"composite_buffer")
                         .extent(back_desc->width, back_desc->height)
                         .format(CGPU_FORMAT_R8G8B8A8_UNORM)
                         .heap_dedicated()
                         .allow_render_target();
-                });
+                }
+            );
             auto gbuffer_color = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     builder.set_name(u8"gbuffer_color")
                         .extent(back_desc->width, back_desc->height)
                         .format(gbuffer_formats[0])
                         .heap_dedicated()
                         .allow_render_target();
-                });
+                }
+            );
             auto gbuffer_depth = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     builder.set_name(u8"gbuffer_depth")
                         .extent(back_desc->width, back_desc->height)
                         .format(gbuffer_depth_format)
                         .heap_dedicated()
                         .allow_depth_stencil();
-                });
+                }
+            );
             auto gbuffer_normal = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     builder.set_name(u8"gbuffer_normal")
                         .extent(back_desc->width, back_desc->height)
                         .format(gbuffer_formats[1])
                         .heap_dedicated()
                         .allow_render_target();
-                });
+                }
+            );
             auto lighting_buffer = graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     builder.set_name(u8"lighting_buffer")
                         .extent(back_desc->width, back_desc->height)
                         .format(lighting_buffer_format)
                         .heap_dedicated()
                         .allow_readwrite();
-                });
+                }
+            );
             // camera
             auto eye = skr::float3(0.f, 2.1f, -2.1f) /*eye*/;
             auto view = skr::float4x4::view_at(eye, skr::float3(0.f), skr::float3::up());
@@ -355,18 +361,20 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                 skr::camera_fov_y_from_x(3.1415926f / 2.f, aspect_ratio),
                 aspect_ratio,
                 1.f,
-                1000.f);
+                1000.f
+            );
             auto _view_proj = skr::mul(view, proj);
             auto view_proj = skr::transpose(_view_proj);
+
             graph->add_render_pass(
-                [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
                     builder.set_name(u8"gbuffer_pass")
                         .set_pipeline(gbuffer_pipeline)
                         .write(0, gbuffer_color, CGPU_LOAD_ACTION_CLEAR)
                         .write(1, gbuffer_normal, CGPU_LOAD_ACTION_CLEAR)
                         .set_depth_stencil(gbuffer_depth.clear_depth(1.f));
                 },
-                [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)back_desc->width, (float)back_desc->height, 0.f, 1.f);
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
                     CGPUBufferId vertex_buffers[5] = {
@@ -382,11 +390,12 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                     cgpu_render_encoder_bind_vertex_buffers(stack.encoder, 5, vertex_buffers, strides, offsets);
                     cgpu_render_encoder_push_constants(stack.encoder, gbuffer_pipeline->root_signature, u8"push_constants", &view_proj);
                     cgpu_render_encoder_draw_indexed_instanced(stack.encoder, 36, 0, 1, 0, 0);
-                });
+                }
+            );
             if (fragmentLightingPass)
             {
                 graph->add_render_pass(
-                    [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                    [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
                         builder.set_name(u8"light_pass_fs")
                             .set_pipeline(lighting_pipeline)
                             .read(u8"gbuffer_color", gbuffer_color.read_mip(0, 1))
@@ -394,17 +403,18 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                             .read(u8"gbuffer_depth", gbuffer_depth)
                             .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
                     },
-                    [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                    [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
                         cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)back_desc->width, (float)back_desc->height, 0.f, 1.f);
                         cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
                         cgpu_render_encoder_push_constants(stack.encoder, lighting_pipeline->root_signature, u8"push_constants", &lighting_data);
                         cgpu_render_encoder_draw(stack.encoder, 3, 0);
-                    });
+                    }
+                );
             }
             else
             {
                 graph->add_compute_pass(
-                    [=](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
+                    [=](RG::RenderGraph& g, RG::ComputePassBuilder& builder) {
                         builder.set_name(u8"light_pass_cs")
                             .set_pipeline(lighting_cs_pipeline)
                             .read(u8"gbuffer_color", gbuffer_color)
@@ -412,36 +422,39 @@ int RenderGraphDeferredModule::main_module_exec(int argc, char8_t** argv)
                             .read(u8"gbuffer_depth", gbuffer_depth)
                             .readwrite(u8"lighting_output", lighting_buffer);
                     },
-                    [=](render_graph::RenderGraph& g, render_graph::ComputePassContext& ctx) {
+                    [=](RG::RenderGraph& g, RG::ComputePassContext& ctx) {
                         cgpu_compute_encoder_push_constants(ctx.encoder, lighting_cs_pipeline->root_signature, u8"push_constants", &lighting_cs_data);
                         cgpu_compute_encoder_set_threadgroup_size(ctx.encoder, 16, 16, 1);
                         cgpu_compute_encoder_dispatch(ctx.encoder, BACK_BUFFER_WIDTH, BACK_BUFFER_HEIGHT, 1);
-                    });
+                    }
+                );
                 graph->add_render_pass(
-                    [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                    [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
                         builder.set_name(u8"lighting_buffer_blit")
                             .set_pipeline(blit_pipeline)
                             .read(u8"input_color", lighting_buffer)
                             .write(0, composite_buffer, CGPU_LOAD_ACTION_CLEAR);
                     },
-                    [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                    [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
                         cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)back_desc->width, (float)back_desc->height, 0.f, 1.f);
                         cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
                         cgpu_render_encoder_draw(stack.encoder, 3, 0);
-                    });
+                    }
+                );
             }
             graph->add_render_pass(
-                [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
                     builder.set_name(u8"final_blit")
                         .set_pipeline(blit_pipeline)
                         .read(u8"input_color", composite_buffer)
                         .write(0, backbuffer, CGPU_LOAD_ACTION_CLEAR);
                 },
-                [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+                [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
                     cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)back_desc->width, (float)back_desc->height, 0.f, 1.f);
                     cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, back_desc->width, back_desc->height);
                     cgpu_render_encoder_draw(stack.encoder, 3, 0);
-                });
+                }
+            );
             imgui_app->render_imgui();
         }
 

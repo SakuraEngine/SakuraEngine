@@ -35,7 +35,7 @@ struct IParagraph;
 // 使用方需要思考这些问题，并将某些 API 转发到这个全局唯一的 NativeDevice 上，而不是另外处理
 struct [[sattr(
     guid = "8ba2ea3e-8a8e-4d88-a7d6-c98552219fc8"
-)]] SKR_GUI_API INativeDevice : virtual public skr::IObject
+)]] SKR_GUI_API INativeDevice : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(INativeDevice)
 

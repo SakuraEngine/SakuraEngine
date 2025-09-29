@@ -3,7 +3,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 struct SKR_RENDER_GRAPH_API Blackboard
 {
@@ -29,5 +29,5 @@ struct SKR_RENDER_GRAPH_API Blackboard
     virtual void override_buffer(const char8_t* name, class BufferNode* buffer) SKR_NOEXCEPT = 0;
     virtual void override_acceleration_structure(const char8_t* name, class AccelerationStructureNode* acceleration_structure) SKR_NOEXCEPT = 0;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

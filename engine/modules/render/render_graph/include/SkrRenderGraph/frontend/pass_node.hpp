@@ -4,7 +4,7 @@
 #include "SkrRenderGraph/frontend/resource_edge.hpp"
 
 namespace skr {
-namespace render_graph
+namespace RG
 {
     template<typename T, uint32_t N = 4>
     using graph_edges_vector = skr::InlineVector<T, N>;  
@@ -13,7 +13,7 @@ namespace render_graph
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 class PassNode : public RenderGraphNode
 {
@@ -154,5 +154,5 @@ public:
 protected:
     CGPUQueuePresentDescriptor descriptor;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

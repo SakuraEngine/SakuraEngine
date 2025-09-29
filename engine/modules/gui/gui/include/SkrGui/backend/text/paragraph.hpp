@@ -10,7 +10,7 @@ struct TextStyle;
 struct PaintingContext;
 struct [[sattr(
     guid = "fe659fa3-d171-4d41-a95a-849618c3765b"
-)]] SKR_GUI_API IParagraph : virtual public skr::IObject
+)]] SKR_GUI_API IParagraph : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(IParagraph)
     virtual ~IParagraph() = default;

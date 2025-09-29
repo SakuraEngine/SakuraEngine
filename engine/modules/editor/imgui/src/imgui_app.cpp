@@ -45,7 +45,7 @@ static float ImGui_ImplSkrSystem_GetWindowDpiScale(ImGuiViewport* viewpoer)
 }
 
 // ctor & dtor
-ImGuiApp::ImGuiApp(const SystemWindowCreateInfo& main_wnd_create_info, SRenderDeviceId render_device, skr::render_graph::RenderGraphBuilder& builder)
+ImGuiApp::ImGuiApp(const SystemWindowCreateInfo& main_wnd_create_info, SRenderDeviceId render_device, skr::RG::RenderGraphBuilder& builder)
     : skr::RenderApp(render_device, builder), _main_window_info(main_wnd_create_info)
 {
 
@@ -716,12 +716,11 @@ void ImGuiApp::create_pipeline()
 
 void ImGuiApp::add_render_pass(
     ImGuiViewport* vp,
-    render_graph::RenderGraph* render_graph,
+    RG::RenderGraph* render_graph,
     CGPURootSignatureId root_sig,
     CGPURenderPipelineId render_pipeline)
 {
     SkrZoneScopedN("RenderIMGUI");
-    namespace rg = skr::render_graph;
 
     // get data
     auto draw_data = vp->DrawData;
@@ -741,7 +740,7 @@ void ImGuiApp::add_render_pass(
 
     // create or resize vb/ib
     auto vertex_buffer_handle = render_graph->create_buffer(
-        [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
             SkrZoneScopedN("ConstructVBHandle");
 
             String name = skr::format(u8"imgui_vertices-{}", draw_data->OwnerViewport->ID);
@@ -754,7 +753,7 @@ void ImGuiApp::add_render_pass(
                 .as_vertex_buffer();
         });
     auto index_buffer_handle = render_graph->create_buffer(
-        [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
             SkrZoneScopedN("ConstructIBHandle");
 
             String name = skr::format(u8"imgui_indices-{}", draw_data->OwnerViewport->ID);
@@ -771,7 +770,7 @@ void ImGuiApp::add_render_pass(
     if (!useCVV)
     {
         auto upload_buffer_handle = render_graph->create_buffer(
-            [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
                 SkrZoneScopedN("ConstructUploadPass");
 
                 String name = skr::format(u8"imgui_upload-{}", draw_data->OwnerViewport->ID);
@@ -781,7 +780,7 @@ void ImGuiApp::add_render_pass(
                     .as_upload_buffer();
             });
         render_graph->add_copy_pass(
-            [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::CopyPassBuilder& builder) {
                 SkrZoneScopedN("ConstructCopyPass");
 
                 String name = skr::format(u8"imgui_copy-{}", draw_data->OwnerViewport->ID);
@@ -789,7 +788,7 @@ void ImGuiApp::add_render_pass(
                     .buffer_to_buffer(upload_buffer_handle.range(0, vertex_size), vertex_buffer_handle.range(0, vertex_size))
                     .buffer_to_buffer(upload_buffer_handle.range(vertex_size, vertex_size + index_size), index_buffer_handle.range(0, index_size));
             },
-            [upload_buffer_handle, draw_data](rg::RenderGraph& g, rg::CopyPassContext& context) {
+            [upload_buffer_handle, draw_data](RG::RenderGraph& g, RG::CopyPassContext& context) {
                 auto upload_buffer = context.resolve(upload_buffer_handle);
                 ImDrawVert* vtx_dst = (ImDrawVert*)upload_buffer->info->cpu_mapped_address;
                 ImDrawIdx* idx_dst = (ImDrawIdx*)(vtx_dst + draw_data->TotalVtxCount);
@@ -806,7 +805,7 @@ void ImGuiApp::add_render_pass(
 
     // cbuffer
     auto constant_buffer = render_graph->create_buffer(
-        [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
             SkrZoneScopedN("ConstructCBHandle");
 
             String name = skr::format(u8"imgui_cbuffer-{}", draw_data->OwnerViewport->ID);
@@ -819,13 +818,13 @@ void ImGuiApp::add_render_pass(
         });
 
     // import textures
-    rg::TextureHandle font_texture;
+    RG::TextureHandle font_texture;
     for (auto tex : ImGui::GetCurrentContext()->PlatformIO.Textures)
     {
         if (tex->Status == ImTextureStatus_OK)
         {
             font_texture = render_graph->create_texture(
-                [=](rg::RenderGraph& g, rg::TextureBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     SkrZoneScopedN("ConstructTextureHandle");
                     auto tex_data = (ImGuiRendererBackendRGTextureData*)tex->BackendUserData;
                     String name = skr::format(u8"imgui_font-{}", tex->UniqueID);
@@ -838,7 +837,7 @@ void ImGuiApp::add_render_pass(
 
     // render passes
     render_graph->add_render_pass(
-        [=](rg::RenderGraph& g, rg::RenderPassBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
             SkrZoneScopedN("ConstructRenderPass");
 
             String name = skr::format(u8"imgui_render-{}", draw_data->OwnerViewport->ID);
@@ -850,7 +849,7 @@ void ImGuiApp::add_render_pass(
                 .read(u8"texture0", font_texture)
                 .write(0, backbuffer, load_action);
         },
-        [backbuffer, useCVV, draw_data, constant_buffer, index_buffer_handle, vertex_buffer_handle](rg::RenderGraph& g, rg::RenderPassContext& context) {
+        [backbuffer, useCVV, draw_data, constant_buffer, index_buffer_handle, vertex_buffer_handle](RG::RenderGraph& g, RG::RenderPassContext& context) {
             SkrZoneScopedN("ImGuiPass");
 
             // get info

@@ -31,7 +31,7 @@ static struct RegisterComponentskr_live2d_render_model_comp_tHelper
         desc.guid = u8"63524b75-b86d-4b34-ba59-b600eb4b415b"_guid;
         desc.callback = {};
         desc.flags = 0;
-        desc.elementSize = 0;
+        desc.arrElementSize = 0;
         desc.alignment = alignof(skr_live2d_render_model_comp_t);
         type = sugoiT_register_type(&desc);
     }
@@ -108,7 +108,7 @@ struct Live2DRendererImpl : public skr::Live2DRenderer
         free_mask_pipeline(renderer);
     }
 
-    void draw(skr::render_graph::RenderGraph* render_graph) override
+    void draw(skr::RG::RenderGraph* render_graph) override
     {
         Live2DRenderPass::create_frame_resources(render_graph);
         Live2DMaskPass::create_frame_resources(render_graph);
@@ -117,7 +117,7 @@ struct Live2DRendererImpl : public skr::Live2DRenderer
         Live2DMaskPass::execute(render_graph, mask_drawcalls);
     }
 
-    void produce_drawcalls(sugoi_storage_t* storage, skr::render_graph::RenderGraph* render_graph) override
+    void produce_drawcalls(sugoi_storage_t* storage, skr::RG::RenderGraph* render_graph) override
     {
         frame_count++;
         async_slot_index = frame_count % RG_MAX_FRAME_IN_FLIGHT;
@@ -131,7 +131,7 @@ struct Live2DRendererImpl : public skr::Live2DRenderer
         }
     }
 
-    void produce_model_drawcall(sugoi_storage_t* storage, skr::render_graph::RenderGraph* render_graph)
+    void produce_model_drawcall(sugoi_storage_t* storage, skr::RG::RenderGraph* render_graph)
     {
         CubismMatrix44 projection;
         // TODO: Correct Projection
@@ -214,7 +214,7 @@ struct Live2DRendererImpl : public skr::Live2DRenderer
         sugoiQ_get_views(effect_query, SUGOI_LAMBDA(counterF));
     }
 
-    void produce_mask_drawcall(sugoi_storage_t* storage, skr::render_graph::RenderGraph* render_graph)
+    void produce_mask_drawcall(sugoi_storage_t* storage, skr::RG::RenderGraph* render_graph)
     {
         {
             SkrZoneScopedN("FrameCleanUp");
@@ -436,7 +436,7 @@ protected:
         return pSrc;
     }
 
-    void updateModelMotion(skr::render_graph::RenderGraph* render_graph, skr_live2d_render_model_id render_model)
+    void updateModelMotion(skr::RG::RenderGraph* render_graph, skr_live2d_render_model_id render_model)
     {
         SkrZoneScopedN("Live2D::updateModelMotion");
 
@@ -468,8 +468,8 @@ protected:
             else if (vb_c)
             {
                 uint64_t totalVertexSize = 0;
-                skr::Map<CGPUBufferId, skr::render_graph::BufferHandle> imported_vbs_map;
-                skr::stl_vector<skr::render_graph::BufferHandle> imported_vbs;
+                skr::Map<CGPUBufferId, skr::RG::BufferHandle> imported_vbs_map;
+                skr::stl_vector<skr::RG::BufferHandle> imported_vbs;
                 skr::stl_vector<uint64_t> vb_sizes;
                 skr::stl_vector<uint64_t> vb_offsets;
                 if (!render_model->use_dynamic_buffer)
@@ -484,7 +484,7 @@ protected:
                     uint32_t vcount = 0;
                     const void* pSrc = getVBData(render_model, j, vcount);
                     (void)pSrc;
-                    imported_vbs_map.add(view.buffer, render_graph->create_buffer([=](skr::render_graph::RenderGraph& g, skr::render_graph::BufferBuilder& builder) {
+                    imported_vbs_map.add(view.buffer, render_graph->create_buffer([=](skr::RG::RenderGraph& g, skr::RG::BufferBuilder& builder) {
                         skr::String name = skr::format(u8"live2d_vb-{}{}", (uint64_t)render_model, j);
                         builder.set_name((const char8_t*)name.c_str())
                             .import(view.buffer, CGPU_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
@@ -496,10 +496,8 @@ protected:
                 }
                 if (totalVertexSize)
                 {
-                    namespace rg = skr::render_graph;
-
                     auto upload_buffer = render_graph->create_buffer(
-                        [=](rg::RenderGraph& g, rg::BufferBuilder& builder) {
+                        [=](skr::RG::RenderGraph& g, skr::RG::BufferBuilder& builder) {
                             SkrZoneScopedN("ConstructUploadPass");
 
                             skr::String name = skr::format(u8"live2d_upload-{}", (uint64_t)render_model);
@@ -509,7 +507,7 @@ protected:
                                 .as_upload_buffer();
                         });
                     render_graph->add_copy_pass(
-                        [=](rg::RenderGraph& g, rg::CopyPassBuilder& builder) {
+                        [=](skr::RG::RenderGraph& g, skr::RG::CopyPassBuilder& builder) {
                             SkrZoneScopedN("ConstructCopyPass");
                             skr::String name = skr::format(u8"live2d_copy-{}", (uint64_t)render_model);
                             builder.set_name((const char8_t*)name.c_str());
@@ -523,7 +521,8 @@ protected:
                                 range_cursor += vb_size;
                             }
                         },
-                        [upload_buffer_hdl = upload_buffer, vb_c, render_model](rg::RenderGraph& g, rg::CopyPassContext& context) {
+                        [upload_buffer_hdl = upload_buffer, vb_c, render_model]
+                        (skr::RG::RenderGraph& g, skr::RG::CopyPassContext& context) {
                             auto upload_buffer = context.resolve(upload_buffer_hdl);
                             uint8_t* range_cursor = (uint8_t*)upload_buffer->info->cpu_mapped_address;
                             for (uint32_t j = 0; j < vb_c; j++)

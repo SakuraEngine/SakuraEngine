@@ -4,7 +4,7 @@
 #include "SkrRuntime/io/ram_io.hpp"
 #include "SkrProfile/profile.h"
 
-namespace skd::asset
+namespace skr
 {
 struct RawTextureData
 {
@@ -148,4 +148,4 @@ uint32_t TextureCooker::Version()
     return kDevelopmentVersion;
 }
 
-} // namespace skd::asset
+} // namespace skr

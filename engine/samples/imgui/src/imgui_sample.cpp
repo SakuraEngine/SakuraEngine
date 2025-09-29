@@ -24,7 +24,7 @@ int main()
     // init imgui
     skr::UPtr<skr::ImGuiApp> imgui_app = nullptr;
     {
-        render_graph::RenderGraphBuilder graph_builder;
+        RG::RenderGraphBuilder graph_builder;
         graph_builder.with_device(device)
             .with_gfx_queue(gfx_queue)
             .enable_memory_aliasing();

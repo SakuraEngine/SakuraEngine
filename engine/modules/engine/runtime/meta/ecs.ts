@@ -91,11 +91,13 @@ class _Gen {
           if (record_config.comp.array > 0) {
             b.$line(`desc.alignment = alignof(sugoi::ArrayComponent<${record.name}, ${record_config.comp.array}>);`)
             b.$line(`desc.size = sizeof(sugoi::ArrayComponent<${record.name}, ${record_config.comp.array}>);`)
-            b.$line(`desc.elementSize = sizeof(${record.name});`)
+            b.$line(`desc.arrElementSize = sizeof(${record.name});`)
+            b.$line(`desc.arrInlineCount = ${record_config.comp.array};`)
           } else {
             b.$line(`desc.alignment = alignof(${record.name});`)
             b.$line(`desc.size = std::is_empty_v<${record.name}> ? 0 : sizeof(${record.name});`)
-            b.$line(`desc.elementSize = 0;`)
+            b.$line(`desc.arrElementSize = 0;`)
+            b.$line(`desc.arrInlineCount = 0;`)
           }
 
           // flags
@@ -116,18 +118,6 @@ class _Gen {
           } else {
             b.$line(`desc.entityFieldsCount = 0;`)
             b.$line(`desc.entityFields = 0;`)
-          }
-
-          // resource fields
-          const resource_fields_offset = this.#make_field_offset_list(record, this.#filter_resource_handle, main_db.parent);
-          b.$line(`// resource fields`)
-          if (resource_fields_offset.length > 0) {
-            b.$line(`desc.resourceFieldsCount = ${resource_fields_offset.length};`)
-            b.$line(`static intptr_t resourceFields[] = {${resource_fields_offset.join(", ")}};`)
-            b.$line(`desc.resourceFields = resourceFields;`)
-          } else {
-            b.$line(`desc.resourceFieldsCount = 0;`)
-            b.$line(`desc.resourceFields = 0;`)
           }
 
           // comp callbacks

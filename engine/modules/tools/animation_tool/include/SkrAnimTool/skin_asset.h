@@ -2,7 +2,7 @@
 #include "SkrToolCore/cook_system/cooker.hpp"
 #include "SkrAnimTool/skin_asset.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 struct [[sattr(
     guid = "B863C921-3451-4024-A525-474D140099DB"
@@ -11,4 +11,4 @@ struct [[sattr(
     bool Cook(CookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 };
-} // namespace skd::asset
+} // namespace skr

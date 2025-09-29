@@ -282,9 +282,9 @@ int provider_main(int argc, char* argv[])
     renderer->create_blit_pipeline();
 
     // initialize render graph
-    namespace render_graph = skr::render_graph;
-    auto graph = render_graph::RenderGraph::create(
-        [=](render_graph::RenderGraphBuilder& builder) {
+    namespace RG = skr::RG;
+    auto graph = RG::RenderGraph::create(
+        [=](RG::RenderGraphBuilder& builder) {
             builder.with_device(renderer->device)
                 .with_gfx_queue(renderer->gfx_queue);
         });
@@ -329,13 +329,13 @@ int provider_main(int argc, char* argv[])
         // render graph setup & compile & exec
         CGPUTextureId to_import = renderer->swapchain->back_buffers[renderer->backbuffer_index];
         auto back_buffer = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                 builder.set_name(u8"backbuffer")
                     .import(to_import, CGPU_RESOURCE_STATE_UNDEFINED)
                     .allow_render_target();
             });
         auto target_buffer = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                 builder.set_name(u8"target_buffer")
                     .extent(to_import->info->width, to_import->info->height)
                     .format((ECGPUFormat)to_import->info->format)
@@ -344,24 +344,24 @@ int provider_main(int argc, char* argv[])
                     .allow_render_target();
             });
         graph->add_render_pass(
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
                 builder.set_name(u8"color_pass")
                     .set_pipeline(renderer->pipeline)
                     .write(0, target_buffer, CGPU_LOAD_ACTION_CLEAR);
             },
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+            [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
                 cgpu_render_encoder_set_viewport(stack.encoder, 0.0f, 0.0f, (float)to_import->info->width, (float)to_import->info->height, 0.f, 1.f);
                 cgpu_render_encoder_set_scissor(stack.encoder, 0, 0, (uint32_t)to_import->info->width, (uint32_t)to_import->info->height);
                 cgpu_render_encoder_draw(stack.encoder, 3, 0);
             });
         graph->add_render_pass(
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
                 builder.set_name(u8"final_blit")
                     .set_pipeline(renderer->blit_pipeline)
                     .read(u8"input_color", target_buffer)
                     .write(0, back_buffer, CGPU_LOAD_ACTION_CLEAR);
             },
-            [=](render_graph::RenderGraph& g, render_graph::RenderPassContext& stack) {
+            [=](RG::RenderGraph& g, RG::RenderPassContext& stack) {
                 static CGPUTextureId cached_shared_texture = nullptr;
                 if (auto shared_texture = stack.resolve(target_buffer); shared_texture != cached_shared_texture)
                 {
@@ -387,7 +387,7 @@ int provider_main(int argc, char* argv[])
                 cgpu_render_encoder_draw(stack.encoder, 6, 0);
             });
         graph->add_present_pass(
-            [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::PresentPassBuilder& builder) {
                 builder.set_name(u8"present")
                     .swapchain(renderer->swapchain, renderer->backbuffer_index)
                     .texture(back_buffer, true);
@@ -400,7 +400,7 @@ int provider_main(int argc, char* argv[])
         present_desc.swapchain = renderer->swapchain;
         cgpu_queue_present(renderer->gfx_queue, &present_desc);
     }
-    render_graph::RenderGraph::destroy(graph);
+    RG::RenderGraph::destroy(graph);
     // clean up
     renderer->finalize();
     SDL_DestroyWindow(renderer->sdl_window);

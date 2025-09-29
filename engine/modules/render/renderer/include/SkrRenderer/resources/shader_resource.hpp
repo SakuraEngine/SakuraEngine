@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrGraphics/api.h"
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "SkrRenderer/graphics/shader_hash.hpp"
 #include <SkrContainers/string.hpp>
 #include <SkrContainers/hashmap.hpp>

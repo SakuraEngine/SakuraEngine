@@ -14,7 +14,7 @@ struct [[sattr(
 {
     skr::SerializeConstString name;
     skr::SerializeConstVector<skr::SerializeConstString> joint_remaps;
-    skr::SerializeConstVector<skr_float4x4_t> inverse_bind_poses;
+    skr::SerializeConstVector<skr::float4x4> inverse_bind_poses;
 };
 
 struct SKR_ANIM_API SkinFactory : public ResourceFactory

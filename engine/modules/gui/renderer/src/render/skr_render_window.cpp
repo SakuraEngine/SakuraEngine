@@ -12,7 +12,7 @@
 #include "SkrGuiRenderer/resource/skr_updatable_image.hpp"
 #include "SkrBase/misc/make_zeroed.hpp"
 #include "SkrGui/framework/layer/native_window_layer.hpp"
-#include "SkrBase/math.h"
+#include "SkrBase/math.hpp"
 
 namespace skr::gui
 {
@@ -128,7 +128,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
     _render_data.clear();
 
     // copy data
-    auto canvas = layer->children().data()[0]->type_cast_fast<GeometryLayer>()->canvas();
+    auto canvas = layer->children().data()[0]->rttr_cast<GeometryLayer>()->canvas();
     _vertices.assign(canvas->vertices().data(), canvas->vertices().size());
     _indices.assign(canvas->indices().data(), canvas->indices().size());
     for (const auto& cmd : canvas->commands())
@@ -183,7 +183,7 @@ void SkrRenderWindow::_prepare_draw_data(const NativeWindowLayer* layer, Sizef w
         // record buffer info
         draw_cmd.transform_buffer_offset   = tb_cursor * sizeof(rtm::matrix4x4f);
         draw_cmd.projection_buffer_offset  = pb_cursor * sizeof(rtm::matrix4x4f);
-        draw_cmd.render_data_buffer_offset = rb_cursor * sizeof(skr_float4x4_t);
+        draw_cmd.render_data_buffer_offset = rb_cursor * sizeof(skr::float4x4);
 
         // flag
         if (draw_cmd.texture && draw_cmd.texture->state() == EResourceState::Okey)
@@ -200,13 +200,13 @@ void SkrRenderWindow::_upload_draw_data()
     const uint64_t indices_size     = _indices.size() * sizeof(PaintIndex);
     const uint64_t transform_size   = _transforms.size() * sizeof(rtm::matrix4x4f);
     const uint64_t projection_size  = _projections.size() * sizeof(rtm::matrix4x4f);
-    const uint64_t render_data_size = _render_data.size() * sizeof(skr_float4x4_t);
+    const uint64_t render_data_size = _render_data.size() * sizeof(skr::float4x4);
     const bool     useCVV           = false;
 
     auto rg = _owner->render_graph();
 
     auto vertex_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
             builder.set_name(u8"gui_vertex_buffer")
                 .size(vertices_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -217,7 +217,7 @@ void SkrRenderWindow::_upload_draw_data()
         }
     );
     auto index_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
             builder.set_name(u8"gui_index_buffer")
                 .size(indices_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -228,7 +228,7 @@ void SkrRenderWindow::_upload_draw_data()
         }
     );
     auto transform_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
             builder.set_name(u8"gui_transform_buffer")
                 .size(transform_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -239,7 +239,7 @@ void SkrRenderWindow::_upload_draw_data()
         }
     );
     auto projection_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
             builder.set_name(u8"gui_projection_buffer")
                 .size(projection_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -250,7 +250,7 @@ void SkrRenderWindow::_upload_draw_data()
         }
     );
     auto rdata_buffer = rg->create_buffer(
-        [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
             builder.set_name(u8"gui_rdata_buffer")
                 .size(render_data_size)
                 .memory_usage(useCVV ? CGPU_MEM_USAGE_CPU_TO_GPU : CGPU_MEM_USAGE_GPU_ONLY)
@@ -270,7 +270,7 @@ void SkrRenderWindow::_upload_draw_data()
     if (!useCVV)
     {
         auto upload_buffer_handle = rg->create_buffer(
-            [=](render_graph::RenderGraph& g, render_graph::BufferBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::BufferBuilder& builder) {
                 SkrZoneScopedN("ConstructUploadPass");
                 builder.set_name(u8"gui_upload_buffer")
                     .size(indices_size + vertices_size + transform_size + projection_size + render_data_size)
@@ -279,7 +279,7 @@ void SkrRenderWindow::_upload_draw_data()
             }
         );
         rg->add_copy_pass(
-            [=](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::CopyPassBuilder& builder) {
                 SkrZoneScopedN("ConstructCopyPass");
                 builder.set_name(u8"gui_copy_pass");
                 uint64_t cursor = 0;
@@ -293,7 +293,7 @@ void SkrRenderWindow::_upload_draw_data()
                 cursor += projection_size;
                 builder.buffer_to_buffer(upload_buffer_handle.range(cursor, cursor + render_data_size), rdata_buffer.range(0, render_data_size));
             },
-            [upload_buffer_handle, this](render_graph::RenderGraph& g, render_graph::CopyPassContext& context) {
+            [upload_buffer_handle, this](RG::RenderGraph& g, RG::CopyPassContext& context) {
                 auto           upload_buffer     = context.resolve(upload_buffer_handle);
                 const uint64_t vertices_count    = _vertices.size();
                 const uint64_t indices_count     = _indices.size();
@@ -305,19 +305,19 @@ void SkrRenderWindow::_upload_draw_data()
                 PaintIndex*      idx_dst        = (PaintIndex*)(vtx_dst + vertices_count);
                 rtm::matrix4x4f* transform_dst  = (rtm::matrix4x4f*)(idx_dst + indices_count);
                 rtm::matrix4x4f* projection_dst = (rtm::matrix4x4f*)(transform_dst + transforms_count);
-                skr_float4x4_t*  rdata_dst      = (skr_float4x4_t*)(projection_dst + projections_count);
+                skr::float4x4*  rdata_dst      = (skr::float4x4*)(projection_dst + projections_count);
 
                 const skr::Span<PaintVertex>     render_vertices    = _vertices;
                 const skr::Span<PaintIndex>      render_indices     = _indices;
                 const skr::Span<rtm::matrix4x4f> render_transforms  = _transforms;
                 const skr::Span<rtm::matrix4x4f> render_projections = _projections;
-                const skr::Span<skr_float4x4_t>  render_data        = _render_data;
+                const skr::Span<skr::float4x4>  render_data        = _render_data;
 
                 memcpy(vtx_dst, render_vertices.data(), vertices_count * sizeof(PaintVertex));
                 memcpy(idx_dst, render_indices.data(), indices_count * sizeof(PaintIndex));
                 memcpy(transform_dst, render_transforms.data(), transforms_count * sizeof(rtm::matrix4x4f));
                 memcpy(projection_dst, render_projections.data(), projections_count * sizeof(rtm::matrix4x4f));
-                memcpy((void*)rdata_dst, render_data.data(), render_data_count * sizeof(skr_float4x4_t));
+                memcpy((void*)rdata_dst, render_data.data(), render_data_count * sizeof(skr::float4x4));
             }
         );
     }
@@ -343,7 +343,7 @@ void SkrRenderWindow::_declare_render_resources()
     if (sample_count != CGPU_SAMPLE_COUNT_1)
     {
         _back_buffer = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                 builder.set_name(SKR_UTF8("presentbuffer"))
                     .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
                     .allow_render_target();
@@ -351,7 +351,7 @@ void SkrRenderWindow::_declare_render_resources()
         );
         const auto back_desc  = graph->resolve_descriptor(_back_buffer);
         auto       msaaTarget = graph->create_texture(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+            [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
                 builder.set_name(SKR_UTF8("backbuffer"))
                     .extent(back_desc->width, back_desc->height)
                     .format(back_desc->format)
@@ -365,7 +365,7 @@ void SkrRenderWindow::_declare_render_resources()
     else
     {
         _back_buffer = graph->create_texture(
-            [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+            [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                 builder.set_name(SKR_UTF8("backbuffer"))
                     .import(imported_backbuffer, CGPU_RESOURCE_STATE_PRESENT)
                     .allow_render_target();
@@ -373,7 +373,7 @@ void SkrRenderWindow::_declare_render_resources()
         );
     }
     _depth_buffer = graph->create_texture(
-        [=, this](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+        [=, this](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
             const auto texInfo = _cgpu_swapchain->back_buffers[0]->info;
             builder.set_name(SKR_UTF8("depth"))
                 .extent(texInfo->width, texInfo->height)
@@ -392,7 +392,7 @@ void SkrRenderWindow::_render()
 
     // TODO. multi pass
     rg->add_render_pass(
-        [&](render_graph::RenderGraph& g, render_graph::RenderPassBuilder& builder) {
+        [&](RG::RenderGraph& g, RG::RenderPassBuilder& builder) {
         SkrZoneScopedN("ConstructRenderPass");
         const auto back_desc = g.resolve_descriptor(target);
         builder.set_name(u8"gui_render_pass")
@@ -405,10 +405,10 @@ void SkrRenderWindow::_render()
             .write(0, target, CGPU_LOAD_ACTION_CLEAR);
         if (back_desc->sample_count > 1)
         {
-            skr::render_graph::TextureHandle real_target = rg->get_texture(u8"presentbuffer");
+            skr::RG::TextureHandle real_target = rg->get_texture(u8"presentbuffer");
             builder.resolve_msaa(0, real_target);
         } },
-        [this, target](render_graph::RenderGraph& g, render_graph::RenderPassContext& ctx) {
+        [this, target](RG::RenderGraph& g, RG::RenderPassContext& ctx) {
             SkrZoneScopedN("GUI-RenderPass");
             const auto     target_desc              = g.resolve_descriptor(target);
             auto           resolved_ib              = ctx.resolve(_index_buffer);
@@ -417,7 +417,7 @@ void SkrRenderWindow::_render()
             auto           resolved_pb              = ctx.resolve(_projection_buffer);
             auto           resolved_rdata           = ctx.resolve(_render_data_buffer);
             CGPUBufferId   vertex_streams[4]        = { resolved_vb, resolved_tb, resolved_pb, resolved_rdata };
-            const uint32_t vertex_stream_strides[4] = { sizeof(PaintVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f), sizeof(skr_float4x4_t) };
+            const uint32_t vertex_stream_strides[4] = { sizeof(PaintVertex), sizeof(rtm::matrix4x4f), sizeof(rtm::matrix4x4f), sizeof(skr::float4x4) };
 
             cgpu_render_encoder_set_viewport(ctx.encoder, 0.0f, 0.0f, (float)target_desc->width, (float)target_desc->height, 0.f, 1.f);
             cgpu_render_encoder_set_scissor(ctx.encoder, 0, 0, (uint32_t)target_desc->width, (uint32_t)target_desc->height);
@@ -437,7 +437,7 @@ void SkrRenderWindow::_render()
 
                 if (use_texture)
                 {
-                    const auto gui_texture = cmd.texture->type_cast<SkrUpdatableImage>();
+                    const auto gui_texture = cmd.texture->rttr_cast<SkrUpdatableImage>();
                     cgpux_render_encoder_bind_bind_table(ctx.encoder, gui_texture->bind_table());
                 }
 
@@ -456,7 +456,7 @@ void SkrRenderWindow::_render()
 
     // present pass
     rg->add_present_pass(
-        [=, this](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+        [=, this](RG::RenderGraph& g, RG::PresentPassBuilder& builder) {
             builder.set_name(SKR_UTF8("present"))
                 .swapchain(_cgpu_swapchain, _backbuffer_index)
                 .texture(_back_buffer, true);

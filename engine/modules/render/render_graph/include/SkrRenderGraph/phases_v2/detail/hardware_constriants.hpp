@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrBase/config.h"
 
-namespace skr::render_graph {
+namespace skr::RG {
 
 // ==================== Hardware Performance Constants ====================
 
@@ -67,4 +67,4 @@ struct HardwareProfile {
     bool supports_ray_tracing = false;
 };
 
-} // namespace skr::render_graph
+} // namespace skr::RG

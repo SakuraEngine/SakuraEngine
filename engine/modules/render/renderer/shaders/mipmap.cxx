@@ -12,7 +12,7 @@ SamplerState tex_sampler;
 Texture1D<float4> src1d;
 RWTexture1D<float4> dst1d;
 
-[[numthreads(8, 1, 1), compute_shader("generate1d")]]
+[[numthreads(8, 1, 1)]]
 void generate1d([[sv_thread_id]] uint3 dispatch_thread_id)
 {
     //DTid is the thread ID * the values from numthreads above and in this case correspond to the pixels location in number of pixels.
@@ -29,7 +29,7 @@ void generate1d([[sv_thread_id]] uint3 dispatch_thread_id)
 Texture2D<float4> src2d;
 RWTexture2D<float4> dst2d;
 
-[[numthreads(8, 8, 1), compute_shader("generate2d")]]
+[[numthreads(8, 8, 1)]]
 void generate2d([[sv_thread_id]] uint3 dispatch_thread_id)
 {
     //DTid is the thread ID * the values from numthreads above and in this case correspond to the pixels location in number of pixels.
@@ -46,7 +46,7 @@ void generate2d([[sv_thread_id]] uint3 dispatch_thread_id)
 Texture3D<float4> src3d;
 RWTexture3D<float4> dst3d;
 
-[[numthreads(8, 8, 1), compute_shader("generate3d")]]
+[[numthreads(8, 8, 1)]]
 void generate3d([[sv_thread_id]] uint3 dispatch_thread_id)
 {
     //DTid is the thread ID * the values from numthreads above and in this case correspond to the pixels location in number of pixels.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-    <!--modules/core/base/include/SkrBase/types/guid.h-->
+    <!--modules/core/base/include/SkrBase/types/guid.hpp-->
     <!--32-16-16-16-48-->
     <!--[time-low]-[time-mid]-[time-high-and-version]-[clock-seq-and-reserved & clock-seq-low]-[node]-->
     <Type Name="skr::GUID">

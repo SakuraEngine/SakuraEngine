@@ -9,7 +9,7 @@
 #define BIND_TABLE_LOG(...)
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // Utility function to find shader resource (from old implementation)
 const CGPUShaderResource* find_shader_resource(const char8_t* name, uint64_t name_hash, CGPURootSignatureId root_sig, ECGPUResourceType* type = nullptr)
@@ -338,5 +338,5 @@ CGPUXBindTableId BindTablePhase::get_pass_bind_table(PassNode* pass) const
     return info ? info->bind_table : nullptr;
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

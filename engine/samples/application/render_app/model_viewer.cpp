@@ -4,9 +4,9 @@
 #include "SkrCore/module/module.hpp"
 #include "SkrCore/async/thread_job.hpp"
 #include "SkrTask/fib_task.hpp"
-#include "SkrRuntime/resource/resource_system.h"
+#include "SkrRuntime/resource/resource_system.hpp"
 #include "SkrRuntime/resource/local_resource_registry.hpp"
-#include "SkrSceneCore/scene_components.h"
+#include "SkrScene/basic_components.hpp"
 #include "SkrSystem/system_app.h"
 #include <SkrCore/serialize/json_archive.hpp>
 
@@ -25,7 +25,7 @@
 
 #include "SkrRenderer/resources/mesh_resource.h"
 #include "SkrRenderer/render_mesh.h"
-#include "SkrMeshCore/mesh_processing.hpp"
+#include "SkrMeshCore/mesh_asset.hpp"
 #include "SkrMeshTool/mesh_asset.hpp"
 #include "common/utils.h"
 #include "SkrRenderer/shared/gpu_table.hpp"
@@ -33,9 +33,9 @@
 using namespace skr::literals;
 const auto MeshAssetID = u8"18db1369-ba32-4e91-aa52-b2ed1556f576"_guid;
 
-struct VirtualProject : skd::SProject
+struct VirtualProject : skr::SProject
 {
-    bool LoadAssetMeta(const skd::URI& uri, skr::String& content) noexcept override
+    bool LoadAssetMeta(const skr::URI& uri, skr::String& content) noexcept override
     {
         if (MetaDatabase.contains(uri))
         {
@@ -45,13 +45,13 @@ struct VirtualProject : skd::SProject
         return false;
     }
 
-    bool SaveAssetMeta(const skd::URI& uri, const skr::String& content) noexcept override
+    bool SaveAssetMeta(const skr::URI& uri, const skr::String& content) noexcept override
     {
         MetaDatabase[uri] = content;
         return true;
     }
 
-    bool ExistImportedAsset(const skd::URI& uri)
+    bool ExistImportedAsset(const skr::URI& uri)
     {
         return MetaDatabase.contains(uri);
     }
@@ -64,7 +64,7 @@ struct VirtualProject : skd::SProject
             SKR_FAST_CHECK(obj_scope.is_success(), );
             SKR_FAST_CHECK(writer.key_value(u8"assets", MetaDatabase), );
         }
-        
+
         // Write to model_viewer.project file
         const auto project_path = skr::fs::current_directory() / u8"model_viewer.project";
         skr::String json_str;
@@ -103,7 +103,7 @@ struct VirtualProject : skd::SProject
         }
     }
 
-    skr::ParallelFlatHashMap<skd::URI, skr::String, skr::Hash<skd::URI>> MetaDatabase;
+    skr::ParallelFlatHashMap<skr::URI, skr::String, skr::Hash<skr::URI>> MetaDatabase;
 };
 
 struct ModelViewerModule : public skr::IDynamicModule
@@ -230,7 +230,7 @@ void ModelViewerModule::on_load(int argc, char8_t** argv)
     render_device = SkrRendererModule::Get()->get_render_device();
 
     const auto current_path = skr::fs::current_directory();
-    skd::SProjectConfig projectConfig = {
+    skr::SProjectConfig projectConfig = {
         .assetDirectory = (current_path / u8"assets").string().c_str(),
         .resourceDirectory = (current_path / u8"cooked").string().c_str(),
         .artifactsDirectory = (current_path / u8"artifacts").string().c_str()
@@ -284,7 +284,7 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
         scheduler.unbind();
     });
 
-    skr::render_graph::RenderGraphBuilder graph_builder;
+    skr::RG::RenderGraphBuilder graph_builder;
     graph_builder.with_device(device)
         .with_gfx_queue(gfx_queue)
         .enable_memory_aliasing();
@@ -409,7 +409,7 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
 
         // Create output render target texture
         auto render_target_handle = render_graph->create_texture(
-            [=](skr::render_graph::RenderGraph& g, skr::render_graph::TextureBuilder& builder) {
+            [=](skr::RG::RenderGraph& g, skr::RG::TextureBuilder& builder) {
                 builder.set_name(u8"render_target")
                     .extent(screen_size.x, screen_size.y)
                     .format(CGPU_FORMAT_R8G8B8A8_UNORM)
@@ -441,19 +441,21 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
         // Add raytracing compute pass (write to intermediate texture)
         auto TLASHandle = GPUScene.GetTLAS(render_graph);
         auto GPUSceneHandle = GPUScene.GetSceneBuffer(render_graph);
-        if (TLASHandle != skr::render_graph::kInvalidHandle && GPUSceneHandle != skr::render_graph::kInvalidHandle)
+        auto MaterialIDTableHandle = GPUScene.GetMatIDBuffer(render_graph);
+        if (TLASHandle != skr::RG::kInvalidHandle && GPUSceneHandle != skr::RG::kInvalidHandle)
         {
             render_graph->add_compute_pass(
-                [=, this](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
+                [=, this](RG::RenderGraph& g, RG::ComputePassBuilder& builder) {
                     builder.set_name(u8"RayTracingPass")
                         .set_pipeline(compute_pipeline)
                         .read(u8"SceneTLAS", TLASHandle)
-                        .read(u8"GPUSceneInstances", GPUScene.GetSceneBuffer(render_graph))
+                        .read(u8"GPUSceneInstances", GPUSceneHandle)
+                        .read(u8"MaterialIDTable", MaterialIDTableHandle)
                         .read(u8"MaterialTable", MaterialBuffer)
                         .read(u8"PrimitiveTable", PrimitiveBuffer)
                         .readwrite(u8"output_texture", render_target_handle);
                 },
-                [=, this](render_graph::RenderGraph& g, render_graph::ComputePassContext& ctx) {
+                [=, this](RG::RenderGraph& g, RG::ComputePassContext& ctx) {
                     // Bind Bindless IB/VBs
                     auto vbibs = MeshFactory->descriptor_buffer();
                     cgpu_compute_encoder_bind_descriptor_buffer(ctx.encoder, vbibs, u8"VertexBuffers");
@@ -467,16 +469,17 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
                     // Dispatch compute shader
                     cgpu_compute_encoder_set_threadgroup_size(ctx.encoder, 16, 16, 1);
                     cgpu_compute_encoder_dispatch(ctx.encoder, camera_constants.screenSize.x, camera_constants.screenSize.y, 1);
-                });
+                }
+            );
 
             // Add copy pass to copy render target to backbuffer
             auto backbuffer_handle = render_graph->get_imported(render_app->get_backbuffer(render_app->get_main_window()));
             render_graph->add_copy_pass(
-                [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassBuilder& builder) {
+                [=](skr::RG::RenderGraph& g, skr::RG::CopyPassBuilder& builder) {
                     builder.set_name(u8"CopyToBackbuffer")
                         .texture_to_texture(render_target_handle, backbuffer_handle);
                 },
-                [=](skr::render_graph::RenderGraph& g, skr::render_graph::CopyPassContext& ctx) {
+                [=](skr::RG::RenderGraph& g, skr::RG::CopyPassContext& ctx) {
                     // Copy implementation handled by render graph
                 }
             );
@@ -502,23 +505,23 @@ int ModelViewerModule::main_module_exec(int argc, char8_t** argv)
 
 void ModelViewerModule::CookAndLoadTestGLTF()
 {
-    auto& CookSystem = *skd::asset::GetCookSystem();
+    auto& CookSystem = *skr::GetCookSystem();
     const bool NeedImport = !project.ExistImportedAsset(u8"girl.model.meta");
     if (NeedImport) // Import from disk!
     {
         // source file is a GLTF so we create a gltf importer, if it is a fbx, then just use a fbx importer
-        auto importer = skd::asset::GltfMeshImporter::Create<skd::asset::GltfMeshImporter>();
+        auto importer = skr::GltfMeshImporter::Create<skr::GltfMeshImporter>();
         importer->import_all_materials = true;
 
         // static mesh has some additional meta data to append
-        auto metadata = skd::asset::MeshAsset::Create<skd::asset::MeshAsset>();
+        auto metadata = skr::MeshAsset::Create<skr::MeshAsset>();
         metadata->vertexType = u8"C35BD99A-B0A8-4602-AFCC-6BBEACC90321"_guid;
 
-        auto asset = skr::RC<skd::asset::AssetMetaFile>::New(
+        auto asset = skr::RC<skr::AssetMetaFile>::New(
             u8"girl.model.meta",                      // virtual uri for this asset in the project
             MeshAssetID,                              // guid for this asset
             skr::type_id_of<skr::MeshResource>(),     // output resource is a mesh resource
-            skr::type_id_of<skd::asset::MeshCooker>() // this cooker cooks t he raw mesh data to mesh resource
+            skr::type_id_of<skr::MeshCooker>() // this cooker cooks t he raw mesh data to mesh resource
         );
         // source file
 #if SKR_PLAT_WINDOWS
@@ -575,8 +578,8 @@ void ModelViewerModule::CreateEntities(uint32_t count)
             auto entities = Context.entities();
             for (uint32_t i = 0; i < cnt; i++)
             {
-                inst_datas[i].resize(1);
-                
+                inst_datas[i].resize_default(1);
+
                 // Generate random position with Z behind camera
                 skr::float3 random_pos = { 0.f, 0.f, 0.f };
                 scales[i].set(1.f);
@@ -585,10 +588,10 @@ void ModelViewerModule::CreateEntities(uint32_t count)
 
                 // Set transform components
                 translations[i].set(random_pos);
-                rotations[i].set(0, 0, 0);
+                rotations[i].set({ 0, 0, 0 });
 
                 // Create transform matrix from components
-                auto transform = skr::scene::Transform(
+                auto transform = skr::Transform(
                     skr::math::QuatF(rotations[i].get()),
                     random_pos,
                     scales[i].get()
@@ -598,9 +601,9 @@ void ModelViewerModule::CreateEntities(uint32_t count)
                 // Add to GPU scene
                 pScene->AddEntity(entities[i]);
 
-                // resolve mesh
-                meshes[i].mesh_resource = MeshAssetID;
-                meshes[i].mesh_resource.resolve(true, pScene->GetECSWorld()->get_storage());
+                // Resolve mesh
+                meshes[i].SetMeshResource(MeshAssetID);
+                meshes[i].GetMeshResource().install();
 
                 local_index += 1;
 
@@ -613,10 +616,10 @@ void ModelViewerModule::CreateEntities(uint32_t count)
         ComponentView<GPUSceneInstance> instances;
         ComponentView<skr::gpu::Instance> inst_datas;
 
-        ComponentView<skr::scene::PositionComponent> translations;
-        ComponentView<skr::scene::RotationComponent> rotations;
-        ComponentView<skr::scene::ScaleComponent> scales;
-        ComponentView<skr::scene::TransformComponent> transforms;
+        ComponentView<skr::PositionComponent> translations;
+        ComponentView<skr::RotationComponent> rotations;
+        ComponentView<skr::ScaleComponent> scales;
+        ComponentView<skr::SolvedTransformComponent> transforms;
         ComponentView<skr::MeshComponent> meshes;
         uint32_t local_index = 0;
     } spawner;
@@ -649,13 +652,13 @@ void ModelViewerModule::DestroyRandomEntities(uint32_t count)
 
 void ModelViewerModule::InitializeAssetSystem()
 {
-    auto& system = *skd::asset::GetCookSystem();
+    auto& system = *skr::GetCookSystem();
     system.Initialize();
 }
 
 void ModelViewerModule::DestroyAssetSystem()
 {
-    auto& system = *skd::asset::GetCookSystem();
+    auto& system = *skr::GetCookSystem();
     system.Shutdown();
 }
 

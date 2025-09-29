@@ -92,7 +92,7 @@ struct V8VirtualModuleNode
 
         if (is_namespace())
         {
-            Local<Object> result = Object::New(isolate);
+            Local<v8::Object> result = v8::Object::New(isolate);
             export_ns_to(isolate, context, result);
             return result;
         }

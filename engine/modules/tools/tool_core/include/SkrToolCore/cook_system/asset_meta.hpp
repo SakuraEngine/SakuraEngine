@@ -3,7 +3,7 @@
 #include "SkrToolCore/cook_system/importer.hpp"
 #include "SkrToolCore/cook_system/asset_meta.generated.h"
 
-namespace skd::asset
+namespace skr
 {
 
 struct [[sattr(
@@ -83,7 +83,7 @@ private:
     skr::String meta_content;
 
     friend struct CookSystemImpl;
-    friend struct Serialize<skd::asset::AssetMetaFile>;
+    friend struct Serialize<skr::AssetMetaFile>;
     SKR_RC_IMPL();
 };
 
@@ -111,34 +111,34 @@ inline skr::RC<T> AssetMetaFile::GetMetadata()
     return nullptr;
 }
 
-} // namespace skd::asset
+} // namespace skr
 
 // serialize
 #include <SkrCore/serialize/serialize_traits.hpp>
 namespace skr
 {
 template <>
-struct Serialize<skd::asset::AssetMetaFile>
+struct Serialize<skr::AssetMetaFile>
 {
-    inline static void read(ArchiveRead& r, skd::asset::AssetMetaFile& v)
+    inline static void read(ArchiveRead& r, skr::AssetMetaFile& v)
     {
         Archive::ObjectScope scope(r);
         SKR_FAST_CHECK(scope.is_success(), );
         read_fields(r, v);
     }
 
-    inline static void write(ArchiveWrite& w, const skd::asset::AssetMetaFile& v)
+    inline static void write(ArchiveWrite& w, const skr::AssetMetaFile& v)
     {
         Archive::ObjectScope scope(w);
         SKR_FAST_CHECK(scope.is_success(), );
         write_fields(w, v);
     }
 
-    inline static void read_fields(ArchiveRead& r, skd::asset::AssetMetaFile& v)
+    inline static void read_fields(ArchiveRead& r, skr::AssetMetaFile& v)
     {
         if (!r.is_structured()) [[unlikely]]
         {
-            r.error(u8"Non-structured ArchiveRead is not supported for skd::asset::AssetMetaFile");
+            r.error(u8"Non-structured ArchiveRead is not supported for skr::AssetMetaFile");
             return;
         }
 
@@ -148,15 +148,15 @@ struct Serialize<skd::asset::AssetMetaFile>
         // TODO. load importer
         // if (r.key(u8"importer"))
         // {
-        //     v.importer = skd::asset::GetImporterRegistry()->LoadImporter(&r);
+        //     v.importer = skr::GetImporterRegistry()->LoadImporter(&r);
         // }
     }
 
-    inline static void write_fields(ArchiveWrite& w, const skd::asset::AssetMetaFile& v)
+    inline static void write_fields(ArchiveWrite& w, const skr::AssetMetaFile& v)
     {
         if (!w.is_structured()) [[unlikely]]
         {
-            w.error(u8"Non-structured ArchiveWrite is not supported for skd::asset::AssetMetaFile");
+            w.error(u8"Non-structured ArchiveWrite is not supported for skr::AssetMetaFile");
             return;
         }
 
@@ -168,7 +168,7 @@ struct Serialize<skd::asset::AssetMetaFile>
         {
             // TODO. store importer
             // w.key(u8"importer");
-            // skd::asset::GetImporterRegistry()->StoreImporter(w, v.importer);
+            // skr::GetImporterRegistry()->StoreImporter(w, v.importer);
         }
 
         if (v.metadata != nullptr)

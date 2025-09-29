@@ -351,7 +351,7 @@ V8BPObject* V8BTObject::_new_bind_proxy(void* address, v8::Local<v8::Object> sel
 
     // make object
     Local<ObjectTemplate> instance_template = _v8_template.Get(isolate)->InstanceTemplate();
-    Local<Object> object =
+    Local<v8::Object> object =
         self.IsEmpty() ?
         instance_template->NewInstance(context).ToLocalChecked() :
         self;

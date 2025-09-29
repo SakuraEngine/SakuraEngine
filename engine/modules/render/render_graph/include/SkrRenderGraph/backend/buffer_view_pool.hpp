@@ -4,7 +4,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 class BufferViewPool
 {
@@ -56,5 +56,5 @@ protected:
     CGPUDeviceId device;
     skr::Map<Key, PooledBufferView> views;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

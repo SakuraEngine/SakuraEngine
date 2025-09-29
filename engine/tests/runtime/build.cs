@@ -6,7 +6,7 @@ public static class RuntimeTests
 {
     static RuntimeTests()
     {
-        Test.UnitTest("GoapTest")
+        Test.UnitTest("TestGoap")
             .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("goap/test_goap.cpp");
 
@@ -14,17 +14,13 @@ public static class RuntimeTests
             .Depend(Visibility.Public, "SkrRenderGraph")
             .AddCppFiles("graph/graph.cpp");
 
-        Test.UnitTest("VFSTest")
+        Test.UnitTest("TestVFS")
             .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("vfs/main.cpp");
 
-        Test.UnitTest("IOServiceTest")
+        Test.UnitTest("TestIOService")
             .Depend(Visibility.Public, "SkrRuntime")
             .AddCppFiles("io_service/*.cpp");
-
-        Test.UnitTest("TestScene")
-            .Depend(Visibility.Public, "SkrScene")
-            .AddCppFiles("scene/*.cpp");
 
         Test.UnitTest("TestECS_CStyle")
             .Depend(Visibility.Public, "SkrRuntime")

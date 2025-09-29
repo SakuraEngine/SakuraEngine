@@ -3,6 +3,7 @@
 
 ByteAddressBuffer GPUSceneInstances;
 ByteAddressBuffer MaterialTable;
+ByteAddressBuffer MaterialIDTable;
 ByteAddressBuffer PrimitiveTable;
 
 RWTexture2D output_texture;
@@ -99,7 +100,8 @@ float4 trace_scene(uint2 pixel_coord, uint2 screen_size)
         }
         
         const auto prim = instance.primitives.Load(PrimitiveTable, geometry_index);
-        const auto mat = prim.material.Load(MaterialTable);
+        const auto mat_id = instance.materials.Load(MaterialIDTable, prim.material_index);
+        const auto mat = skr::gpu::Row<skr::gpu::PBRMaterial>(mat_id.index).Load(MaterialTable);
         const auto prim_idx = query.CommittedPrimitiveIndex();
         
         // 添加边界检查以防止缓冲区越界访问
@@ -145,9 +147,8 @@ float4 trace_scene(uint2 pixel_coord, uint2 screen_size)
 }
 
 // Compute shader entry point
-[[compute_shader("cs_main")]]
 [[numthreads(16, 16, 1)]]
-void compute_main([[sv_thread_id]] uint3 thread_id) 
+void cs_main([[sv_thread_id]] uint3 thread_id) 
 {
     uint2 screen_size = uint2(camera_constants.screenSize);
     uint2 pixel_coord = thread_id.xy;

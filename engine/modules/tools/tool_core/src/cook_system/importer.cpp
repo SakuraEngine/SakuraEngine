@@ -2,7 +2,7 @@
 #include "SkrToolCore/cook_system/importer.hpp"
 #include "SkrContainers/hashmap.hpp"
 
-namespace skd::asset
+namespace skr
 {
 Importer::Importer()
 {
@@ -66,4 +66,4 @@ void ImporterRegistryImpl::RegisterImporter(skr::GUID type, ImporterTypeInfo inf
 {
     importer_types.insert({ type, info });
 }
-} // namespace skd::asset
+} // namespace skr

@@ -1,9 +1,9 @@
 #include "SkrCore/module/module_manager.hpp"
 #include "SkrRuntime/ecs/world.hpp"
 #include "SkrTask/fib_task.hpp"
-#include "SkrSceneCore/transform_system.h"
+#include "SkrScene/transform_system.hpp"
 #include "SkrSystem/system_app.h"
-#include "SkrSceneCore/scene_components.h"
+#include "SkrScene/basic_components.hpp"
 #include "SkrGraphics/api.h"
 #include "SkrCore/log.hpp"
 #include "SkrGraphics/raytracing.h"
@@ -36,7 +36,7 @@ public:
     skr::SystemApp app;
     skr::ecs::ECSWorld world;
     skr::task::scheduler_t scheduler;
-    skr::TransformSystem* transform_system = nullptr;
+    skr::UPtr<skr::TransformSystem> transform_system = nullptr;
 
     // Raytracing resources
     CGPUInstanceId instance = nullptr;
@@ -56,7 +56,7 @@ public:
     CGPUSwapChainId swapchain = nullptr;
 
     // RenderGraph resources
-    skr::render_graph::RenderGraph* render_graph = nullptr;
+    skr::RG::RenderGraph* render_graph = nullptr;
 
     // Camera control state
     struct CameraController
@@ -174,16 +174,17 @@ void RGRaytracingSampleModule::on_load(int argc, char8_t** argv)
     scheduler.initialize({});
     scheduler.bind();
     world.initialize();
-    transform_system = skr_transform_system_create(&world);
+    transform_system = skr::TransformSystem::Create(&world);
 
     spawn_entities();
     create_as();
 
-    render_graph = skr::render_graph::RenderGraph::create(
-        [=, this](skr::render_graph::RenderGraphBuilder& builder) {
+    render_graph = skr::RG::RenderGraph::create(
+        [=, this](skr::RG::RenderGraphBuilder& builder) {
             builder.with_device(device)
                 .with_gfx_queue(gfx_queue);
-        });
+        }
+    );
 }
 
 int RGRaytracingSampleModule::main_module_exec(int argc, char8_t** argv)
@@ -191,9 +192,7 @@ int RGRaytracingSampleModule::main_module_exec(int argc, char8_t** argv)
     app.initialize(nullptr);
     auto wm = app.get_window_manager();
     auto eq = app.get_event_queue();
-    auto main_window = wm->create_window({ .title = u8"Render Graph Raytracing Sample",
-        .size = { 1280, 720 },
-        .is_resizable = false });
+    auto main_window = wm->create_window({ .title = u8"Render Graph Raytracing Sample", .size = { 1280, 720 }, .is_resizable = false });
     main_window->show();
     SKR_DEFER({ wm->destroy_window(main_window); });
 
@@ -267,7 +266,8 @@ int RGRaytracingSampleModule::main_module_exec(int argc, char8_t** argv)
     // 初始化相机控制器
     this->camera_controller.initialize_from_lookat(
         { -25000.0f, 15000.0f, -35000.0f },
-        { 0.0f, 2000.0f, 0.0f });
+        { 0.0f, 2000.0f, 0.0f }
+    );
 
     // 时间管理
     auto last_time = std::chrono::high_resolution_clock::now();
@@ -314,7 +314,7 @@ void RGRaytracingSampleModule::spawn_entities()
     {
         void build(skr::ecs::ArchetypeBuilder& Builder)
         {
-            Builder.add_component<skr::scene::TransformComponent>()
+            Builder.add_component<skr::SolvedTransformComponent>()
                 .add_component(&LevelSpawner::children)
                 .add_component(&LevelSpawner::translations)
                 .add_component(&LevelSpawner::rotations)
@@ -323,10 +323,10 @@ void RGRaytracingSampleModule::spawn_entities()
 
         skr::Vector<Entity> ents;
 
-        ComponentView<skr::scene::ChildrenComponent> children;
-        ComponentView<skr::scene::PositionComponent> translations;
-        ComponentView<skr::scene::RotationComponent> rotations;
-        ComponentView<skr::scene::ScaleComponent> scales;
+        ComponentView<skr::ChildrenComponent> children;
+        ComponentView<skr::PositionComponent> translations;
+        ComponentView<skr::RotationComponent> rotations;
+        ComponentView<skr::ScaleComponent> scales;
     };
 
     // Level 1 spawner (Cities) - Root entities without parents
@@ -336,7 +336,7 @@ void RGRaytracingSampleModule::spawn_entities()
         {
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_real_distribution<skr::scene::PositionElement> pos_dist(-SCENE_SIZE * 0.5f, SCENE_SIZE * 0.5f);
+            std::uniform_real_distribution<skr::real> pos_dist(-SCENE_SIZE * 0.5f, SCENE_SIZE * 0.5f);
             std::uniform_real_distribution<float> scale_dist(0.5f, 3.0f);
             std::uniform_real_distribution<float> rotation_dist(0.0f, 2.0f * skr::kPi);
 
@@ -351,11 +351,12 @@ void RGRaytracingSampleModule::spawn_entities()
                 float city_scale = scale_dist(gen) * 4.0f; // Moderate scale
 
                 translations[i].set(
-                    base_x + pos_dist(gen) * 0.1f,
-                    0.0f,
-                    base_z + pos_dist(gen) * 0.1f);
-                rotations[i].set(0.0f, rotation_dist(gen), 0.0f);
-                scales[i].set(city_scale, city_scale, city_scale);
+                    { base_x + pos_dist(gen) * 0.1f,
+                      0.0f,
+                      base_z + pos_dist(gen) * 0.1f }
+                );
+                rotations[i].set({ 0.0f, rotation_dist(gen), 0.0f });
+                scales[i].set({ city_scale, city_scale, city_scale });
             }
         }
     } level1_spawner;
@@ -380,7 +381,7 @@ void RGRaytracingSampleModule::spawn_entities()
         {
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_real_distribution<skr::scene::PositionElement> pos_dist(-SCENE_SIZE * 0.5f, SCENE_SIZE * 0.5f);
+            std::uniform_real_distribution<skr::real> pos_dist(-SCENE_SIZE * 0.5f, SCENE_SIZE * 0.5f);
             std::uniform_real_distribution<float> scale_dist(0.5f, 3.0f);
             std::uniform_real_distribution<float> rotation_dist(0.0f, 2.0f * skr::kPi);
 
@@ -393,22 +394,23 @@ void RGRaytracingSampleModule::spawn_entities()
                 float building_scale = scale_dist(gen) * 2.0f; // Medium scale for buildings
 
                 translations[i].set(
-                    std::cos(angle) * radius,
-                    pos_dist(gen) * 10.0f,
-                    std::sin(angle) * radius);
-                rotations[i].set(0.0f, rotation_dist(gen), 0.0f);
-                scales[i].set(building_scale, building_scale, building_scale);
+                    { std::cos(angle) * radius,
+                      pos_dist(gen) * 10.0f,
+                      std::sin(angle) * radius }
+                );
+                rotations[i].set({ 0.0f, rotation_dist(gen), 0.0f });
+                scales[i].set({ building_scale, building_scale, building_scale });
 
                 const auto parent = lv1.ents[index_in_level / 9];
-                skr::scene::ChildrenComponent as_child = { .entity = Context.entities()[i] };
+                skr::ChildrenComponent as_child = { .entity = Context.entities()[i] };
                 parents[i].entity = parent;                  // Attach to the corresponding city
                 children_writer[parent].push_back(as_child); // Add this building to the city's children
                 index_in_level += 1;
             }
         }
         uint64_t index_in_level = 0;
-        ComponentView<skr::scene::ParentComponent> parents;
-        RandomComponentReadWrite<skr::scene::ChildrenComponent> children_writer;
+        ComponentView<skr::ParentComponent> parents;
+        RandomComponentReadWrite<skr::ChildrenComponent> children_writer;
     } level2_spawner(level1_spawner);
 
     // Level 3 spawner (Objects) - Leaf entities
@@ -431,7 +433,7 @@ void RGRaytracingSampleModule::spawn_entities()
         {
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_real_distribution<skr::scene::PositionElement> pos_dist(-SCENE_SIZE * 0.5f, SCENE_SIZE * 0.5f);
+            std::uniform_real_distribution<skr::real> pos_dist(-SCENE_SIZE * 0.5f, SCENE_SIZE * 0.5f);
             std::uniform_real_distribution<float> scale_dist(0.5f, 3.0f);
             std::uniform_real_distribution<float> rotation_dist(0.0f, 2.0f * skr::kPi);
 
@@ -444,29 +446,30 @@ void RGRaytracingSampleModule::spawn_entities()
                 float local_distance = pos_dist(gen) * 0.01f * local_radius;
 
                 translations[i].set(
-                    std::cos(local_angle) * local_distance,
-                    pos_dist(gen) * 5.0f,
-                    std::sin(local_angle) * local_distance);
+                    { std::cos(local_angle) * local_distance,
+                      pos_dist(gen) * 5.0f,
+                      std::sin(local_angle) * local_distance }
+                );
 
                 rotations[i].set(
-                    rotation_dist(gen) * 0.2f, // Small pitch variation
-                    rotation_dist(gen),        // Full yaw rotation
-                    rotation_dist(gen) * 0.1f  // Small roll variation
+                    { rotation_dist(gen) * 0.2f,  // Small pitch variation
+                      rotation_dist(gen),         // Full yaw rotation
+                      rotation_dist(gen) * 0.1f } // Small roll variation
                 );
 
                 float object_scale = scale_dist(gen) * 1.0f; // Small scale for objects
-                scales[i].set(object_scale, object_scale, object_scale);
+                scales[i].set({ object_scale, object_scale, object_scale });
 
                 const auto parent = lv2.ents[index_in_level / 50];
-                skr::scene::ChildrenComponent as_child = { .entity = Context.entities()[i] };
+                skr::ChildrenComponent as_child = { .entity = Context.entities()[i] };
                 parents[i].entity = parent;                  // Attach to the corresponding building
                 children_writer[parent].push_back(as_child); // Add this object to the building's children
                 index_in_level += 1;
             }
         }
         uint64_t index_in_level = 0;
-        ComponentView<skr::scene::ParentComponent> parents;
-        RandomComponentReadWrite<skr::scene::ChildrenComponent> children_writer;
+        ComponentView<skr::ParentComponent> parents;
+        RandomComponentReadWrite<skr::ChildrenComponent> children_writer;
     } level3_spawner(level2_spawner);
 
     {
@@ -491,10 +494,7 @@ void RGRaytracingSampleModule::spawn_entities()
     SKR_LOG_INFO(u8"  Level 1 (Cities): {%d} entities", LEVEL_1_COUNT);
     SKR_LOG_INFO(u8"  Level 2 (Buildings): {%d} entities", LEVEL_2_COUNT);
     SKR_LOG_INFO(u8"  Level 3 (Objects): {%d} entities", LEVEL_3_COUNT);
-    SKR_LOG_INFO(u8"Scene distributed in {%d}x{%d}x{%d} space",
-        static_cast<int>(SCENE_SIZE),
-        static_cast<int>(SCENE_SIZE),
-        static_cast<int>(SCENE_SIZE));
+    SKR_LOG_INFO(u8"Scene distributed in {%d}x{%d}x{%d} space", static_cast<int>(SCENE_SIZE), static_cast<int>(SCENE_SIZE), static_cast<int>(SCENE_SIZE));
     SKR_LOG_INFO(u8"Established parent-child relationships successfully");
 }
 
@@ -662,7 +662,7 @@ void RGRaytracingSampleModule::create_SceneTLAS()
         {
             Builder.read(&TransformJob::transforms);
         }
-        ComponentView<const skr::scene::TransformComponent> transforms;
+        ComponentView<const skr::SolvedTransformComponent> transforms;
     };
     struct GatherTransforms : public TransformJob
     {
@@ -857,68 +857,75 @@ void RGRaytracingSampleModule::render()
     camera_constants.cameraPos = skr::math::float4(eye, 0.f);
     camera_constants.cameraDir = skr::math::float4(skr::math::normalize(target - eye), 0.f);
     camera_constants.screenSize = { static_cast<float>(to_import->info->width),
-        static_cast<float>(to_import->info->height) };
+                                    static_cast<float>(to_import->info->height) };
 
     // Create intermediate render target texture (can create UAV)
     auto render_target_handle = render_graph->create_texture(
-        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
             builder.set_name(u8"raytracing_output")
                 .extent(to_import->info->width, to_import->info->height, 1)
                 .format(to_import->info->format)
                 .allow_readwrite(); // Enable UAV creation
-        });
+        }
+    );
 
     // Create backbuffer texture handle for RenderGraph (import only, no UAV)
     auto backbuffer_handle = render_graph->create_texture(
-        [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+        [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
             builder.set_name(u8"backbuffer")
                 .import(to_import, CGPU_RESOURCE_STATE_PRESENT);
-        });
+        }
+    );
 
     // Create acceleration structure handle for RenderGraph
     auto tlas_handle = render_graph->create_acceleration_structure(
-        [=, this](render_graph::RenderGraph& g, render_graph::AccelerationStructureBuilder& builder) {
+        [=, this](RG::RenderGraph& g, RG::AccelerationStructureBuilder& builder) {
             builder.set_name(u8"SceneTLAS")
                 .import(SceneTLAS);
-        });
+        }
+    );
 
     // Add raytracing compute pass (write to intermediate texture)
     render_graph->add_compute_pass(
-        [=, this](render_graph::RenderGraph& g, render_graph::ComputePassBuilder& builder) {
+        [=, this](RG::RenderGraph& g, RG::ComputePassBuilder& builder) {
             builder.set_name(u8"RayTracingPass")
                 .set_pipeline(compute_pipeline)
                 .read(u8"SceneTLAS", tlas_handle)
                 .readwrite(u8"output_texture", render_target_handle);
         },
-        [=, this](render_graph::RenderGraph& g, render_graph::ComputePassContext& ctx) {
+        [=, this](RG::RenderGraph& g, RG::ComputePassContext& ctx) {
             // Push constants
             cgpu_compute_encoder_push_constants(ctx.encoder, root_signature, u8"camera_constants", &camera_constants);
 
             // Dispatch compute shader
             cgpu_compute_encoder_set_threadgroup_size(ctx.encoder, 16, 16, 1);
             cgpu_compute_encoder_dispatch(ctx.encoder, camera_constants.screenSize.x, camera_constants.screenSize.y, 1);
-        });
+        }
+    );
 
     // Add copy pass to copy intermediate texture to backbuffer
     render_graph->add_copy_pass(
-        [=, this](render_graph::RenderGraph& g, render_graph::CopyPassBuilder& builder) {
+        [=, this](RG::RenderGraph& g, RG::CopyPassBuilder& builder) {
             builder.set_name(u8"CopyToBackbuffer")
                 .texture_to_texture(
                     render_target_handle,
                     backbuffer_handle,
-                    CGPU_RESOURCE_STATE_PRESENT);
+                    CGPU_RESOURCE_STATE_PRESENT
+                );
         },
-        [=, this](render_graph::RenderGraph& g, render_graph::CopyPassContext& ctx) {
+        [=, this](RG::RenderGraph& g, RG::CopyPassContext& ctx) {
             // Copy pass execution is handled automatically by RenderGraph
-        });
+        }
+    );
 
     // Add present pass
     render_graph->add_present_pass(
-        [=, this](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+        [=, this](RG::RenderGraph& g, RG::PresentPassBuilder& builder) {
             builder.set_name(u8"present")
                 .swapchain(swapchain, backbuffer_index)
                 .texture(backbuffer_handle, true);
-        });
+        }
+    );
 
     // Execute render graph
     {
@@ -941,7 +948,7 @@ void RGRaytracingSampleModule::on_unload()
     // Clean up render graph
     if (render_graph)
     {
-        skr::render_graph::RenderGraph::destroy(render_graph);
+        skr::RG::RenderGraph::destroy(render_graph);
         render_graph = nullptr;
     }
 
@@ -962,7 +969,7 @@ void RGRaytracingSampleModule::on_unload()
     if (device) cgpu_free_device(device);
     if (instance) cgpu_free_instance(instance);
 
-    skr_transform_system_destroy(transform_system);
+    transform_system.reset();
     world.finalize();
     app.shutdown();
     scheduler.unbind();

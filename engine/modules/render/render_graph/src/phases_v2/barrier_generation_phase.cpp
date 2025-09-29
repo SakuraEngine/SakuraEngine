@@ -12,7 +12,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 inline static float estimate_barrier_cost(const GPUBarrier& barrier) SKR_NOEXCEPT
@@ -486,5 +486,5 @@ void BarrierGenerationPhase::dump_barrier_analysis() const SKR_NOEXCEPT
     SKR_LOG_INFO(u8"===============================================");
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

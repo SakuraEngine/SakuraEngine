@@ -2,7 +2,7 @@
 #include "SkrShaderCompiler/assets/shader_asset.hpp"
 #include "SkrShaderCompiler/shader_compiler.hpp"
 
-namespace skd::asset
+namespace skr
 {
 void* ShaderOptionImporter::Import(skr::io::IRAMService* ioService, CookContext* context)
 {
@@ -50,4 +50,4 @@ uint32_t ShaderOptionsCooker::Version()
     return kDevelopmentVersion;
 }
 
-} // namespace skd::asset
+} // namespace skr

@@ -9,7 +9,7 @@ namespace skr::gui
 {
 struct [[sattr(
     guid = "409eaa24-5549-46e3-87c1-81649576d2cd"
-)]] SKR_GUI_API IMultiChildRenderObject : virtual public skr::IObject
+)]] SKR_GUI_API IMultiChildRenderObject : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(IMultiChildRenderObject)
     virtual ~IMultiChildRenderObject() = default;
@@ -63,7 +63,7 @@ struct MultiChildRenderObjectMixin
     }
     inline void add_child(TSelf& self, NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
     {
-        _children.emplace(slot, child->type_cast_fast<TChild>());
+        _children.emplace(slot, child->rttr_cast<TChild>());
         child->mount(&self);
         _need_flush_updates = true;
     }

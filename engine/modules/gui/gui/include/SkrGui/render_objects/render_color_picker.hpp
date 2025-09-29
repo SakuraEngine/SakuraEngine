@@ -8,7 +8,6 @@ struct [[sattr(guid = "f9de7eb7-9431-4dde-a06d-2fb9bc211bb9"
 )]] SKR_GUI_API RenderColorPicker : public RenderBox
 {
     SKR_GENERATE_BODY(RenderColorPicker)
-    using Super = RenderBox;
 
     void perform_layout() SKR_NOEXCEPT override;
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;

@@ -13,7 +13,6 @@ struct PointerUpEvent;
 struct [[sattr(guid = "0de9790c-5a02-470f-92bd-81ca6fb282f2"
 )]] SKR_GUI_API RenderMouseRegion : public RenderProxyBoxWithHitTestBehavior
 {
-    using Super = RenderProxyBoxWithHitTestBehavior;
     SKR_GENERATE_BODY(RenderMouseRegion)
 
     bool hit_test(HitTestResult* result, Offsetf local_position) const SKR_NOEXCEPT override;

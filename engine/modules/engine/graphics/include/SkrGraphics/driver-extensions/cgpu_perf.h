@@ -99,7 +99,7 @@ typedef enum ECGPUPerfCommandListType
 
 typedef struct CGPUPerfCounterDescriptor
 {
-    skr_guid_t guid;
+    skr::GUID guid;
     CGPUPerfCounterIndex index;
     const char8_t* name;
     const char8_t* group;
@@ -118,7 +118,7 @@ typedef struct CGPUPerfCounterDescriptor
         struct
         {
             uint32_t hw_generation; // GFX10, GFX11, etc.
-            skr_guid_t uuid;       // Counter UUID
+            skr::GUID uuid;       // Counter UUID
         } amd;
     } vendor_ext;
 } CGPUPerfCounterDescriptor;

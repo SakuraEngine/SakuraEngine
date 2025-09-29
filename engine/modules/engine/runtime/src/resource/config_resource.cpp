@@ -1,4 +1,4 @@
-#include "SkrRuntime/resource/config_resource.h"
+#include "SkrRuntime/resource/config_resource.hpp"
 #include "SkrBase/misc/debug.h"
 #include "SkrCore/memory/memory.h"
 #include "SkrRTTR/type_registry.hpp"

@@ -61,7 +61,9 @@ inline static void write_components(
     const auto* comp_types = arch_type->type.data;
     const auto* comp_offsets = arch_type->offsets[(int)view.chunk->pt];
     const auto* comp_sizes = arch_type->sizes;
-    const auto* comp_elem_sizes = arch_type->elemSizes;
+    const auto* comp_aligns = arch_type->aligns;
+    const auto* comp_arr_elem_sizes = arch_type->arrElemSizes;
+    const auto* comp_arr_inline_counts = arch_type->arrInlineCounts;
     const auto* comp_callbacks = arch_type->callbacks;
 
     skr::Archive::ArrayScope arr_scope(*writer);
@@ -73,7 +75,8 @@ inline static void write_components(
         auto comp_type = comp_types[i];
         auto comp_offset = comp_offsets[i];
         auto comp_size = comp_sizes[i];
-        auto comp_elem_size = comp_elem_sizes[i];
+        auto comp_arr_elem_size = comp_arr_elem_sizes[i];
+        auto comp_arr_inline_count = comp_arr_inline_counts[i];
         auto* comp_callback = &comp_callbacks[i];
         char* comp_src = view.chunk->data() + (size_t)comp_offset + (size_t)comp_size * view.start;
 
@@ -89,11 +92,8 @@ inline static void write_components(
             for (uint64_t i = 0; i < view.count; i++)
             {
                 // prepare array info
-                auto array = (sugoi_array_comp_t*)((size_t)i * comp_size + comp_src);
-                int64_t padding = ((char*)array->BeginX - (char*)(array + 1));
-                void* array_data = array->BeginX;
-                uint64_t array_data_length = (uint64_t)((char*)array->EndX - (char*)array->BeginX);
-                uint64_t array_count = array_data_length / comp_elem_size;
+                auto array = (ArrayComponentBase*)((size_t)i * comp_size + comp_src);
+                uint64_t array_count = array->size();
 
                 // write array component as object
                 {
@@ -101,15 +101,14 @@ inline static void write_components(
                     SKR_FAST_CHECK(obj_scope.is_success(), );
 
                     // write array info
-                    SKR_FAST_CHECK(writer->key_value(u8"padding", padding), );
-                    SKR_FAST_CHECK(writer->key_value(u8"data_length", array_data_length), );
+                    SKR_FAST_CHECK(writer->key_value(u8"array_count", array_count), );
 
                     // write array data
                     SKR_FAST_CHECK(writer->key(u8"data"), );
                     SKR_FAST_CHECK(
                         comp_callback->serialize(
                             comp_type,
-                            array_data,
+                            array->unsafe_data(),
                             array_count,
                             writer
                         ),
@@ -140,7 +139,9 @@ inline static void read_components(
     const auto* comp_types = arch_type->type.data;
     const auto* comp_offsets = arch_type->offsets[(int)view.chunk->pt];
     const auto* comp_sizes = arch_type->sizes;
-    const auto* comp_elem_sizes = arch_type->elemSizes;
+    const auto* comp_aligns = arch_type->aligns;
+    const auto* comp_arr_elem_sizes = arch_type->arrElemSizes;
+    const auto* comp_arr_inline_counts = arch_type->arrInlineCounts;
     const auto* comp_callbacks = arch_type->callbacks;
 
     skr::Archive::ArrayScope arr_scope(*reader);
@@ -168,7 +169,9 @@ inline static void read_components(
         auto comp_type = comp_types[i];
         auto comp_offset = comp_offsets[i];
         auto comp_size = comp_sizes[i];
-        auto comp_elem_size = comp_elem_sizes[i];
+        auto comp_align = comp_aligns[i];
+        auto comp_arr_elem_size = comp_arr_elem_sizes[i];
+        auto comp_arr_inline_count = comp_arr_inline_counts[i];
         auto* comp_callback = &comp_callbacks[i];
         char* comp_src = view.chunk->data() + (size_t)comp_offset + (size_t)comp_size * view.start;
 
@@ -184,7 +187,7 @@ inline static void read_components(
             for (uint64_t i = 0; i < view.count; i++)
             {
                 // prepare array info
-                auto array = (sugoi_array_comp_t*)((size_t)i * comp_size + comp_src);
+                auto array = (ArrayComponentBase*)((size_t)i * comp_size + comp_src);
 
                 // read array component as object
                 {
@@ -192,32 +195,36 @@ inline static void read_components(
                     SKR_FAST_CHECK(obj_scope.is_success(), );
 
                     // read array info
-                    int64_t padding = false;
-                    uint64_t array_data_length = 0;
-                    SKR_FAST_CHECK(reader->key_value(u8"padding", padding), );
-                    SKR_FAST_CHECK(reader->key_value(u8"data_length", array_data_length), );
-                    uint64_t array_count = array_data_length / comp_elem_size;
+                    uint64_t array_count = 0;
+                    SKR_FAST_CHECK(reader->key_value(u8"array_count", array_count), );
 
                     // alloc array data
-                    if (padding < 0 || padding > comp_elem_size)
+                    if (array_count > comp_arr_inline_count)
                     { // heap alloc
-                        array->BeginX = llvm_vecsmall::SmallVectorBase::allocate(array_data_length);
-                        array->EndX = (char*)array->BeginX + array_data_length;
-                        array->CapacityX = array->EndX;
+                        array->unsafe_set_capacity(array_count);
+                        array->set_size(array_count);
+                        array->unsafe_set_data(
+                            skr::SkrAllocator::alloc_raw(
+                                array_count,
+                                comp_arr_elem_size,
+                                comp_align
+                            )
+                        );
                     }
                     else
                     { // inline alloc
-                        array->BeginX = (char*)(array + 1) + padding;
-                        array->EndX = (char*)array->BeginX + array_data_length;
-                        array->CapacityX = array->EndX;
+                        array->unsafe_set_capacity(comp_arr_inline_count);
+                        array->set_size(array_count);
+                        array->unsafe_set_data(array->calc_inline_data_ptr(comp_align));
                     }
 
                     // construct array elements
                     if (auto ctor = comp_callback->constructor)
                     {
-                        for (char* curr = (char*)array->BeginX; curr != array->EndX; curr += comp_elem_size)
+                        for (uint64_t i = 0; i < array_count; ++i)
                         {
-                            ctor(comp_type, view.chunk, view.start + i, curr);
+                            auto* curr = ::skr::memory::offset_item(array->unsafe_data(), comp_arr_elem_size, i);
+                            ctor(comp_type, view.chunk, view.start + i, (char*)curr);
                         }
                     }
 
@@ -226,7 +233,7 @@ inline static void read_components(
                     SKR_FAST_CHECK(
                         comp_callback->deserialize(
                             comp_type,
-                            array->BeginX,
+                            array->unsafe_data(),
                             array_count,
                             reader
                         ),

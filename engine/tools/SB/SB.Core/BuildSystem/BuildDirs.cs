@@ -39,7 +39,7 @@ public static class BuildDirs
     }
 
     // dump paths
-    [AfterStage(EBuildStage.PrepareCommandline)]
+    [AfterStage(EBuildStage.PrepareCallCommandLine)]
     private static void _DumpPaths()
     {
         Log.Information("EngineDir: {EngineDir}", EngineDir);

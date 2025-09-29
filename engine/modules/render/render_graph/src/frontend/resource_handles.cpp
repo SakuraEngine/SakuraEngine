@@ -2,7 +2,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 static const auto NULL_TEXTURE_HANDLE = TextureHandle();
 // tex
@@ -212,5 +212,5 @@ AccelerationStructureSRVHandle::ShaderReadHandle(const HandleStorage _this)
     : _this(_this)
 {
 }
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

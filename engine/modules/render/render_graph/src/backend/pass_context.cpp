@@ -3,7 +3,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 CGPUBufferId PassContext::resolve(BufferHandle buffer_handle) const
@@ -57,5 +57,5 @@ void ComputePassContext::bind(const CGPUXMergedBindTable* tbl)
     cgpux_compute_encoder_bind_merged_bind_table(encoder, tbl);
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

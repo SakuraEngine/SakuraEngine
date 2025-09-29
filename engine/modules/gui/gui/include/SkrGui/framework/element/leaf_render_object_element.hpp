@@ -8,8 +8,7 @@ struct [[sattr(guid = "4e452c55-c545-4602-a9d2-76232f561536")]]
 LeafRenderObjectElement : public RenderObjectElement
 {
     SKR_GENERATE_BODY(LeafRenderObjectElement)
-    using Super = RenderObjectElement;
-    using Super::Super;
+    SKR_IFNOT_META(using Super::Super);
 
     void visit_children(VisitFuncRef visitor) const SKR_NOEXCEPT override {}
 

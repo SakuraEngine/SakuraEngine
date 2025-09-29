@@ -10,12 +10,42 @@
 [![ci](https://github.com/SakuraEngine/SakuraEngine/actions/workflows/ci.yml/badge.svg)](https://github.com/SakuraEngine/SakuraEngine/actions/workflows/ci.yml)
 
 
+## 特性
+
+### 原生
+
+- 充分考虑易用性并针对硬件优化的实现；
+- 确保强缩放性且面向最先进平台功能特性的设计；
+- 集成大量原生开发需要的 SDK。
+
+### 直白
+
+- 面向过程的实现与设计；
+- **C API**
+
+### 先进
+
+- 基于 C# 平台自研的构建系统, 在为代码生成工具提供强大并发驱动力的同时支持最新的 C++ 工具链, 并满足大型项目中重度的自动化需求;
+- 基于 LLVM 工具链自研的代码生成工具链, 为拓展 C++ 语言功能与编程模型提供强大动力;
+- 基于 LLVM 工具链自研的 CppSL 着色器编程语言, 提供几乎标准的 C++ 语法来编写着色器, 与 CPU 代码完美协同, 并共享代码生成工具链!
+- 基于 ECS 思想，特性丰富且高度正交的数据驱动编程管线带来最大化的访存效率；
+- 混合 Fibers 和 Thread 的任务调度系统，配合 ECS 的依赖管线，赋予运行时前所未有的多线程任务吞吐量；
+- 完全面向现代 GPU 平台、几无性能开销的超薄跨平台 Graphics API；
+- 清晰的 Render Graph 前端让您可以在不接触同步原语和复杂描述符的情况下完成高度异步的现代 GPU 管线编程，并充分利用 Memory Aliasing 等高级特性；
+- 完全异步、针对 NVMe 驱动以及 GPU 异步拷贝引擎优化的 I/O 服务，轻松享受 Direct Storage 的极限吞吐，打破 SSD 性能桎梏。
+
+<div align=center>
+
+https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-b331-347e3669f3ae.mp4
+
+</div>
+
+
 ## 构建
 
 ### 前置
 
 - dotnet 9.0+
-- 初始化 LFS
 
 ### 编译
 
@@ -65,6 +95,7 @@ class LocalConfig
     [AfterStage(EBuildStage.PrepareCommandline)] // 在最早的阶段执行
     private static void _startUp()
     {
+        D5FTP.Enable = false; // 禁用 D5Ftp 而是使用 Github 源，在 D5Ftp 不稳定时有用
         Engine.DefaultMode = "debug"; // 默认 mode
         Engine.DefaultToolchain = "clang-cl"; // 默认工具链
     }
@@ -74,35 +105,6 @@ class LocalConfig
 ## 编辑环境
 
 推荐使用 vscode + clangd 作为编辑环境，使用命令 `dotnet run SB compile_commands` 来生成 clangd 需要的数据集
-
-
-## 特性
-
-### 原生
-
-- 充分考虑易用性并针对硬件优化的实现；
-- 确保强缩放性且面向最先进平台功能特性的设计；
-- 集成大量原生开发需要的 SDK。
-
-### 直白
-
-- 面向过程的实现与设计；
-- **C API**
-
-### 现代
-
-- 基于 ECS 思想，特性丰富且高度正交的[数据驱动编程管线](https://github.com/SakuraEngine/Sakura.Runtime/tree/main/include/ecs)带来最大化的访存效率；
-- 混合 Fibers 和 Thread 的任务调度系统，配合 ECS 的依赖管线，赋予运行时前所未有的多线程任务吞吐量；
-- 完全面向现代 GPU 平台、几无性能开销的超薄跨平台 Graphics API；
-- 清晰的 Render Graph 前端让您可以在不接触同步原语和复杂描述符的情况下完成高度异步的现代 GPU 管线编程，并充分利用 Memory Aliasing 等高级特性；
-- 完全异步、针对 NVMe 驱动以及 GPU 异步拷贝引擎优化的 I/O 服务，轻松享受 Direct Storage 的极限吞吐，打破 SSD 性能桎梏。
-
-<div align=center>
-
-https://user-images.githubusercontent.com/39457738/192722537-6ab035a5-2789-43d0-b331-347e3669f3ae.mp4
-
-</div>
-
 
 ## 示例 (从上到下逐渐贴近底层)
 

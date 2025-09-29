@@ -7,10 +7,9 @@
 #define RG_MAX_FRAME_IN_FLIGHT 3
 #endif
 
-namespace skr
+namespace skr::RG
 {
-namespace render_graph
-{
+
 struct BarrierGenerationPhase;
 class SKR_RENDER_GRAPH_API RenderGraphProfiler
 {
@@ -384,15 +383,14 @@ struct ResourceLifetimeAnalysis;
 struct GraphViz
 {
     static SKR_RENDER_GRAPH_API void generate_graphviz_visualization(
-        skr::render_graph::RenderGraph* graph,
-        const skr::render_graph::PassInfoAnalysis& info_analysis,
-        const skr::render_graph::QueueSchedule& queue_schedule,
-        const skr::render_graph::CrossQueueSyncAnalysis& ssis_phase,
-        const skr::render_graph::BarrierGenerationPhase& barrier_phase,
-        const skr::render_graph::MemoryAliasingPhase& aliasing_phase,
-        const skr::render_graph::ResourceLifetimeAnalysis& lifetime_analysis
+        skr::RG::RenderGraph* graph,
+        const skr::RG::PassInfoAnalysis& info_analysis,
+        const skr::RG::QueueSchedule& queue_schedule,
+        const skr::RG::CrossQueueSyncAnalysis& ssis_phase,
+        const skr::RG::BarrierGenerationPhase& barrier_phase,
+        const skr::RG::MemoryAliasingPhase& aliasing_phase,
+        const skr::RG::ResourceLifetimeAnalysis& lifetime_analysis
     );
 };
 
-} // namespace render_graph
-} // namespace skr
+} // namespace skr::RG

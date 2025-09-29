@@ -4,8 +4,8 @@
 #include <SkrOS/filesystem.hpp>
 #include "SkrBase/misc/debug.h"
 #include "SkrRuntime/io/vram_io.hpp"
-#include "SkrRuntime/resource/resource_factory.h"
-#include "SkrRuntime/resource/resource_system.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
+#include "SkrRuntime/resource/resource_system.hpp"
 #include "SkrCore/log.h"
 #include "SkrBase/misc/make_zeroed.hpp"
 

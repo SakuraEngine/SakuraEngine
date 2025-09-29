@@ -37,14 +37,17 @@ public static class SkrCore
             .AddCppFiles("src/core/build.*.cpp")
             // RTTR Files
             .AddCppFiles("src/rttr/build.*.cpp")
+            // object Files
+            .AddCppFiles("src/object/build.*.cpp")
             .Require("yyjson", new PackageConfig { Version = new Version(0, 12, 0) })
             .Depend(Visibility.Private, "yyjson@yyjson")
             // Codegen Files
             .AddMetaHeaders(
-                "include/SkrRTTR/iobject.hpp",
+                "include/SkrRTTR/irttr_basic.hpp",
                 "include/SkrRTTR/script/scriptble_object.hpp",
                 "include/SkrRTTR/export/export_data.hpp",
-                "include/SkrCore/cli.hpp"
+                "include/SkrCore/cli.hpp",
+                "include/SkrObject/**.hpp"
             )
             .AddCodegenScript("meta/basic.ts")
             .AddCodegenScript("meta/rttr.ts")

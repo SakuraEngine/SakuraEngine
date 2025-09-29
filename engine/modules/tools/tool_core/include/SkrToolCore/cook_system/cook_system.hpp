@@ -13,7 +13,7 @@
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service);
 
-namespace skd::asset
+namespace skr
 {
 using AssetID = skr::GUID;
 using ResourceID = skr::GUID;
@@ -163,4 +163,4 @@ public:
 
     static constexpr uint32_t ioServicesMaxCount = 1;
 };
-} // namespace skd::asset
+} // namespace skr

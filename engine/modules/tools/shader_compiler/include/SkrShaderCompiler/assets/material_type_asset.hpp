@@ -6,7 +6,7 @@
 #include "SkrToolCore/cook_system/cooker.hpp"
 #include "SkrShaderCompiler/assets/material_type_asset.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 struct [[sattr(
     guid = "329fddb1-73a6-4b4b-8f9f-f4acca58a6e5"
@@ -51,4 +51,4 @@ struct [[sattr(
     uint32_t Version() override { return kDevelopmentVersion; }
 };
 
-} // namespace skd::asset
+} // namespace skr

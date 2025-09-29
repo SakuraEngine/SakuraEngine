@@ -153,9 +153,9 @@ void RenderObject::mark_needs_paint() SKR_NOEXCEPT
                 owner()->schedule_paint_for(this);
             }
         }
-        else if (parent() && parent()->type_is<RenderObject>())
+        else if (parent() && parent()->rttr_is<RenderObject>())
         {
-            parent()->type_cast_fast<RenderObject>()->mark_needs_paint();
+            parent()->rttr_cast<RenderObject>()->mark_needs_paint();
         }
         else
         {
@@ -270,8 +270,8 @@ Offsetf RenderObject::system_to_local(Offsetf system_position) const SKR_NOEXCEP
     {
         root_widget = root_widget->parent();
     }
-    auto root_window = root_widget->type_cast_fast<RenderNativeWindow>();
-    auto global_pos  = root_window->window()->type_cast_fast<INativeWindow>()->to_relative(system_position);
+    auto root_window = root_widget->rttr_cast<RenderNativeWindow>();
+    auto global_pos  = root_window->window()->rttr_cast<INativeWindow>()->to_relative(system_position);
     return global_to_local(global_pos);
 }
 Offsetf RenderObject::local_to_system(Offsetf local_position) const SKR_NOEXCEPT
@@ -281,9 +281,9 @@ Offsetf RenderObject::local_to_system(Offsetf local_position) const SKR_NOEXCEPT
     {
         root_widget = root_widget->parent();
     }
-    auto root_window = root_widget->type_cast_fast<RenderNativeWindow>();
+    auto root_window = root_widget->rttr_cast<RenderNativeWindow>();
     auto global_pos  = local_to_global(local_position);
-    return root_window->window()->type_cast_fast<INativeWindow>()->to_absolute(global_pos);
+    return root_window->window()->rttr_cast<INativeWindow>()->to_absolute(global_pos);
 }
 
 // event

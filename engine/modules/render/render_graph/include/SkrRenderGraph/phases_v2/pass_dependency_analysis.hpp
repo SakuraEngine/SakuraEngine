@@ -5,7 +5,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 class PassNode;
@@ -135,5 +135,5 @@ private:
     void calculate_logical_dependency_levels();
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

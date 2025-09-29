@@ -61,7 +61,6 @@ bool LocalResourceRegistry::RequestResourceFile(ResourceRequest* request)
     resourcePath.replace_extension(u8".bin");
     auto resourceUri = resourcePath.string();
     FillRequest(request, header, vfs, resourceUri.c_str());
-    request->OnRequestFileFinished();
     return true;
 }
 

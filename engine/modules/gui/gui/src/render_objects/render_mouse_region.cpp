@@ -9,35 +9,35 @@ bool RenderMouseRegion::hit_test(HitTestResult* result, Offsetf local_position) 
 }
 bool RenderMouseRegion::handle_event(NotNull<PointerEvent*> event, NotNull<HitTestEntry*> entry)
 {
-    if (auto move_event = event->type_cast<PointerMoveEvent>())
+    if (auto move_event = event->rttr_cast<PointerMoveEvent>())
     {
         if (on_hover)
         {
             return on_hover(move_event);
         }
     }
-    else if (auto enter_event = event->type_cast<PointerEnterEvent>())
+    else if (auto enter_event = event->rttr_cast<PointerEnterEvent>())
     {
         if (on_enter)
         {
             return on_enter(enter_event);
         }
     }
-    else if (auto exit_event = event->type_cast<PointerExitEvent>())
+    else if (auto exit_event = event->rttr_cast<PointerExitEvent>())
     {
         if (on_exit)
         {
             return on_exit(exit_event);
         }
     }
-    else if (auto down_event = event->type_cast<PointerDownEvent>())
+    else if (auto down_event = event->rttr_cast<PointerDownEvent>())
     {
         if (on_down)
         {
             return on_down(down_event);
         }
     }
-    else if (auto up_event = event->type_cast<PointerUpEvent>())
+    else if (auto up_event = event->rttr_cast<PointerUpEvent>())
     {
         if (on_up)
         {

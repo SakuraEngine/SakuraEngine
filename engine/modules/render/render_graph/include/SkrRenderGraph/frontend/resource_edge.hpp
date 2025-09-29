@@ -3,7 +3,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 class PassNode;
 class TextureEdge : public RenderGraphEdge
@@ -187,5 +187,5 @@ protected:
     const skr::String name = u8"";
     const AccelerationStructureSRVHandle handle;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

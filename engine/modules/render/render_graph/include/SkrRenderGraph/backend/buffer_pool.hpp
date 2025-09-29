@@ -7,7 +7,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 class BufferPool
 {
@@ -63,5 +63,5 @@ protected:
     CGPUDeviceId device;
     skr::FlatHashMap<Key, skr::stl_deque<PooledBuffer>, Key::hasher> buffers;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

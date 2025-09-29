@@ -22,10 +22,10 @@ skr::AnimComponent::~AnimComponent()
 
 void skr_init_skin_component(skr::SkinComponent* component, const skr::SkeletonResource* skeleton)
 {
-    auto skin = component->skin_resource.get_resolved();
-    if (!skin)
+    auto skin = component->skin_resource.install();
+    if (skin == nullptr)
         return;
-    SKR_ASSERT(skeleton);
+
     component->joint_remaps.resize_zeroed(skin->joint_remaps.size());
     for (size_t i = 0; i < skin->joint_remaps.size(); ++i)
     {
@@ -193,7 +193,7 @@ void skr_init_anim_buffers(CGPUDeviceId device, skr::AnimComponent* anim, const 
 
 void skr_cpu_skin(skr::SkinComponent* skin, const skr::AnimComponent* anim, const MeshResource* mesh)
 {
-    auto skin_resource = skin->skin_resource.get_resolved();
+    auto skin_resource = skin->skin_resource.install();
     // SKR_LOG_INFO(u8"Skin %d mesh primitive(s)", mesh->primitives.size());
     for (size_t i = 0; i < mesh->primitives.size(); ++i)
     {

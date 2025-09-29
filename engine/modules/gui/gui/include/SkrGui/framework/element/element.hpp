@@ -16,7 +16,7 @@ enum class EElementLifecycle : uint8_t
 };
 
 struct [[sattr(guid = "ec3aff75-d8d1-4e0f-aff3-5c8df4995a78"
-)]] SKR_GUI_API Element : virtual public skr::IObject
+)]] SKR_GUI_API Element : virtual public skr::IRTTRBasic
     , public IBuildContext
 {
     SKR_GENERATE_BODY(Element)

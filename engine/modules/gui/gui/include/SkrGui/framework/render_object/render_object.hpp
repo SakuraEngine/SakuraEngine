@@ -18,7 +18,7 @@ enum class ERenderObjectLifecycle : uint8_t
 };
 
 struct [[sattr(guid = "2f1b78a5-1be9-4799-a3ca-2f2d3b153f29"
-)]] SKR_GUI_API RenderObject : virtual public skr::IObject
+)]] SKR_GUI_API RenderObject : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(RenderObject)
     friend struct BuildOwner;

@@ -18,7 +18,7 @@ NotNull<RenderObject*> MouseRegin::create_render_object() SKR_NOEXCEPT
 }
 void MouseRegin::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    auto mouse_region = render_object->type_cast_fast<RenderMouseRegion>();
+    auto mouse_region = render_object->rttr_cast<RenderMouseRegion>();
 
     mouse_region->hit_test_behavior = hit_test_behaviour;
     mouse_region->on_enter          = std::move(on_enter);

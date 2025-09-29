@@ -5,7 +5,7 @@
 #include "SkrRuntime/io/ram_io.hpp"
 #include "SkrCore/log.hpp"
 #include "SkrCore/platform/vfs.h"
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 
 namespace skr
 {
@@ -24,254 +24,42 @@ skr::Span<const uint8_t> SResourceRequestImpl::GetData() const
     return skr::Span<const uint8_t>(dataBlob->get_data(), dataBlob->get_size());
 }
 
-#ifdef SKR_RESOURCE_DEV_MODE
-skr::Span<const uint8_t> SResourceRequestImpl::GetArtifactsData() const
+skr::Span<const SResourceHandle> SResourceRequestImpl::GetDependencies() const
 {
-    if (!artifactsBlob)
-    {
-        return {};
-    }
-    return skr::Span<const uint8_t>(artifactsBlob->get_data(), artifactsBlob->get_size());
-}
-#endif
-
-skr::Span<const GUID> SResourceRequestImpl::GetDependencies() const
-{
-    return skr::Span<const GUID>(dependencies.data(), dependencies.size());
-}
-
-void SResourceRequestImpl::UpdateLoad(bool requestInstall)
-{
-    if (isLoading)
-        return;
-    isLoading = true;
-    resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
-    switch (currentPhase)
-    {
-    case SKR_LOADING_PHASE_FINISHED:
-        currentPhase = SKR_LOADING_PHASE_REQUEST_RESOURCE;
-        break;
-    case SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST:
-        currentPhase = SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST;
-        break;
-    case SKR_LOADING_PHASE_UNINSTALL_RESOURCE: {
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLED);
-    }
-    break;
-
-    case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO: {
-        currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
-    }
-    case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE: {
-        currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
-    }
-    break;
-    case SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE: {
-        currentPhase = SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLING);
-    }
-    break;
-    case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES: {
-        currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES;
-    }
-    break;
-
-    case SKR_LOADING_PHASE_UNLOAD_RESOURCE: {
-        if (!requestInstall)
-        {
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADED);
-        }
-        else
-            currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
-    }
-    break;
-
-    default:
-        SKR_HALT();
-        break;
-    }
-}
-
-void SResourceRequestImpl::UpdateUnload()
-{
-    if (!isLoading)
-        return;
-    isLoading = false;
-
-    resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
-
-    switch (currentPhase)
-    {
-    case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST: {
-        currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES;
-    }
-    break;
-    case SKR_LOADING_PHASE_IO:
-    case SKR_LOADING_PHASE_DESER_RESOURCE: {
-        dataBlob.reset();
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
-    }
-    break;
-    case SKR_LOADING_PHASE_WAITFOR_IO: {
-        currentPhase = SKR_LOADING_PHASE_CANCLE_WAITFOR_IO;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
-    }
-    break;
-
-    case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
-        currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
-    }
-    break;
-
-    case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES: {
-        currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES;
-    }
-    break;
-
-    case SKR_LOADING_PHASE_INSTALL_RESOURCE: {
-        currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
-    }
-    break;
-
-    case SKR_LOADING_PHASE_FINISHED: {
-        currentPhase = SKR_LOADING_PHASE_UNINSTALL_RESOURCE;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNINSTALLING);
-    }
-    break;
-
-    case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE: {
-        currentPhase = SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNINSTALLING);
-    }
-
-    default:
-        SKR_HALT();
-        break;
-    }
-}
-
-void SResourceRequestImpl::OnRequestFileFinished()
-{
-    if (resourceUrl.is_empty() || vfs == nullptr)
-    {
-        SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, file not found.", resourceRecord->header.guid);
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
-        return;
-    }
-    else
-    {
-        currentPhase = SKR_LOADING_PHASE_IO;
-        factory = system->FindFactory(resourceRecord->header.type);
-        if (factory == nullptr)
-        {
-            SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, factory of type {} not found.", resourceRecord->header.guid, resourceRecord->header.type);
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
-            return;
-        }
-    }
-    // schedule loading for all runtime dependencies
-    if (requestInstall)
-    {
-        _LoadDependencies();
-    }
-}
-
-void SResourceRequestImpl::OnRequestLoadFinished()
-{
-}
-
-void SResourceRequestImpl::_LoadDependencies()
-{
-    if (dependenciesLoaded)
-        return;
-    dependenciesLoaded = true;
     auto& dependencies = resourceRecord->header.dependencies;
-    for (auto& dep : dependencies)
-        dep.resolve(true, resourceRecord->id, SKR_REQUESTER_DEPENDENCY);
+    return skr::Span<const SResourceHandle>(dependencies.data(), dependencies.size());
 }
 
 void SResourceRequestImpl::_UnloadDependencies()
 {
-    if (!dependenciesLoaded)
-        return;
-    dependenciesLoaded = false;
     auto& dependencies = resourceRecord->header.dependencies;
     for (auto& dep : dependencies)
-        dep.unload();
-}
-
-void SResourceRequestImpl::_LoadFinished()
-{
-    resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADED);
-    dataBlob.reset();
-    auto& dependencies = resourceRecord->header.dependencies;
-    if (!requestInstall) // only require data, we are done
-    {
-        _UnloadDependencies();
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
-        return;
-    }
-    if (!dependencies.is_empty())
-    {
-        _LoadDependencies();
-        currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES;
-    }
-    else
-        currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
-}
-
-void SResourceRequestImpl::_InstallFinished()
-{
-    resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLED);
-    currentPhase = SKR_LOADING_PHASE_FINISHED;
-    return;
-}
-
-void SResourceRequestImpl::_UnloadResource()
-{
+        dep.reset();
 }
 
 void SResourceRequestImpl::Update()
 {
     SMutexLock lock(updateMutex.mMutex);
-    if (requireLoading != isLoading)
-    {
-        if (requireLoading)
-            UpdateLoad(requestInstall);
-        else
-            UpdateUnload();
-    }
     auto resourceRegistry = system->GetRegistry();
     auto ioService = system->GetRAMService();
-    SKR_LOG_BACKTRACE(u8"Current reosurce loading phase: %d!", (int32_t)currentPhase);
-    switch (currentPhase)
+    auto currentStatus = resourceRecord->loadingStatus.load();
+    SKR_LOG_BACKTRACE(u8"Current reosurce loading phase: %d!", (int32_t)currentStatus);
+    if (currentStatus == EResourceLoadingStatus::Unloaded)
+        return;
+
+    switch (currentStatus)
     {
-    case SKR_LOADING_PHASE_REQUEST_RESOURCE: {
-        auto fopened = resourceRegistry->RequestResourceFile(this);
-        if (fopened)
-            currentPhase = SKR_LOADING_PHASE_IO;
-        else
+    case EResourceLoadingStatus::Loading: {
+        if (dataBlob && factory->AsyncIO())
         {
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            // TODO: Do something with this rude code
-            resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
+            if (const bool dataReady = dataFuture.is_ready())
+            {
+                resourceRecord->SetStatus(EResourceLoadingStatus::Loaded);
+            }
         }
-    }
-    break;
-    case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
-        break;
-    case SKR_LOADING_PHASE_IO:
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADING);
-        if (factory->AsyncIO())
+        else if (auto fopened = resourceRegistry->RequestResourceFile(this))
         {
+            if (factory->AsyncIO())
             {
                 auto rq = ioService->open_request();
                 rq->set_vfs(vfs);
@@ -280,215 +68,129 @@ void SResourceRequestImpl::Update()
                 SKR_ASSERT(dataFuture.status == 0);
                 dataBlob = ioService->request(rq, &dataFuture);
             }
-#ifdef SKR_RESOURCE_DEV_MODE
-            if (!artifactsUrl.is_empty())
-            {
-                auto rq = ioService->open_request();
-                rq->set_vfs(vfs);
-                rq->set_path(artifactsUrl.c_str());
-                rq->add_block({}); // read all
-                SKR_ASSERT(artifactsFuture.status == 0);
-                artifactsBlob = ioService->request(rq, &artifactsFuture);
-            }
-#endif
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_IO;
-        }
-        else
-        {
+            else
             {
                 auto file = skr_vfs_fopen(vfs, (const char8_t*)resourceUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
                 SKR_DEFER({ skr_vfs_fclose(file); });
                 auto fsize = skr_vfs_fsize(file);
                 dataBlob = skr::IBlob::Create(nullptr, fsize, false);
                 skr_vfs_fread(file, dataBlob->get_data(), 0, fsize);
-            }
-#ifdef SKR_RESOURCE_DEV_MODE
-            if (!artifactsUrl.is_empty())
-            {
-                auto file = skr_vfs_fopen(vfs, (const char8_t*)artifactsUrl.c_str(), SKR_FM_READ_BINARY, SKR_FILE_CREATION_OPEN_EXISTING);
-                SKR_DEFER({ skr_vfs_fclose(file); });
-                auto fsize = skr_vfs_fsize(file);
-                artifactsBlob = skr::IBlob::Create(nullptr, fsize, false);
-                skr_vfs_fread(file, artifactsBlob->get_data(), 0, fsize);
-            }
-#endif
-            currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
-        }
-        break;
-    case SKR_LOADING_PHASE_WAITFOR_IO: {
-        if (factory->AsyncIO())
-        {
-            const bool dataReady = dataFuture.is_ready();
-#ifdef SKR_RESOURCE_DEV_MODE
-            const bool artifactsReady = artifactsUrl.is_empty() || artifactsFuture.is_ready();
-            if (dataReady && artifactsReady)
-#else
-            if (dataReady)
-#endif
-            {
-                currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
+                resourceRecord->SetStatus(EResourceLoadingStatus::Loaded);
             }
         }
         else
         {
-            currentPhase = SKR_LOADING_PHASE_DESER_RESOURCE;
+            // TODO: Do something with this rude code
+            resourceRecord->SetStatus(EResourceLoadingStatus::Error);
         }
     }
     break;
-    case SKR_LOADING_PHASE_DESER_RESOURCE: {
-        bool asyncSerde = factory->AsyncSerdeLoadFactor() != 0.f;
-
-        if (asyncSerde)
+    case EResourceLoadingStatus::Loaded: {
+        // send dependencies' requests
+        auto& dependencies = resourceRecord->header.dependencies;
+        if (!dependencies.is_empty())
         {
-            serdeScheduled = false;
-            serdeEvent.clear();
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE;
+            auto& dependencies = resourceRecord->header.dependencies;
+            for (auto& dep : dependencies)
+            {
+                dep.install();
+            }
+        }
+        // no need of deserialization
+        if (resourceRecord->resource != nullptr)
+        {
+            resourceRecord->SetStatus(EResourceLoadingStatus::WaitingDependencies);
+        }
+        // deserialize
+        // TODO: USE ASYNC SERDE
+        else if (bool asyncSerde = false && factory->AsyncSerdeLoadFactor() != 0.f)
+        {
+            SKR_UNIMPLEMENTED_FUNCTION();
         }
         else
         {
-            LoadTask();
-            if (serdeResult != 0)
+            skr::ArReadBin reader;
+            auto buffer = GetData();
+            reader.use_buffer(buffer);
+            if (factory->Deserialize(resourceRecord, &reader))
             {
-                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.", resourceRecord->header.guid, serdeResult);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
+                serdeEvent.signal();
+                dataBlob.reset();
+                if (!requestInstall) // only require data, we are done
+                {
+                    _UnloadDependencies();
+                    return;
+                }
+                resourceRecord->SetStatus(EResourceLoadingStatus::WaitingDependencies);
             }
             else
-                _LoadFinished();
+            {
+                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, deserialize failed! ", resourceRecord->header.guid);
+                resourceRecord->SetStatus(EResourceLoadingStatus::Error);
+            }
         }
     }
     break;
-    case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE: {
-        if (serdeEvent.test())
-        {
-            serdeEvent.clear();
-            if (serdeResult != 0)
-            {
-                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load, serde failed with error code {}.", resourceRecord->header.guid, serdeResult);
-                currentPhase = SKR_LOADING_PHASE_FINISHED;
-                resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
-            }
-            else
-                _LoadFinished();
-        }
-    }
-    break;
-    case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES: {
-        // pass 1 - check for error
-        bool failed = false;
+    case EResourceLoadingStatus::WaitingDependencies: {
+        // wait dependencies
+        bool dependencies_ready = true;
         for (auto& dep : resourceRecord->header.dependencies)
         {
-            if (dep.get_status() == ESkrLoadingStatus::SKR_LOADING_STATUS_ERROR)
+            if (dep.get_status() == EResourceLoadingStatus::Error)
             {
-                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load dependency resource {}.", resourceRecord->header.guid, dep.get_serialized());
-                failed = true;
+                resourceRecord->SetStatus(EResourceLoadingStatus::Error);
+                SKR_LOG_FMT_ERROR(u8"Resource {} failed to load dependency resource {}.", resourceRecord->header.guid, dep.get_guid());
+                break;
+            }
+            else if (dep.get_status() != EResourceLoadingStatus::Installed)
+            {
+                dependencies_ready = false;
                 break;
             }
         }
-        if (failed)
+        // start install
+        if (dependencies_ready)
         {
-            _UnloadDependencies();
-            resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
-            factory->Unload(resourceRecord);
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            break;
-        }
-        // pass 2 - check for loading
-        bool completed = true;
-        for (auto& dep : resourceRecord->header.dependencies)
-        {
-            if (dep.get_status() != ESkrLoadingStatus::SKR_LOADING_STATUS_INSTALLED)
+            auto installStatus = factory->Install(resourceRecord);
+            if (installStatus == SKR_INSTALL_STATUS_FAILED)
             {
-                completed = false;
-                break;
+                SKR_LOG_FMT_ERROR(u8"Resource {} failed to install.", resourceRecord->header.guid);
+                resourceRecord->SetStatus(EResourceLoadingStatus::Error);
+            }
+            else if (installStatus == SKR_INSTALL_STATUS_INPROGRESS)
+            {
+                resourceRecord->SetStatus(EResourceLoadingStatus::Installing);
+            }
+            else if (installStatus == SKR_INSTALL_STATUS_SUCCEED)
+            {
+                resourceRecord->SetStatus(EResourceLoadingStatus::Installed);
             }
         }
-        if (completed)
-        {
-            currentPhase = SKR_LOADING_PHASE_INSTALL_RESOURCE;
-        }
     }
     break;
-    case SKR_LOADING_PHASE_INSTALL_RESOURCE: {
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_INSTALLING);
-        auto status = factory->Install(resourceRecord);
-        if (status == SKR_INSTALL_STATUS_FAILED)
-        {
-            SKR_LOG_FMT_ERROR(u8"Resource {} failed to install.", resourceRecord->header.guid);
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
-        }
-        else if (status == SKR_INSTALL_STATUS_INPROGRESS)
-        {
-            currentPhase = SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE;
-        }
-        else if (status == SKR_INSTALL_STATUS_SUCCEED)
-        {
-            _InstallFinished();
-        }
-    }
-    break;
-    case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE: {
+    case EResourceLoadingStatus::Installing: {
         auto status = factory->UpdateInstall(resourceRecord);
         if (status == SKR_INSTALL_STATUS_FAILED)
         {
             SKR_LOG_FMT_ERROR(u8"Resource {} failed to install.", resourceRecord->header.guid);
-            currentPhase = SKR_LOADING_PHASE_FINISHED;
-            resourceRecord->SetStatus(SKR_LOADING_STATUS_ERROR);
+            resourceRecord->SetStatus(EResourceLoadingStatus::Error);
         }
         else if (status == SKR_INSTALL_STATUS_SUCCEED)
         {
-            _InstallFinished();
+            resourceRecord->SetStatus(EResourceLoadingStatus::Installed);
         }
     }
     break;
-    case SKR_LOADING_PHASE_FINISHED: {
-        // special case when we are installing a resource that is already loaded
-        SKR_ASSERT(isLoading && requestInstall >= (resourceRecord->loadingStatus != SKR_LOADING_STATUS_LOADED));
-        _LoadFinished();
-    }
-    break;
-    case SKR_LOADING_PHASE_CANCLE_WAITFOR_IO: {
-        if (!dataFuture.is_ready())
-        {
-            // request cancle
-            if (!skr_atomic_load_acquire(&dataFuture.request_cancel))
-            {
-                ioService->cancel(&dataFuture);
-            }
-            else if (!dataFuture.is_cancelled())
-            {
-                break; // continue to wait for cancel
-            }
-        }
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
-    }
-    break;
-    case SKR_LOADING_PHASE_CANCEL_WAITFOR_INSTALL_RESOURCE:
-    case SKR_LOADING_PHASE_UNINSTALL_RESOURCE: {
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNINSTALLING);
+    case EResourceLoadingStatus::Uninstalling: {
         factory->Uninstall(resourceRecord);
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_LOADED);
-        currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
+        resourceRecord->SetStatus(EResourceLoadingStatus::Unloading);
     }
     break;
-    case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_RESOURCE:
-    case SKR_LOADING_PHASE_CANCEL_WAITFOR_LOAD_DEPENDENCIES:
-    case SKR_LOADING_PHASE_UNLOAD_RESOURCE: {
+    case EResourceLoadingStatus::Unloading: {
         dataBlob.reset();
         _UnloadDependencies();
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
         factory->Unload(resourceRecord);
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
-    }
-    break;
-    case SKR_LOADING_PHASE_CANCEL_RESOURCE_REQUEST: {
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADING);
-        resourceRegistry->CancelRequestFile(this);
-        resourceRecord->SetStatus(SKR_LOADING_STATUS_UNLOADED);
-        currentPhase = SKR_LOADING_PHASE_FINISHED;
+        resourceRecord->SetStatus(EResourceLoadingStatus::Unloaded);
     }
     break;
     default:
@@ -497,48 +199,18 @@ void SResourceRequestImpl::Update()
     }
 }
 
-void SResourceRequestImpl::LoadTask()
-{
-    skr::ArReadBin reader;
-    reader.use_buffer(GetData());
-#ifdef SKR_RESOURCE_DEV_MODE
-    skr::ArReadBin artifacts_reader;
-    artifacts_reader.use_buffer(GetArtifactsData());
-#endif
-    if (factory->Deserialize(resourceRecord, &reader))
-        factory->DerserializeArtifacts(resourceRecord, &artifacts_reader);
-    serdeEvent.signal();
-}
-
 bool SResourceRequestImpl::Okay()
 {
-    bool installed = resourceRecord && !(resourceRecord->loadingStatus == SKR_LOADING_STATUS_LOADED);
-    return (currentPhase == SKR_LOADING_PHASE_FINISHED) && (isLoading == requireLoading) && (requestInstall <= installed);
+    if (requestInstall)
+        return resourceRecord->loadingStatus == EResourceLoadingStatus::Installed;
+    const bool bLoaded = resourceRecord->loadingStatus == EResourceLoadingStatus::Loaded;;
+    const bool bUnloaded = resourceRecord->loadingStatus == EResourceLoadingStatus::Unloaded;
+    return bLoaded || bUnloaded;
 }
 
 bool SResourceRequestImpl::Failed()
 {
-    return !resourceRecord || (resourceRecord->loadingStatus == SKR_LOADING_STATUS_ERROR);
-}
-
-bool SResourceRequestImpl::AsyncSerde()
-{
-    return currentPhase == SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE && !serdeScheduled;
-}
-
-bool SResourceRequestImpl::Yielded()
-{
-    switch (currentPhase)
-    {
-    case SKR_LOADING_PHASE_WAITFOR_RESOURCE_REQUEST:
-    case SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE:
-    case SKR_LOADING_PHASE_WAITFOR_LOAD_DEPENDENCIES:
-    case SKR_LOADING_PHASE_WAITFOR_IO:
-    case SKR_LOADING_PHASE_WAITFOR_INSTALL_RESOURCE:
-        return true;
-    default:
-        return false;
-    }
+    return !resourceRecord || (resourceRecord->loadingStatus == EResourceLoadingStatus::Error);
 }
 
 void ResourceRegistry::FillRequest(ResourceRequest* r, SResourceHeader header, skr_vfs_t* vfs, const char8_t* uri)
@@ -551,6 +223,8 @@ void ResourceRegistry::FillRequest(ResourceRequest* r, SResourceHeader header, s
         request->resourceRecord->header.dependencies = header.dependencies;
         request->vfs = vfs;
         request->resourceUrl = uri;
+        request->system = request->system;
+        request->factory = request->system->FindFactory(request->resourceRecord->header.type);
     }
 }
 

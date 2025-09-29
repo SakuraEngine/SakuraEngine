@@ -5,7 +5,7 @@
 #include "SkrCore/log.hpp"
 #include "SkrProfile/profile.h"
 
-namespace skr::render_graph
+namespace skr::RG
 {
 
 ResourceAllocationPhase::ResourceAllocationPhase(
@@ -190,4 +190,4 @@ CGPUBufferId ResourceAllocationPhase::get_resource(BufferNode* buffer, ECGPUReso
     return buffer->get_imported();
 }
 
-} // namespace skr::render_graph
+} // namespace skr::RG

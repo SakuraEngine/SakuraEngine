@@ -1,6 +1,6 @@
 #include "SkrCore/exec_static.hpp"
 #include "SkrRTTR/export/export_builder.hpp"
-#include "SkrRTTR/iobject.hpp"
+#include "SkrRTTR/irttr_basic.hpp"
 #include "SkrRTTR/type.hpp"
 #include <SkrRTTR/generic/generic_base.hpp>
 #include <SkrRTTR/generic/generic_vector.hpp>

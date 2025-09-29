@@ -17,7 +17,7 @@
 #include "./../dxc/dxcapi.h"
 
 // helper
-namespace skd::asset
+namespace skr
 {
 struct DxcCreateInstanceT
 {
@@ -69,7 +69,7 @@ SDXCCompiledShader* SDXCCompiledShader::Create(ECGPUShaderStage shader_stage, EC
             auto md5 = MD5{};
             auto bytes = bytecode->GetBufferPointer();
             auto byte_size = (uint32_t)bytecode->GetBufferSize();
-            skr_make_md5((const char8_t*)bytes, byte_size, &md5);
+            md5 = skr::MD5::Build(bytes, byte_size);
             spv_hash[0] = md5.at_u32(0);
             spv_hash[1] = md5.at_u32(1);
             spv_hash[2] = md5.at_u32(2);
@@ -204,7 +204,7 @@ IShaderCompiler* SDXCCompiler::Create() SKR_NOEXCEPT
     return compierInstance;
 }
 
-void SDXCCompiler::Free(skd::asset::IShaderCompiler* compiler) SKR_NOEXCEPT { SkrDelete(compiler); }
+void SDXCCompiler::Free(skr::IShaderCompiler* compiler) SKR_NOEXCEPT { SkrDelete(compiler); }
 
 EShaderSourceType SDXCCompiler::GetSourceType() const SKR_NOEXCEPT { return EShaderSourceType::HLSL; }
 
@@ -564,8 +564,8 @@ void SDXCLibrary::Finalize()
 {
     SDXCLibrary::UnloadLibraries();
 }
-} // namespace skd::asset
+} // namespace skr
 
 #if SKR_PLAT_WINDOWS
-SKR_MODULE_SUBSYSTEM(skd::asset::SDXCLibrary, SkrShaderCompiler);
+SKR_MODULE_SUBSYSTEM(skr::SDXCLibrary, SkrShaderCompiler);
 #endif

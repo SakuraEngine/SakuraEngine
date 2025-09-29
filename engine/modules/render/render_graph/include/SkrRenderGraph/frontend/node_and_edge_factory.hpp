@@ -4,7 +4,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 struct SKR_RENDER_GRAPH_API NodeAndEdgeFactory
 {
@@ -54,5 +54,5 @@ struct SKR_RENDER_GRAPH_API NodeAndEdgeFactory
     virtual bool internalFreeMemory(void* memory, size_t size) = 0;
     virtual void* internalAllocateMemory(size_t size) = 0;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

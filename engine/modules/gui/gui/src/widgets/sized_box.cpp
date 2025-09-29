@@ -12,7 +12,7 @@ NotNull<RenderObject*> SizedBox::create_render_object() SKR_NOEXCEPT
 }
 void SizedBox::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    auto r_obj = render_object->type_cast_fast<RenderConstrainedBox>();
+    auto r_obj = render_object->rttr_cast<RenderConstrainedBox>();
 
     r_obj->set_additional_constraint(BoxConstraints::Tight(size));
 }

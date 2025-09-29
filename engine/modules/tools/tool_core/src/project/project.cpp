@@ -5,7 +5,7 @@
 #include "SkrRuntime/io/ram_io.hpp"
 #include "SkrToolCore/project/project.hpp"
 
-namespace skd
+namespace skr
 {
 
 // void SProject::SetAssetVFS(skr_vfs_t* asset_vfs)
@@ -200,7 +200,7 @@ bool SProject::LoadAssetSourceFile(const URI& uri, skr::Vector<uint8_t>& content
 bool SProject::OpenProject(const URI& projectFilePath) noexcept
 {
     auto projectPath = skr::Path{ projectFilePath };
-    skd::SProjectConfig cfg;
+    skr::SProjectConfig cfg;
     {
         // Create a temporary VFS for reading the project file
         skr_vfs_desc_t temp_vfs_desc = {};
@@ -256,4 +256,4 @@ SProject::~SProject() noexcept
     if (asset_vfs)
         skr_free_vfs(asset_vfs);
 }
-} // namespace skd
+} // namespace skr

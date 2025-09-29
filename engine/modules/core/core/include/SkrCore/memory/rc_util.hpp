@@ -3,6 +3,7 @@
 #include <SkrBase/types/expected.hpp>
 #include <SkrBase/atomic/atomic_mutex.hpp>
 #include <SkrCore/memory/memory.h>
+#include <SkrBase/template/concepts.hpp>
 
 namespace skr
 {
@@ -21,13 +22,13 @@ template <typename T>
 concept ObjectWithRCDeleter = requires(const T* const_obj, T* obj) {
     { obj->skr_rc_delete() } -> std::same_as<void>;
 };
+template <typename T>
+concept RCAble = !CompletedType<T> || ObjectWithRC<T>;
 template <typename From, typename To>
 concept RCConvertible =
     std::convertible_to<From*, To*> &&
-    requires(From obj) {
-        ObjectWithRC<From>;
-        ObjectWithRC<To>;
-    };
+    RCAble<From> &&
+    RCAble<To>;
 } // namespace concepts
 
 // deleter traits

@@ -3,7 +3,7 @@
 namespace skr
 {
 
-RenderApp::RenderApp(SRenderDeviceId render_device, skr::render_graph::RenderGraphBuilder& builder)
+RenderApp::RenderApp(SRenderDeviceId render_device, skr::RG::RenderGraphBuilder& builder)
     : _render_device(render_device), swapchain_manager(*this), _graph_builder(builder)
 {
 
@@ -99,8 +99,8 @@ bool RenderApp::initialize(const char* backend)
     if (!SystemApp::initialize(backend))
         return false;
     get_event_queue()->add_handler(&swapchain_manager);
-    _graph = render_graph::RenderGraph::create(
-    [=, this](skr::render_graph::RenderGraphBuilder& bd) {
+    _graph = RG::RenderGraph::create(
+    [=, this](skr::RG::RenderGraphBuilder& bd) {
         bd = _graph_builder;
     });
     return true;
@@ -109,7 +109,7 @@ bool RenderApp::initialize(const char* backend)
 void RenderApp::shutdown()
 {
     get_event_queue()->remove_handler(&swapchain_manager);
-    skr::render_graph::RenderGraph::destroy(_graph);
+    skr::RG::RenderGraph::destroy(_graph);
     SystemApp::shutdown();
 }
 
@@ -156,14 +156,14 @@ uint32_t RenderApp::SwapchainManager::acquire_frame(skr::SystemWindow* window)
             auto swapchain = exist.value()._swapchain;
             auto backbuffer = swapchain->back_buffers[backbuffer_index];
             auto imported = _app._graph->create_texture(
-                [=](render_graph::RenderGraph& g, render_graph::TextureBuilder& builder) {
+                [=](RG::RenderGraph& g, RG::TextureBuilder& builder) {
                     builder.set_name(u8"backbuffer")
                         .import(backbuffer, CGPU_RESOURCE_STATE_UNDEFINED)
                         .allow_render_target();
                 });
             _app._graph->add_before_execute_callback([backbuffer_index, swapchain, window_index, imported](RenderGraph& graph) {
                 graph.add_present_pass(
-                    [=](render_graph::RenderGraph& g, render_graph::PresentPassBuilder& builder) {
+                    [=](RG::RenderGraph& g, RG::PresentPassBuilder& builder) {
                         skr::String pass_name = skr::format(u8"present-{}", window_index);
                         builder.set_name((const char8_t*)pass_name.c_str())
                             .swapchain(swapchain, backbuffer_index)

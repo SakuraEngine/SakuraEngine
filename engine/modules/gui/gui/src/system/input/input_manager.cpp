@@ -9,7 +9,7 @@ namespace skr::gui
 // dispatch event
 bool InputManager::dispatch_event(Event* event)
 {
-    if (auto pointer_down_event = event->type_cast<PointerDownEvent>())
+    if (auto pointer_down_event = event->rttr_cast<PointerDownEvent>())
     {
         // reopen gesture arena
         CombinePointerId pointer_id = { pointer_down_event->pointer_id, static_cast<uint32_t>(pointer_down_event->button) };
@@ -34,14 +34,14 @@ bool InputManager::dispatch_event(Event* event)
 
         return handled;
     }
-    else if (auto pointer_move_event = event->type_cast<PointerMoveEvent>())
+    else if (auto pointer_move_event = event->rttr_cast<PointerMoveEvent>())
     {
         // do hit test
         HitTestResult result;
         hit_test(&result, pointer_move_event->global_position);
 
         // handle enter & exit
-        _dispatch_enter_exit(&result, pointer_move_event->type_cast_fast<PointerMoveEvent>());
+        _dispatch_enter_exit(&result, pointer_move_event->rttr_cast<PointerMoveEvent>());
 
         // dispatch to widget
         bool handled = route_event(&result, pointer_move_event);
@@ -51,7 +51,7 @@ bool InputManager::dispatch_event(Event* event)
 
         return handled;
     }
-    else if (auto pointer_up_event = event->type_cast<PointerUpEvent>())
+    else if (auto pointer_up_event = event->rttr_cast<PointerUpEvent>())
     {
         // do hit test
         HitTestResult result;

@@ -13,7 +13,6 @@ struct [[sattr(guid = "977b69fd-b3c7-4030-8c9d-076bc94fdfbf"
 {
 public:
     SKR_GENERATE_BODY(RenderStack)
-    using Super = RenderBox;
 
     // intrinsic size
     float compute_min_intrinsic_width(float height) const SKR_NOEXCEPT override;

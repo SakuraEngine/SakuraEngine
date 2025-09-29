@@ -8,7 +8,7 @@
 #define SSIS_LOG(...)
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 CrossQueueSyncAnalysis::CrossQueueSyncAnalysis(
     const PassDependencyAnalysis& dependency_analysis,
@@ -350,5 +350,5 @@ void CrossQueueSyncAnalysis::dump_sync_points() const SKR_NOEXCEPT
     dump_ssis_analysis(); // 目前复用相同的输出
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

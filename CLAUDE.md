@@ -26,7 +26,7 @@ dotnet run SB build --target= # 构建引擎模块
 
 项目使用的 Shader 语言是自研的基于 libTooling 的 C++ 着色器，它通过把 C++ AST 翻译到 Shader AST 再翻译成 HLSL 和 MSL 等语言。
 
-- C++ AST 解析和处理的目标为 CppSLLLVM，代码在 tools/shader_compiler/LLVM 下；
+- C++ AST 解析和处理的目标为 CppSLLLVM，代码在 tools/LLVMTools/shader_compiler/LLVM 下；
 - 中间层 Shader AST 的目标为 CppSLAst，剔除了 C++ 的一些冗余语法，更加容易生成代码，实现在 tools/shader/AST 下；
 
 ## 运行时模块

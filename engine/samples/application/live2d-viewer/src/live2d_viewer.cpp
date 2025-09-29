@@ -209,7 +209,7 @@ int SLive2DViewerModule::main_module_exec(int argc, char8_t** argv)
 
     // init imgui
     {
-        skr::render_graph::RenderGraphBuilder graph_builder;
+        skr::RG::RenderGraphBuilder graph_builder;
         graph_builder.with_device(cgpu_device)
             .with_gfx_queue(gfx_queue)
             .enable_memory_aliasing();

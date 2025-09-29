@@ -10,8 +10,7 @@ struct [[sattr(guid = "5b6fca8a-7558-4301-a00a-749b63be5aab"
 )]] SKR_GUI_API ProxyElement : public ComponentElement
 {
     SKR_GENERATE_BODY(ProxyElement)
-    using Super = ComponentElement;
-    using Super::Super;
+    SKR_IFNOT_META(using Super::Super);
 
     // build & update
     void update(NotNull<Widget*> new_widget) SKR_NOEXCEPT override;

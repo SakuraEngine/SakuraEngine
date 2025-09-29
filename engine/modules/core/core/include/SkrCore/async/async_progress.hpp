@@ -384,7 +384,7 @@ private:
     template <typename Data>
     struct ThreadSafeQueue {
     private:
-        skr::queue<Data> mData{};
+        skr::stl_queue<Data> mData{};
         mutable SRWMutex mMutex{};
 
     public:
@@ -411,7 +411,7 @@ private:
             skr_rw_mutex_release_w(&mMutex);
         }
 
-        skr::queue<Data> move()
+        skr::stl_queue<Data> move()
         {
             skr_rw_mutex_acquire_w(&mMutex);
             auto const mDataMoved = std::move(mData);

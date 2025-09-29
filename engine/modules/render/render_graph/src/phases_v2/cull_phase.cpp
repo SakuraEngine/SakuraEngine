@@ -6,7 +6,7 @@
 #include "SkrProfile/profile.h"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 void CullPhase::on_execute(RenderGraph* graph, RenderGraphFrameExecutor* executor, RenderGraphProfiler* profiler) SKR_NOEXCEPT
 {
@@ -62,5 +62,5 @@ void CullPhase::on_execute(RenderGraph* graph, RenderGraphFrameExecutor* executo
     }
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

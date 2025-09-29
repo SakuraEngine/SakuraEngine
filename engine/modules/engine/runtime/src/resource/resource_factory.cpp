@@ -1,4 +1,4 @@
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "SkrRuntime/resource/resource_header.hpp"
 #include "SkrBase/misc/debug.h"
 #include "SkrRTTR/type_registry.hpp"
@@ -51,12 +51,11 @@ bool ResourceFactory::Deserialize(SResourceRecord* record, skr::ArchiveRead* rea
 bool ResourceFactory::Unload(SResourceRecord* record)
 {
     record->header.dependencies.clear();
-    if (record->destructor)
-        record->destructor(record->resource);
-#ifdef SKR_RESOURCE_DEV_MODE
-    if (record->artifactsDestructor)
-        record->artifactsDestructor(record->artifacts);
-#endif
+    if (auto type = skr::get_type_from_guid(record->header.type))
+    {
+        if (auto dtor = type->dtor_invoker())
+            dtor(record);
+    }
     return true;
 }
 

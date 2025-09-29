@@ -12,15 +12,12 @@ namespace skr::task
     struct event_t;
 }
 
-namespace skd
+namespace skr
 {
 struct SProject;
-namespace asset
-{
 struct Importer;
 struct AssetMetaFile;
 struct CookSystem;
 struct Cooker;
 struct CookContext;
-} // namespace asset
-} // namespace skd
+} // namespace skr

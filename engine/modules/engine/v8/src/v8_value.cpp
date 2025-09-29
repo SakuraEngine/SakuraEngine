@@ -68,7 +68,7 @@ V8Value V8Value::get_field(StringView name) const
     }
 
     // get object
-    Local<Object> obj = _v8_value.Get(isolate)->ToObject(context).ToLocalChecked();
+    Local<v8::Object> obj = _v8_value.Get(isolate)->ToObject(context).ToLocalChecked();
 
     // get field
     auto found = obj->Get(context, V8Bind::to_v8(name, true));
@@ -100,7 +100,7 @@ bool V8Value::set_field_value(StringView name, const V8Value& value) const
     if (!_v8_value.Get(isolate)->IsObject()) { return false; }
 
     // get object
-    Local<Object> obj = _v8_value.Get(isolate)->ToObject(context).ToLocalChecked();
+    Local<v8::Object> obj = _v8_value.Get(isolate)->ToObject(context).ToLocalChecked();
 
     auto result = obj->Set(
         context,

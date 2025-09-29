@@ -7,6 +7,6 @@ namespace skr
 {
 
 template <typename T, typename Container = skr::stl_deque<T>>
-using queue [[sfinal_alias]] = std::queue<T, Container>;
+using stl_queue [[sfinal_alias]] = std::queue<T, Container>;
 
 } // namespace skr

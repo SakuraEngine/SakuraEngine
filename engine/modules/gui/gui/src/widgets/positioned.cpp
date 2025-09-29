@@ -12,7 +12,7 @@ NotNull<RenderObject*> Positioned::create_render_object() SKR_NOEXCEPT
 }
 void Positioned::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    auto r_obj = render_object->type_cast_fast<RenderPositioned>();
+    auto r_obj = render_object->rttr_cast<RenderPositioned>();
 
     r_obj->set_positional(positional);
 }

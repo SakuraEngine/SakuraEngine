@@ -23,7 +23,7 @@ struct ImGuiRendererBackendRGTextureData
 struct SKR_IMGUI_API ImGuiApp : public skr::RenderApp
 {
 public:
-    ImGuiApp(const SystemWindowCreateInfo& main_wnd_create_info, SRenderDeviceId render_device, skr::render_graph::RenderGraphBuilder& builder);
+    ImGuiApp(const SystemWindowCreateInfo& main_wnd_create_info, SRenderDeviceId render_device, skr::RG::RenderGraphBuilder& builder);
     ~ImGuiApp();
 
     virtual bool initialize(const char* backend = nullptr) override;
@@ -59,7 +59,7 @@ private:
     void create_pipeline();
     void add_render_pass(
         ImGuiViewport* vp,
-        render_graph::RenderGraph* render_graph,
+        RG::RenderGraph* render_graph,
         CGPURootSignatureId root_sig,
         CGPURenderPipelineId render_pipeline);
     void create_texture(ImTextureData* tex_data);

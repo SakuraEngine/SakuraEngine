@@ -1,16 +1,12 @@
 /**
 * use servide_io to load gltf files
 */
-#include <iostream>
-
 #include <SkrOS/filesystem.hpp>
-#include "SkrCore/async/thread_job.hpp"
 #include <SkrCore/module/module_manager.hpp>
 #include "SkrCore/platform/vfs.h"
-#include "SkrCore/async/wait_timeout.hpp"
 #include "SkrRuntime/io/ram_io.hpp"
 #include "SkrRuntime/misc/cmd_parser.hpp"
-#include "SkrMeshTool/mesh_processing.hpp"
+#include "SkrMeshTool/gltf_processing.hpp"
 #include "cgltf/cgltf.h"
 
 // Module IOSample_gltf_tool
@@ -92,7 +88,7 @@ int IOSampleGLTFToolModule::main_module_exec(int argc, char8_t** argv)
     // skr::String result = (const skr_char8*)blob->get_data();
     // SKR_LOG_INFO(u8"Loaded glTF file: {%s}", result.c_str());
 
-    auto gltf_data = skd::asset::ImportGLTFWithData(gltf_path->view(), ioService, abs_fs);
+    auto gltf_data = skr::ImportGLTFData(gltf_path->view(), ioService, abs_fs);
     // process binary buffer file automatically
     if (!gltf_data)
     {

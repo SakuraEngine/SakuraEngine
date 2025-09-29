@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrSystem/window.h"
-#include "SkrBase/math.h"
+#include "SkrBase/math.hpp"
 #include "SkrContainersDef/string.hpp"
 #include "SkrContainersDef/vector.hpp"
 #include <functional>

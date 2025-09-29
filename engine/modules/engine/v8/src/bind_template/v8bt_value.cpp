@@ -453,7 +453,7 @@ V8BPValue* V8BTValue::_new_bind_proxy(void* address, v8::Local<v8::Object> self)
 
     // make v8 object
     Local<ObjectTemplate> instance_template = _v8_template.Get(isolate)->InstanceTemplate();
-    Local<Object> object =
+    Local<v8::Object> object =
         self.IsEmpty() ?
         instance_template->NewInstance(context).ToLocalChecked() :
         self;

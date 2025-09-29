@@ -4,7 +4,7 @@
 #include "SkrCore/log.hpp"
 #include <memory>
 
-namespace skr::render_graph
+namespace skr::RG
 {
 
 static const char* kStackAllocatorName = "RenderGraphStackAllocator";
@@ -102,4 +102,4 @@ void RenderGraphStackAllocator::Reset()
     }
 }
 
-} // namespace skr::render_graph
+} // namespace skr::RG

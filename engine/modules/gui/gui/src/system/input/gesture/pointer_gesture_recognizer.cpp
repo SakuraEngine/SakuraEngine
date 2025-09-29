@@ -5,7 +5,7 @@ namespace skr::gui
 {
 void PointerGestureRecognizer::add_pointer(NotNull<Event*> event)
 {
-    if (auto pointer_down_event = event->type_cast<PointerDownEvent>())
+    if (auto pointer_down_event = event->rttr_cast<PointerDownEvent>())
     {
         CombinePointerId id = { pointer_down_event->pointer_id, static_cast<uint32_t>(pointer_down_event->button) };
         if (!_tracing_pointers.find(id))

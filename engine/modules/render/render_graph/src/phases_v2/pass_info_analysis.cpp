@@ -5,7 +5,7 @@
 #include "SkrRenderGraph/frontend/render_graph.hpp"
 #include "SkrGraphics/flags.h"
 
-namespace skr::render_graph {
+namespace skr::RG {
 
 void PassInfoAnalysis::on_execute(RenderGraph* graph, RenderGraphFrameExecutor* executor, RenderGraphProfiler* profiler) SKR_NOEXCEPT
 {
@@ -215,4 +215,4 @@ ECGPUResourceState PassInfoAnalysis::get_resource_state(PassNode* pass, Resource
     return CGPU_RESOURCE_STATE_UNDEFINED; // Default fallback
 }
 
-} // namespace skr::render_graph
+} // namespace skr::RG

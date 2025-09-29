@@ -193,7 +193,7 @@ RenderObject* Element::find_render_object() const SKR_NOEXCEPT
     const Element* cur_element = this;
     while (cur_element)
     {
-        if (auto render_object_element = cur_element->type_cast<RenderObjectElement>())
+        if (auto render_object_element = cur_element->rttr_cast<RenderObjectElement>())
         {
             return render_object_element->render_object();
         }
@@ -211,7 +211,7 @@ Optional<Sizef> Element::render_box_size() const SKR_NOEXCEPT
 {
     if (auto render_object = find_render_object())
     {
-        if (auto render_box = render_object->type_cast<RenderBox>())
+        if (auto render_box = render_object->rttr_cast<RenderBox>())
         {
             return render_box->size();
         }
@@ -412,7 +412,7 @@ void Element::_update_slot_for_child(NotNull<Element*> child, Slot new_slot) SKR
         Slot new_slot;
         bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
-            if (auto render_object = obj->type_cast<RenderObjectElement>())
+            if (auto render_object = obj->rttr_cast<RenderObjectElement>())
             {
                 if (render_object->slot() != new_slot)
                 {
@@ -436,7 +436,7 @@ void Element::_attach_render_object_children(Slot new_slot) SKR_NOEXCEPT
         Slot new_slot;
         bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
-            if (auto render_object = obj->type_cast<RenderObjectElement>())
+            if (auto render_object = obj->rttr_cast<RenderObjectElement>())
             {
                 render_object->attach_render_object_to_parent(new_slot);
             }
@@ -455,7 +455,7 @@ void Element::_detach_render_object_children() SKR_NOEXCEPT
     struct _RecursiveHelper {
         bool operator()(NotNull<Element*> obj) const SKR_NOEXCEPT
         {
-            if (auto render_object = obj->type_cast<RenderObjectElement>())
+            if (auto render_object = obj->rttr_cast<RenderObjectElement>())
             {
                 render_object->detach_render_object_from_parent();
             }

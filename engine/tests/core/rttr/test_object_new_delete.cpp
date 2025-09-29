@@ -8,11 +8,11 @@ TEST_CASE("test object new/delete")
     using namespace skr;
     using namespace test_rttr;
 
-    IObject*         as_obj         = SkrNew<TestDerivedC>();
+    IRTTRBasic* as_obj = SkrNew<TestDerivedC>();
     ITestInterfaceA* as_interface_a = SkrNew<TestDerivedC>();
     ITestInterfaceB* as_interface_b = SkrNew<TestDerivedC>();
-    TestDerivedA*    as_derived_a   = SkrNew<TestDerivedC>();
-    TestDerivedB*    as_derived_b   = SkrNew<TestDerivedC>();
+    TestDerivedA* as_derived_a = SkrNew<TestDerivedC>();
+    TestDerivedB* as_derived_b = SkrNew<TestDerivedC>();
 
     SkrDelete(as_obj);
     SkrDelete(as_interface_a);

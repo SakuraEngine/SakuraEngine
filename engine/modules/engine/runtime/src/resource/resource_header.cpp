@@ -1,4 +1,5 @@
 #include "SkrRuntime/resource/resource_header.hpp"
+#include "SkrRuntime/resource/resource_system.hpp"
 
 namespace skr
 {
@@ -60,106 +61,31 @@ void Serialize<SResourceHeader>::write(ArchiveWrite& w, const SResourceHeader& v
 }
 } // namespace skr
 
-uint32_t SResourceRecord::AddReference(uint64_t requester, ESkrRequesterType requesterType)
+uint32_t SResourceRecord::AddReference()
 {
-#if TRACK_RESOURCE_REQUESTS
-    SMutexLock lock(mutex.mMutex);
-    if (requesterType == SKR_REQUESTER_ENTITY)
-    {
-        entityRefCount++;
-        auto iter = std::find_if(entityReferences.begin(), entityReferences.end(), [&](const entity_requester& id) { return id.storage == (void*)requester; });
-        if (iter == entityReferences.end())
-        {
-            auto id = requesterCounter++;
-            entityReferences.push_back(entity_requester{ id, (sugoi_storage_t*)requester, 1 });
-            return id;
-        }
-        else
-        {
-            iter->entityRefCount++;
-            return iter->id;
-        }
-    }
-    else if (requesterType == SKR_REQUESTER_SCRIPT)
-    {
-        scriptRefCount++;
-        auto iter = std::find_if(scriptReferences.begin(), scriptReferences.end(), [&](const script_requester& id) { return id.state == (void*)requester; });
-        if (iter == scriptReferences.end())
-        {
-            auto id = requesterCounter++;
-            scriptReferences.push_back(script_requester{ id, (lua_State*)requester, 1 });
-            return id;
-        }
-        else
-        {
-            iter->scriptRefCount++;
-            return iter->id;
-        }
-    }
-    else
-    {
-        auto id = requesterCounter++;
-        objectReferences.push_back(object_requester{ id, (void*)requester, requesterType });
-        return id;
-    }
-#else
     ++referenceCount;
-#endif
+    return referenceCount;
 }
-void SResourceRecord::RemoveReference(uint32_t id, ESkrRequesterType requesterType)
+
+void SResourceRecord::RemoveReference()
 {
-#if TRACK_RESOURCE_REQUESTS
-    SMutexLock lock(mutex.mMutex);
-    if (requesterType == SKR_REQUESTER_ENTITY)
-    {
-        entityRefCount--;
-        auto iter = std::find_if(entityReferences.begin(), entityReferences.end(), [&](const entity_requester& re) { return re.id == id; });
-        SKR_ASSERT(iter != entityReferences.end());
-        if (--iter->entityRefCount == 0)
-            entityReferences.erase(iter);
-    }
-    else if (requesterType == SKR_REQUESTER_SCRIPT)
-    {
-        scriptRefCount--;
-        auto iter = std::find_if(scriptReferences.begin(), scriptReferences.end(), [&](const script_requester& re) { return re.id == id; });
-        SKR_ASSERT(iter != scriptReferences.end());
-        if (--iter->scriptRefCount == 0)
-            scriptReferences.erase(iter);
-    }
-    else
-    {
-        auto iter = std::find_if(objectReferences.begin(), objectReferences.end(), [&](const object_requester& re) { return re.id == id; });
-        SKR_ASSERT(iter != objectReferences.end());
-        objectReferences.erase(iter);
-    }
-#else
     --referenceCount;
-#endif
+    if (referenceCount == 0)
+    {
+        auto system = skr::GetResourceSystem();
+        system->UnloadResource(header.guid);
+    }
 }
+
 bool SResourceRecord::IsReferenced() const
 {
-#if TRACK_RESOURCE_REQUESTS
-    return entityRefCount > 0 || objectReferences.size() > 0 || scriptRefCount > 0;
-#else
     return referenceCount > 0;
-#endif
 }
-void SResourceRecord::SetStatus(ESkrLoadingStatus newStatus)
+
+void SResourceRecord::SetStatus(EResourceLoadingStatus newStatus)
 {
     if (newStatus != loadingStatus)
     {
-        SMutexLock lock(mutex.mMutex);
         loadingStatus = newStatus;
-        if (!callbacks[newStatus].is_empty())
-        {
-            for (auto& callback : callbacks[newStatus])
-                callback();
-            callbacks[newStatus].clear();
-        }
     }
-}
-void SResourceRecord::AddCallback(ESkrLoadingStatus status, void (*callback)(void*), void* userData)
-{
-    SMutexLock lock(mutex.mMutex);
-    callbacks[status].push_back({ userData, callback });
 }

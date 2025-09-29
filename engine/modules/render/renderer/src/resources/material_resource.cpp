@@ -3,6 +3,7 @@
 #include "SkrCore/id_range_allocator.hpp"
 #include "SkrCore/memory/sp.hpp"
 #include "SkrRenderer/resources/mesh_resource.h"
+#include "SkrRenderer/resources/shader_resource.hpp"
 #include "SkrRenderer/resources/material_resource.hpp"
 #include "SkrRenderer/resources/material_type_resource.hpp"
 #include "SkrRenderer/resources/texture_resource.h"
@@ -14,6 +15,136 @@ namespace skr
 {
 using namespace skr;
 using MaterialFutureLancher = skr::FutureLauncher<bool>;
+
+void MaterialResource::SetBoolParameterValue(skr::StringView name, bool v)
+{
+    overrides.bools.remove_all_if([&](auto v) { return v.slot_name == name; });
+    MaterialValueBool value = {
+        .slot_name = name,
+        .value = v
+    };
+    overrides.bools.add(value);
+    if (factory != nullptr)
+        factory->MarkMaterialDirty(this);
+}
+
+void MaterialResource::SetDoubleParameterValue(skr::StringView name, double v)
+{
+    overrides.doubles.remove_all_if([&](auto v) { return v.slot_name == name; });
+    MaterialValueDouble value = {
+        .slot_name = name,
+        .value = v
+    };
+    overrides.doubles.add(value);
+    if (factory != nullptr)
+        factory->MarkMaterialDirty(this);
+}
+
+void MaterialResource::SetFloatParameterValue(skr::StringView name, float v)
+{
+    overrides.floats.remove_all_if([&](auto v) { return v.slot_name == name; });
+    MaterialValueFloat value = {
+        .slot_name = name,
+        .value = v
+    };
+    overrides.floats.add(value);
+    if (factory != nullptr)
+        factory->MarkMaterialDirty(this);
+}
+
+void MaterialResource::SetFloat2ParameterValue(skr::StringView name, float2 v)
+{
+    overrides.float2s.remove_all_if([&](auto v) { return v.slot_name == name; });
+    MaterialValueFloat2 value = {
+        .slot_name = name,
+        .value = v
+    };
+    overrides.float2s.add(value);
+    if (factory != nullptr)
+        factory->MarkMaterialDirty(this);
+}
+
+void MaterialResource::SetFloat3ParameterValue(skr::StringView name, float3 v)
+{
+    overrides.float3s.remove_all_if([&](auto v) { return v.slot_name == name; });
+    MaterialValueFloat3 value = {
+        .slot_name = name,
+        .value = v
+    };
+    overrides.float3s.add(value);
+    if (factory != nullptr)
+        factory->MarkMaterialDirty(this);
+}
+
+void MaterialResource::SetFloat4ParameterValue(skr::StringView name, float4 v)
+{
+    overrides.float4s.remove_all_if([&](auto v) { return v.slot_name == name; });
+    MaterialValueFloat4 value = {
+        .slot_name = name,
+        .value = v
+    };
+    overrides.float4s.add(value);
+    if (factory != nullptr)
+        factory->MarkMaterialDirty(this);
+}
+
+void MaterialResource::SetTextureParameterValue(skr::StringView name, AsyncResource<TextureResource> tex)
+{
+    overrides.textures.remove_all_if([&](auto v) { return v.slot_name == name; });
+    MaterialValueTexture value = {
+        .slot_name = name,
+        .value = tex.get_guid()
+    };
+    overrides.textures.add(value);
+    if (factory != nullptr)
+        factory->MarkMaterialDirty(this);
+}
+
+void MaterialResource::SetSamplerParameterValue(skr::StringView name, AsyncResource<TextureSamplerResource> tex)
+{
+    overrides.samplers.remove_all_if([&](auto v) { return v.slot_name == name; });
+    MaterialValueSampler value = {
+        .slot_name = name,
+        .value = tex.get_guid()
+    };
+    overrides.samplers.add(value);
+    if (factory != nullptr)
+        factory->MarkMaterialDirty(this);
+}
+
+void MaterialResource::storeToGPUTable(gpu::TableInstance& table)
+{
+    gpu::PBRMaterial mat_data;
+    mat_data.global_index = this->mat_id;
+    mat_data.basecolor_tex = ~0;
+    mat_data.metallic_roughness_tex = ~0;
+    mat_data.emission_tex = ~0;
+    mat_data.normal_tex = ~0;
+    for (const auto& f : overrides.floats)
+    {
+        if (f.slot_name == u8"Metallic")
+            mat_data.metallic = saturate(f.value);
+        else if (f.slot_name == u8"Roughness")
+            mat_data.roughness = saturate(f.value);
+    }
+    for (const auto& f3 : overrides.float3s)
+    {
+        if (f3.slot_name == u8"BaseColor")
+            mat_data.basecolor = saturate(f3.value);
+    }
+    for (const auto& tex : overrides.textures)
+    {
+        if (tex.slot_name == u8"BaseColorTexture")
+            mat_data.basecolor_tex = tex.bindless_id;
+        else if (tex.slot_name == u8"MetallicRoughness")
+            mat_data.metallic_roughness_tex = tex.bindless_id;
+        else if (tex.slot_name == u8"Emissive")
+            mat_data.emission_tex = tex.bindless_id;
+        else if (tex.slot_name == u8"NormalMap")
+            mat_data.normal_tex = tex.bindless_id;
+    }
+    gpu::GPUDatablock<gpu::PBRMaterial>::StoreInstance(table, mat_data.global_index, mat_data);
+}
 
 struct MaterialFactoryImpl : public MaterialFactory
 {
@@ -48,7 +179,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         {
             gpu::TableConfig table_builder(root.render_device->get_cgpu_device(), u8"Materials");
             table_builder.with_instances(16 * 1024);
-            gpu::GPUDatablock<gpu::Material>::SetupTableConfig(table_builder);
+            gpu::GPUDatablock<gpu::PBRMaterial>::SetupTableConfig(table_builder);
             mMaterialTable = TableManager->CreateTable(table_builder);
             mMaterialIdRangeAllocator.resize(mMaterialTable->GetInstanceCapacity());
         }
@@ -75,7 +206,7 @@ struct MaterialFactoryImpl : public MaterialFactory
 
     bool AsyncIO() override { return true; }
 
-    bool Unload_Pass(MaterialResource::installed_pass& pass)
+    bool Unload_Pass(MaterialResource::InstalledPass& pass)
     {
         // 1.free PSO & map key
         if (pass.key)
@@ -114,18 +245,17 @@ struct MaterialFactoryImpl : public MaterialFactory
             unloaded &= Unload_Pass(pass);
         }
         mMaterialIdRangeAllocator.deallocate(material->mat_id);
+        SkrDelete(material);
         return unloaded;
     }
 
     ESkrInstallStatus Install(SResourceRecord* record) override
     {
         auto material = static_cast<MaterialResource*>(record->resource);
+        material->factory = this;
         if (!material->material_type.is_null())
         {
-            if (!material->material_type.is_resolved())
-                material->material_type.resolve(true, nullptr);
-
-            auto matType = material->material_type.get_resolved();
+            auto matType = material->material_type.install();
             // install shaders
             for (auto& pass_template : matType->passes)
             {
@@ -134,9 +264,8 @@ struct MaterialFactoryImpl : public MaterialFactory
                 for (auto& shader : pass_template.shader_resources)
                 {
                     bool installed = false;
-                    if (!shader.is_resolved()) shader.resolve(true, nullptr);
-                    const auto pShaderCollection = shader.get_resolved();
-                    const auto shaderCollectionGUID = shader.get_record()->header.guid;
+                    const auto pShaderCollection = shader.install();
+                    const auto shaderCollectionGUID = shader.get_guid();
                     for (auto switchVariant : material->overrides.switch_variants)
                     {
                         const auto theCollectionGUID = switchVariant.shader_collection;
@@ -183,10 +312,57 @@ struct MaterialFactoryImpl : public MaterialFactory
 
     bool Uninstall(SResourceRecord* record) override
     {
+        auto material = static_cast<MaterialResource*>(record->resource);
+        mDirtyMaterials.erase(material);
         return true;
     }
 
-    CGPURootSignatureId createMaterialRS(MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders) const
+    skr::RG::BufferHandle UpdateGPUTable(skr::RG::RenderGraph* graph) override
+    {
+        auto dirties = mDirtyMaterials;
+        mDirtyMaterials.clear();
+        for (auto dirty : dirties)
+        {
+            dirty->storeToGPUTable(*mMaterialTable);
+        }
+
+        auto handle = mMaterialTable->UpdateTableBuffer(graph, mMaterialIdRangeAllocator.getMaxIds());
+        mMaterialTable->DispatchSparseUpload(graph, {});
+        return handle;
+    }
+
+    void MarkMaterialDirty(MaterialResource* mat) override
+    {
+        mDirtyMaterials.insert(mat);
+    }
+
+    ESkrInstallStatus UpdateInstall(SResourceRecord* record) override
+    {
+        auto material = static_cast<MaterialResource*>(record->resource);
+        // foreach pass check if all shaders are installed.
+        bool all_okay = true;
+        for (auto& installed_pass : material->installed_passes)
+        {
+            const auto pass_status = UpdateInstall_Pass(record, installed_pass);
+            if (pass_status != SKR_INSTALL_STATUS_SUCCEED) all_okay = false;
+        }
+        return all_okay ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
+    }
+
+    void addToGPUTable(MaterialResource* material)
+    {
+        auto id_range = mMaterialIdRangeAllocator.allocate(1);
+        if (id_range.empty())
+        {
+            auto neededCount = 1 + mMaterialIdRangeAllocator.getMaxIds();
+            mMaterialIdRangeAllocator.resize(neededCount * 2);
+            id_range = mMaterialIdRangeAllocator.allocate(1);
+        }
+        material->mat_id = id_range.start;
+        material->storeToGPUTable(*mMaterialTable);
+    }
+
+    CGPURootSignatureId createMaterialRS(MaterialResource::InstalledPass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders) const
     {
         CGPUShaderEntryDescriptor ppl_shaders[CGPU_SHADER_STAGE_COUNT];
         for (size_t i = 0; i < installed_pass.shaders.size(); i++)
@@ -227,51 +403,12 @@ struct MaterialFactoryImpl : public MaterialFactory
         return mMaterialTable;
     }
 
-    skr::render_graph::BufferHandle UpdateGPUTable(skr::render_graph::RenderGraph* graph) override
-    {
-        auto handle = mMaterialTable->UpdateTableBuffer(graph, mMaterialIdRangeAllocator.getMaxIds());
-        mMaterialTable->DispatchSparseUpload(graph, {});
-        return handle;
-    }
-
-    void addToGPUTable(MaterialResource* material)
-    {
-        auto id_range = mMaterialIdRangeAllocator.allocate(1);
-        if (id_range.empty())
-        {
-            auto neededCount = 1 + mMaterialIdRangeAllocator.getMaxIds();
-            mMaterialIdRangeAllocator.resize(neededCount * 2);
-            id_range = mMaterialIdRangeAllocator.allocate(1);
-        }
-
-        gpu::Material mat_data;
-        mat_data.global_index = id_range.start;
-        mat_data.basecolor_tex = ~0;
-        mat_data.metallic_roughness_tex = ~0;
-        mat_data.emission_tex = ~0;
-        mat_data.normal_tex = ~0;
-        for (const auto& tex : material->overrides.textures)
-        {
-            if (tex.slot_name == u8"BaseColor")
-                mat_data.basecolor_tex = tex.bindless_id;
-            else if (tex.slot_name == u8"MetallicRoughness")
-                mat_data.metallic_roughness_tex = tex.bindless_id;
-            else if (tex.slot_name == u8"Emissive")
-                mat_data.emission_tex = tex.bindless_id;
-            else if (tex.slot_name == u8"NormalMap")
-                mat_data.normal_tex = tex.bindless_id;
-        }
-        gpu::GPUDatablock<gpu::Material>::StoreInstance(*mMaterialTable, mat_data.global_index, mat_data);
-        material->mat_id = mat_data.global_index;
-    }
-
     void createBindlessDescriptors(MaterialResource* material)
     {
         // 3.create bindless descriptor
         for (auto& override : material->overrides.textures)
         {
             skr::AsyncResource<TextureResource> hdl = override.value;
-            hdl.resolve(true, 1, ESkrRequesterType::SKR_REQUESTER_UNKNOWN);
 
             uint32_t free_id = 0;
             if (!desc_buffer.free_list.is_empty())
@@ -280,8 +417,7 @@ struct MaterialFactoryImpl : public MaterialFactory
                 free_id = desc_buffer.next++;
             override.bindless_id = free_id;
 
-            auto texture = hdl.get_resolved(true)->texture;
-            hdl.resolve(true, nullptr);
+            auto texture = hdl.install()->texture;
             CGPUTextureViewDescriptor tv_desc = {
                 .name = u8"MaterialTexture",
                 .texture = texture,
@@ -350,28 +486,24 @@ struct MaterialFactoryImpl : public MaterialFactory
         for (const auto& override : material->overrides.samplers)
         {
             auto hdl = skr::AsyncResource<TextureSamplerResource>(override.value);
-            hdl.resolve(true, nullptr);
-
             auto& update = updates.emplace().ref();
             update.by_name.name = override.slot_name.data();
             update.count = 1;
-            update.samplers = &hdl.get_resolved()->sampler;
+            update.samplers = &hdl.install()->sampler;
         }
         for (const auto& override : material->overrides.textures)
         {
             skr::AsyncResource<TextureResource> hdl = override.value;
-            hdl.resolve(true, nullptr);
-
             auto& update = updates.emplace().ref();
             update.by_name.name = override.slot_name.data();
             update.count = 1; // TODO: Tex array parameter
-            update.textures = &hdl.get_resolved()->texture_view;
+            update.textures = &hdl.install()->texture_view;
         }
         cgpux_bind_table_update(bind_table, updates.data(), (uint32_t)updates.size());
         return bind_table;
     }
 
-    CGPURootSignatureId requestRS(SResourceRecord* record, MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders)
+    CGPURootSignatureId requestRS(SResourceRecord* record, MaterialResource::InstalledPass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders)
     {
         auto material = static_cast<MaterialResource*>(record->resource);
         // 0.return if ready
@@ -397,7 +529,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         return nullptr;
     }
 
-    skr_pso_map_key_id makePsoMapKey(MaterialResource* material, MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders) const SKR_NOEXCEPT
+    skr_pso_map_key_id makePsoMapKey(MaterialResource* material, MaterialResource::InstalledPass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders) const SKR_NOEXCEPT
     {
         auto desc = make_zeroed<CGPURenderPipelineDescriptor>();
         desc.root_signature = installed_pass.root_signature;
@@ -441,7 +573,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         }
         // 2.fill vertex layout
         auto vert_layout = make_zeroed<CGPUVertexLayout>();
-        const auto matType = material->material_type.get_resolved();
+        const auto matType = material->material_type.install();
         const auto vertType = matType->vertex_type;
         skr_mesh_resource_query_vertex_layout(vertType, &vert_layout);
         desc.vertex_layout = &vert_layout;
@@ -517,7 +649,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         return skr_pso_map_create_key(pso_map, &desc);
     }
 
-    CGPURenderPipelineId requestPSO(SResourceRecord* record, MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders, bool& fail)
+    CGPURenderPipelineId requestPSO(SResourceRecord* record, MaterialResource::InstalledPass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders, bool& fail)
     {
         auto material = static_cast<MaterialResource*>(record->resource);
         if (!installed_pass.key)
@@ -529,7 +661,7 @@ struct MaterialFactoryImpl : public MaterialFactory
         return skr_pso_map_find_pso(pso_map, installed_pass.key);
     }
 
-    ESkrInstallStatus UpdateInstall_Pass(SResourceRecord* record, MaterialResource::installed_pass& installed_pass)
+    ESkrInstallStatus UpdateInstall_Pass(SResourceRecord* record, MaterialResource::InstalledPass& installed_pass)
     {
         // 1.all shaders are installed ?
         skr::InlineVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
@@ -557,23 +689,10 @@ struct MaterialFactoryImpl : public MaterialFactory
         return installed_pass.pso ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
     }
 
-    ESkrInstallStatus UpdateInstall(SResourceRecord* record) override
-    {
-        auto material = static_cast<MaterialResource*>(record->resource);
-        // foreach pass check if all shaders are installed.
-        bool all_okay = true;
-        for (auto& installed_pass : material->installed_passes)
-        {
-            const auto pass_status = UpdateInstall_Pass(record, installed_pass);
-            if (pass_status != SKR_INSTALL_STATUS_SUCCEED) all_okay = false;
-        }
-        return all_okay ? SKR_INSTALL_STATUS_SUCCEED : SKR_INSTALL_STATUS_INPROGRESS;
-    }
-
     struct RootSignatureRequest
         : public skr::AsyncProgress<MaterialFutureLancher, int, bool>
     {
-        RootSignatureRequest(const MaterialResource* material, MaterialFactoryImpl* factory, MaterialResource::installed_pass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders)
+        RootSignatureRequest(const MaterialResource* material, MaterialFactoryImpl* factory, MaterialResource::InstalledPass& installed_pass, skr::Span<CGPUShaderLibraryId> shaders)
             : material(material)
             , installed_pass(installed_pass)
             , factory(factory)
@@ -589,13 +708,14 @@ struct MaterialFactoryImpl : public MaterialFactory
         }
 
         const MaterialResource* material = nullptr;
-        MaterialResource::installed_pass& installed_pass;
+        MaterialResource::InstalledPass& installed_pass;
         MaterialFactoryImpl* factory = nullptr;
         CGPURootSignatureId root_signature = nullptr;
         CGPUXBindTableId bind_table = nullptr;
         skr::InlineVector<CGPUShaderLibraryId, CGPU_SHADER_STAGE_COUNT> shaders;
     };
 
+    skr::ParallelFlatHashSet<MaterialResource*> mDirtyMaterials;
     skr::FlatHashMap<GUID, SP<RootSignatureRequest>, skr::Hash<GUID>> mRootSignatureRequests;
     skr::SP<MaterialFutureLancher> launcher = nullptr;
 

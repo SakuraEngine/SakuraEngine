@@ -1,11 +1,11 @@
 #include "SkrBase/misc/defer.hpp"
 #include "SkrRuntime/io/ram_io.hpp"
-#include "SkrRuntime/resource/config_resource.h"
+#include "SkrRuntime/resource/config_resource.hpp"
 #include "SkrToolCore/assets/config_asset.hpp"
 #include "SkrToolCore/cook_system/cook_system.hpp"
 #include <SkrRTTR/type_registry.hpp>
 
-namespace skd::asset
+namespace skr
 {
 void* JsonConfigImporter::Import(skr::io::IRAMService* ioService, CookContext* context)
 {
@@ -69,4 +69,4 @@ bool ConfigCooker::Cook(CookContext* ctx)
     ctx->Save(*resource);
     return true;
 }
-} // namespace skd::asset
+} // namespace skr

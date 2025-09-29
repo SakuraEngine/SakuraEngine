@@ -3,6 +3,7 @@
 #include "SkrBase/types.h"
 #include "SkrBase/misc/traits.hpp"
 #include "SkrContainers/function_ref.hpp"
+#include "./array.hpp"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -21,7 +22,7 @@ SUGOI_DECLARE(storage_delta_t);
 #undef SUGOI_DECLARE
 
 typedef TIndex sugoi_type_index_t;
-typedef skr_guid_t sugoi_guid_t;
+typedef skr::GUID sugoi_guid_t;
 
 #if defined(__cplusplus)
 }
@@ -56,9 +57,6 @@ enum pool_type_t
 };
 
 using guid_t = sugoi_guid_t;
-
-template <class T, size_t N>
-struct ArrayComponent;
 
 using link_array_t = ArrayComponent<sugoi_entity_t, kLinkComponentSize>;
 

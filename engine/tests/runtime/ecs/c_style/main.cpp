@@ -508,10 +508,10 @@ void register_test_component()
         desc.guid = u8"{3A44728E-66C2-40F9-A3C1-0920A727A94A}"_guid;
         desc.callback = {};
         desc.flags = 0;
-        desc.elementSize = 0;
+        desc.arrElementSize = 0;
         desc.alignment = alignof(TestComp);
         type_test = sugoiT_register_type(&desc);
-        desc.elementSize = desc.size;
+        desc.arrElementSize = desc.size;
         desc.size = sizeof(sugoi::ArrayComponent<TestComp, 10>);
         desc.guid = u8"{82D170AE-6D06-406C-A451-F670103D7894}"_guid;
         desc.name = u8"test_arr";
@@ -528,11 +528,11 @@ void register_test_component()
         desc.guid = u8"{36B139D5-0492-4EC7-AF72-B440665F2307}"_guid;
         desc.callback = {};
         desc.flags = 0;
-        desc.elementSize = 0;
+        desc.arrElementSize = 0;
         desc.alignment = alignof(TestComp);
         type_test2 = sugoiT_register_type(&desc);
         desc.guid = u8"{FD70F4BD-52FB-4911-8930-41A80C482DBF}"_guid;
-        desc.elementSize = desc.size;
+        desc.arrElementSize = desc.size;
         desc.size = sizeof(sugoi::ArrayComponent<TestComp, 10>);
         desc.name = u8"test_arr";
         type_test2_arr = sugoiT_register_type(&desc);
@@ -548,7 +548,7 @@ void register_test_component()
         desc.guid = u8"{3E5A2C5F-7FBE-486C-BCCE-8E6D8933B2C5}"_guid;
         desc.callback = {};
         desc.flags = 0;
-        desc.elementSize = 0;
+        desc.arrElementSize = 0;
         desc.alignment = alignof(TestComp);
         type_test3 = sugoiT_register_type(&desc);
     }
@@ -566,11 +566,11 @@ void register_ref_component()
     desc.guid = u8"{4BEC235F-63DF-4A49-8F5E-5431890F61DD}"_guid;
     desc.callback = {};
     desc.flags = 0;
-    desc.elementSize = 0;
+    desc.arrElementSize = 0;
     desc.alignment = alignof(ref);
     type_ref = sugoiT_register_type(&desc);
     desc.guid = u8"{F84BB5DE-DB21-4CEF-8DF1-8CD7AEEE766F}"_guid;
-    desc.elementSize = desc.size;
+    desc.arrElementSize = desc.size;
     desc.size = sizeof(sugoi::ArrayComponent<ref, 10>);
     desc.name = u8"ref_arr";
     type_ref_arr = sugoiT_register_type(&desc);
@@ -586,7 +586,7 @@ void register_managed_component()
     desc.entityFields = 0;
     desc.guid = u8"{BA2D8E6A-9841-474F-9A6D-3E43BF0A7A9C}"_guid;
     desc.flags = 0;
-    desc.elementSize = 0;
+    desc.arrElementSize = 0;
     desc.alignment = alignof(managed);
     desc.callback = {
         +[](sugoi_type_index_t, sugoi_chunk_t* chunk, EIndex index, char* data) { new (data) managed; },
@@ -597,7 +597,7 @@ void register_managed_component()
     };
     type_managed = sugoiT_register_type(&desc);
     desc.guid = u8"{BCF22A9B-908C-4F84-89B4-C7BD803FC6C2}"_guid;
-    desc.elementSize = desc.size;
+    desc.arrElementSize = desc.size;
     desc.size = sizeof(sugoi::ArrayComponent<managed, 10>);
     desc.name = u8"managed_arr";
     type_managed_arr = sugoiT_register_type(&desc);
@@ -614,11 +614,11 @@ void register_pinned_component()
     desc.guid = u8"{E6127548-981D-46F5-BF33-8EC31CACACFD}"_guid;
     desc.callback = {};
     desc.flags = SUGOI_TYPE_FLAG_PIN;
-    desc.elementSize = 0;
+    desc.arrElementSize = 0;
     desc.alignment = alignof(pinned);
     type_pinned = sugoiT_register_type(&desc);
     desc.guid = u8"{673605E0-C52C-40F5-A3F0-736409617D15}"_guid;
-    desc.elementSize = desc.size;
+    desc.arrElementSize = desc.size;
     desc.size = sizeof(sugoi::ArrayComponent<pinned, 10>);
     desc.name = u8"pinned_arr";
     type_pinned_arr = sugoiT_register_type(&desc);

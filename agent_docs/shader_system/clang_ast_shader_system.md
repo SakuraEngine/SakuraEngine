@@ -12,8 +12,8 @@ C++ 源码 → Clang AST → Shader AST → HLSL/MSL/GLSL
 
 ### 核心组件
 
-- **CppSLLLVM**：基于 Clang LibTooling 的 C++ AST 解析器（位于 `tools/shader_compiler/LLVM`）
-- **CppSLAst**：中间层着色器 AST 表示（位于 `tools/shader_compiler/AST`）
+- **CppSLLLVM**：基于 Clang LibTooling 的 C++ AST 解析器（位于 `tools/LLVMTools/shader_compiler/LLVM`）
+- **CppSLAst**：中间层着色器 AST 表示（位于 `tools/LLVMTools/shader_compiler/AST`）
 - **代码生成器**：将 Shader AST 转换为各种目标语言
 
 ## Clang AST 解析实现
@@ -21,7 +21,7 @@ C++ 源码 → Clang AST → Shader AST → HLSL/MSL/GLSL
 ### ShaderCompiler 主框架
 
 ```cpp
-// tools/shader_compiler/LLVM/src/shader_compiler.hpp
+// tools/LLVMTools/shader_compiler/LLVM/src/shader_compiler.hpp
 struct ShaderCompiler {
     static ShaderCompiler* Create(int argc, const char **argv);
     virtual int Run() = 0;
@@ -124,8 +124,7 @@ SakuraEngine 着色器系统使用 Clang 注解属性进行元数据标记：
 #include "std/attributes.hpp"
 
 // 计算着色器入口点
-[[compute_shader("compute_main")]]
-[[kernel_3d(32, 32, 1)]]
+[[numthreads(32, 32, 1)]]
 void compute_main([[sv_thread_id]] uint3 tid);
 
 // 顶点着色器
@@ -312,8 +311,7 @@ float4 trace(uint2 tid, uint2 tsize) {
 }
 
 // 计算着色器入口点
-[[compute_shader("compute_main")]]
-[[kernel_3d(32, 32, 1)]]
+[[numthreads(32, 32, 1)]]
 void compute_main([[sv_thread_id]] uint3 tid) {
     uint2 tsize = uint2(WIDTH, HEIGHT);
     uint row_pitch = tsize.x;
@@ -340,8 +338,7 @@ float4 process_pixel(uint2 coord, uint2 size) {
 }
 
 // 计算着色器入口点
-[[compute_shader("compute_main")]]
-[[kernel_3d(8, 8, 1)]]
+[[numthreads(8, 8, 1)]]
 void compute_main([[sv_thread_id]] uint3 tid) {
     const uint2 size = uint2(1920, 1080);
     

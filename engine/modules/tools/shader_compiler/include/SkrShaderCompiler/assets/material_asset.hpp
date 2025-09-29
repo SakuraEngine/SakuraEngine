@@ -4,7 +4,7 @@
 #include "SkrShaderCompiler/assets/material_type_asset.hpp" // IWYU pragma: export
 #include "SkrShaderCompiler/assets/material_asset.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 
 struct [[sattr(
@@ -57,4 +57,4 @@ struct [[sattr(
     uint32_t Version() override { return kDevelopmentVersion; }
 };
 
-} // namespace skd::asset
+} // namespace skr

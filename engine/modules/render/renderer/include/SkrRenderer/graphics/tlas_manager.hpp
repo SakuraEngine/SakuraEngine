@@ -57,8 +57,8 @@ struct SKR_RENDERER_API TLASManager
     static TLASManager* Create(uint32_t max_count, RenderDevice* device);
     static void Destroy(TLASManager* manager);
 
-    virtual void Request(skr::render_graph::RenderGraph* graph, const TLASUpdateRequest& request) = 0; 
-    virtual TLASHandle GetLatestTLAS(skr::render_graph::RenderGraph* graph) const = 0;
+    virtual void Request(skr::RG::RenderGraph* graph, const TLASUpdateRequest& request) = 0; 
+    virtual TLASHandle GetLatestTLAS(skr::RG::RenderGraph* graph) const = 0;
 };
 
 } // namespace skr

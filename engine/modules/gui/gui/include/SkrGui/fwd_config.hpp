@@ -11,7 +11,7 @@
 
 // reflection
 #include "SkrRuntime/config.h"
-#include "SkrRTTR/iobject.hpp"
+#include "SkrRTTR/irttr_basic.hpp"
 
 // export macro
 #include "SkrBase/config.h"

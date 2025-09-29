@@ -164,7 +164,7 @@ struct _NVGHelper {
         inv[5] = (float)(((double)t[1] * t[4] - (double)t[0] * t[5]) * invdet);
     }
 
-    static skr_float4x4_t nvg__getMatrix(NVGpaint* paint)
+    static skr::float4x4 nvg__getMatrix(NVGpaint* paint)
     {
         float invxform[6];
         nvg__xformInverse(invxform, paint->xform);
@@ -174,7 +174,7 @@ struct _NVGHelper {
                  { invxform[4], invxform[5], 0.f, 1.f } };
     }
 
-    static void nvg__renderPath(ICanvas* canvas, const NVGpath& path, NVGpaint* paint, const skr_float4x4_t& transform, float fringe)
+    static void nvg__renderPath(ICanvas* canvas, const NVGpath& path, NVGpaint* paint, const skr::float4x4& transform, float fringe)
     {
         float2 extend{ paint->extent[0], paint->extent[1] };
         auto&        vertices    = canvas->_vertices;
@@ -298,8 +298,8 @@ struct _NVGHelper {
                 command.texture_swizzle  = surface_brush->_swizzle;
                 if (surface_brush->_surface)
                 {
-                    command.material = surface_brush->_surface->type_cast<IMaterial>();
-                    command.texture  = surface_brush->_surface->type_cast<IImage>();
+                    command.material = surface_brush->_surface->rttr_cast<IMaterial>();
+                    command.texture  = surface_brush->_surface->rttr_cast<IImage>();
                 }
             }
             else if (canvas->_tmp_brush->type() == EBrushType::SurfaceNine)
@@ -308,8 +308,8 @@ struct _NVGHelper {
                 command.texture_swizzle       = surface_nine_brush->_swizzle;
                 if (surface_nine_brush->_surface)
                 {
-                    command.material = surface_nine_brush->_surface->type_cast<IMaterial>();
-                    command.texture  = surface_nine_brush->_surface->type_cast<IImage>();
+                    command.material = surface_nine_brush->_surface->rttr_cast<IMaterial>();
+                    command.texture  = surface_nine_brush->_surface->rttr_cast<IImage>();
                 }
             }
 

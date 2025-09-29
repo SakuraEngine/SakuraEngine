@@ -6,7 +6,7 @@
 namespace skr::gui
 {
 struct [[sattr(guid = "a40f7782-8b8f-4059-ab2a-3d8e4ac2fdd5"
-)]] SKR_GUI_API Layer : virtual public skr::IObject
+)]] SKR_GUI_API Layer : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(Layer)
     using VisitFuncRef = FunctionRef<void(NotNull<Layer*>)>;

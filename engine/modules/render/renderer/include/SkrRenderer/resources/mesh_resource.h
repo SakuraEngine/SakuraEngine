@@ -4,9 +4,11 @@
 #include "SkrCore/blob.hpp"
 #include "SkrContainers/string.hpp"
 #include "SkrContainers/vector.hpp"
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrContainers/map.hpp"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "SkrRenderer/graphics/gpu_table.hpp"
 #include "SkrRenderer/resources/mesh_resource.generated.h" // IWYU pragma: export
+
 namespace skr
 {
 enum class [[sattr(
@@ -62,27 +64,26 @@ MeshBuffer
 struct [[sattr(guid = "cd2d43a7-1e0e-4951-bf87-7d693fd26227" serde = @enable)]]
 MeshPrimitive
 {
-    VertexLayoutId vertex_layout;
-    uint32_t material_index;
     skr::Vector<VertexBufferEntry> vertex_buffers;
     IndexBufferEntry index_buffer;
     uint32_t vertex_count;
+    uint32_t material_index;
 };
 
 struct [[sattr(guid = "d3b04ea5-415d-44d5-995a-5c77c64fe1de" serde = @enable)]]
 MeshSection
 {
     int32_t parent_index;
-    skr_float3_t translation;
-    skr_float3_t scale;
-    skr_float4_t rotation;
+    skr::float3 translation;
+    skr::float3 scale;
+    skr::float4 rotation;
     skr::Vector<uint32_t> primitive_indices;
 };
 
 struct [[sattr(guid = "3b8ca511-33d1-4db4-b805-00eea6a8d5e1" serde = @enable)]]
-MeshResource
+SKR_RENDERER_API MeshResource
 {
-    SKR_RENDERER_API ~MeshResource() SKR_NOEXCEPT;
+    ~MeshResource() SKR_NOEXCEPT;
 
     skr::String name;
     skr::Vector<MeshSection> sections;
@@ -92,10 +93,30 @@ MeshResource
     skr::Vector<skr::AsyncResource<MaterialResource>> materials;
 
     bool install_to_vram SKR_IF_CPP(= true);
-    bool install_to_ram SKR_IF_CPP(= true); // TODO: configure this in asset
+    bool install_to_ram SKR_IF_CPP(= false);
 
     [[sattr(serde = @disable)]]
     RenderMesh* render_mesh SKR_IF_CPP(= nullptr);
+};
+
+struct [[secs_component, sattr(
+    guid = "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c"
+    serde = @enable
+)]] SKR_RENDERER_API MeshComponent
+{
+public:
+    SKR_GENERATE_BODY(MeshComponent);
+
+    void SetMeshResource(skr::AsyncResource<skr::MeshResource> mesh);
+    skr::AsyncResource<skr::MeshResource>& GetMeshResource();
+    const skr::AsyncResource<skr::MeshResource>& GetMeshResource() const;
+
+    void SetOverrideMaterial(uint32_t slot, skr::AsyncResource<MaterialResource> mat);
+    skr::AsyncResource<MaterialResource> GetOverrideMaterial(uint32_t slot);
+
+private:
+    skr::AsyncResource<skr::MeshResource> mesh_resource;
+    skr::InlineMap<uint32_t, skr::AsyncResource<MaterialResource>, 1> override_materials;
 };
 
 struct SKR_RENDERER_API MeshFactory : public ResourceFactory
@@ -106,15 +127,15 @@ struct SKR_RENDERER_API MeshFactory : public ResourceFactory
     {
         skr_vfs_t* vfs = nullptr;
         const char8_t* dstorage_root;
-        skr_io_ram_service_t* ram_service = nullptr;
-        skr_io_vram_service_t* vram_service = nullptr;
+        io::IRAMService* ram_service = nullptr;
+        io::IVRAMService* vram_service = nullptr;
         SRenderDeviceId render_device = nullptr;
         skr::RC<gpu::TableManager> table_manager = nullptr;
     };
 
+    virtual skr::RG::BufferHandle UpdateGPUTable(skr::RG::RenderGraph* graph) = 0;
     virtual CGPUDescriptorBufferId descriptor_buffer() = 0;
     virtual skr::RC<gpu::TableInstance> primitive_table() = 0;
-    virtual skr::render_graph::BufferHandle UpdateGPUTable(skr::render_graph::RenderGraph* graph) = 0;
 
     float AsyncSerdeLoadFactor() override { return 2.5f; }
     [[nodiscard]] static MeshFactory* Create(const Root& root);

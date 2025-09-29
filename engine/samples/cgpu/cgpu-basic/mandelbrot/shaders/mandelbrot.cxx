@@ -2,8 +2,8 @@
 
 RWStructuredBuffer<float4> buf;
 
-[[compute_shader("compute_main"), numthreads(32, 32, 1)]]
-void kernel([[sv_thread_id]] uint2 tid)
+[[numthreads(32, 32, 1)]]
+void compute_main([[sv_thread_id]] uint2 tid)
 {
     const uint2 tsize = uint2(3200, 2400);
     const uint32 row_pitch = tsize.x;

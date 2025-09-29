@@ -6,7 +6,7 @@
 #include "schedule_reorder.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // 同步点类型
 enum class ESyncPointType : uint8_t
@@ -110,5 +110,5 @@ private:
     uint32_t total_queue_count_ = 0;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

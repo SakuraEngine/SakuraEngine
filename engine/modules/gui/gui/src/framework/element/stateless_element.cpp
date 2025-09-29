@@ -6,7 +6,7 @@ namespace skr::gui
 // build & update
 Widget* StatelessElement::build() SKR_NOEXCEPT
 {
-    auto stateless_widget = widget()->type_cast_fast<StatelessWidget>();
+    auto stateless_widget = widget()->rttr_cast<StatelessWidget>();
     return stateless_widget->build(this).get();
 }
 void StatelessElement::update(NotNull<Widget*> new_widget) SKR_NOEXCEPT

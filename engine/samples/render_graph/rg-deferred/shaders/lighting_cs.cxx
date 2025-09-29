@@ -15,8 +15,8 @@ struct RootConstants
 [[push_constant]]
 ConstantBuffer<RootConstants> push_constants;
 
-[[compute_shader("cs"), numthreads(16, 16, 1)]]
-void compute([[sv_thread_id]] uint2 threadID)
+[[numthreads(16, 16, 1)]]
+void cs([[sv_thread_id]] uint2 threadID)
 {
     if (any(threadID.xy >= uint2(push_constants.viewportSize)))
         return;

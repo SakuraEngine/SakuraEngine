@@ -21,10 +21,10 @@ public class UploadSDKCommand
     [Cli.ExecCmd]
     public int Exec()
     {
-        Engine.InitializeLogger(Verbose ? LogEventLevel.Verbose : LogEventLevel.Information);
+        Sakura.Logging.InitializeLogger(Verbose ? LogEventLevel.Verbose : LogEventLevel.Information);
 
         // notify prepare commandline stage for some basic setup
-        BuildStage.UpdateStage(EBuildStage.PrepareCommandline);
+        BuildStage.UpdateStage(EBuildStage.PrepareCallCommandLine);
 
         Log.Information("开始上传SDK文件...");
         Log.Information("GLOB模式: {GlobPattern}", GlobPattern);

@@ -8,8 +8,7 @@ struct [[sattr(guid = "85142301-eaec-4908-8420-930bf85b02ff"
 )]] SKR_GUI_API RenderNativeWindowElement : public RenderWindowElement
 {
     SKR_GENERATE_BODY(ProxyElement)
-    using Super = RenderWindowElement;
-    using Super::Super;
+    SKR_IFNOT_META(using Super::Super);
 
     void perform_rebuild() SKR_NOEXCEPT override;
     void update(NotNull<Widget*> new_widget) SKR_NOEXCEPT override;

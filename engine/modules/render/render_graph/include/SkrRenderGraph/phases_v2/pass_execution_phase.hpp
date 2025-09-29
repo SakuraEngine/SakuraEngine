@@ -7,7 +7,7 @@
 #include "queue_schedule.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // Command recording phase configuration
 struct CommandRecordingConfig {
@@ -77,5 +77,5 @@ private:
     CommandRecordingResult recording_result_;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

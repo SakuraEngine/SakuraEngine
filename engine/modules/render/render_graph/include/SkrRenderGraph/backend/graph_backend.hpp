@@ -7,7 +7,7 @@
 #include "SkrRenderGraph/backend/texture_view_pool.hpp"
 #include "SkrRenderGraph/backend/bind_table_pool.hpp"
 
-namespace skr::render_graph
+namespace skr::RG
 {
 struct PassInfoAnalysis;
 struct QueueSchedule;
@@ -108,4 +108,4 @@ protected:
     TexturePool texture_pool;
     TextureViewPool texture_view_pool;
 };
-} // namespace skr::render_graph
+} // namespace skr::RG

@@ -10,7 +10,7 @@ void ClickGestureRecognizer::on_pointer_added(PointerDownEvent* event)
 // 事件处理
 bool ClickGestureRecognizer::handle_event(Event* event)
 {
-    if (auto pointer_up_event = event->type_cast<PointerUpEvent>())
+    if (auto pointer_up_event = event->rttr_cast<PointerUpEvent>())
     {
         _up_event = *pointer_up_event;
         if (_has_preview_up_event)
@@ -28,7 +28,7 @@ bool ClickGestureRecognizer::handle_event(Event* event)
 }
 bool ClickGestureRecognizer::handle_event_from_widget(Event* event)
 {
-    if (event->type_is<PointerUpEvent>())
+    if (event->rttr_cast<PointerUpEvent>())
     {
         _has_preview_up_event = true;
         return true;

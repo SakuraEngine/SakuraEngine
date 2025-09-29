@@ -17,18 +17,15 @@ struct SKR_RUNTIME_API archetype_t
     const sugoi_type_set_t type;
     const uint32_t* const sizes;
     const uint32_t* const offsets[3];
-    const uint32_t* const elemSizes;
     const uint32_t* const aligns;
-
-    // TODO. elemSizes 变为更精细的数据
-    // - arrElemSizes: for array component, size of each element
-    // - arrInlineCounts: for array component, inline count of each array
+    
+    const uint32_t* const arrElemSizes;
+    const uint32_t* const arrInlineCounts;
 
     const uint32_t sliceDataOffsets[3];
     const uint32_t* const callbackFlags;
     const uint32_t* const stableOrder;
     const sugoi_callback_v* const callbacks;
-    const resource_fields_t* const resourceFields;
     const uint32_t chunkCapacity[3];
     const uint32_t entitySize;
     const uint32_t sizeToPatch;

@@ -17,7 +17,7 @@ struct RawSkeleton;
 struct RawAnimation;
 } // namespace ozz::animation::offline
 
-namespace skd::asset
+namespace skr
 {
 using RawAnimation = ozz::animation::offline::RawAnimation;
 
@@ -60,7 +60,7 @@ AnimOptimizationOverride
 };
 
 struct [[sattr(guid = "13873706-F7EE-4386-B7F0-B4E313864624" serde = @enable)]]
-AnimAsset : public skd::asset::AssetMetadata
+AnimAsset : public skr::AssetMetadata
 {
     /*
         "additive" : false, //  Creates a delta animation that can be used for additive blending.
@@ -90,9 +90,9 @@ AnimAsset : public skd::asset::AssetMetadata
 
 struct [[sattr(
     guid = "81F1C813-1ABA-41BE-8D7A-F6C88E73E891"
-)]] SKR_ANIMTOOL_API AnimCooker : public skd::asset::Cooker
+)]] SKR_ANIMTOOL_API AnimCooker : public skr::Cooker
 {
     bool Cook(CookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 };
-} // namespace skd::asset
+} // namespace skr

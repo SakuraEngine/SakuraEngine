@@ -3,7 +3,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 struct RenderGraphStateTracker;
@@ -137,5 +137,5 @@ protected:
     // temporal handle with a lifespan of only one frame
     mutable CGPUAccelerationStructureId imported_as = nullptr;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

@@ -130,4 +130,10 @@ concept Invocable = requires(Func&& func, Args&&... args) {
     std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
 };
 
+// completed type
+template <typename T>
+concept CompletedType = requires {
+    sizeof(T);
+};
+
 } // namespace skr::concepts

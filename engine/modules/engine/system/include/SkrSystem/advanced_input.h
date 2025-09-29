@@ -32,7 +32,7 @@ typedef enum EInputResult
     INPUT_RESULT_NOT_FOUND
 } EInputResult;
 
-using LayerId                            = skr_guid_t;
+using LayerId                            = skr::GUID;
 static const LayerId kGameInputLayerId   = { 0xa0bb28b1, 0xacdb, 0x41fb, { 0x87, 0xaa, 0x9d, 0x09, 0xfb, 0x92, 0x31, 0x8f } };
 static const LayerId kCommonInputLayerId = { 0x1b1487f5, 0x7850, 0x4b85, { 0x9f, 0xc3, 0x0a, 0x9f, 0x81, 0x28, 0xcc, 0x5a } };
 struct SKR_SYSTEM_API InputLayer {

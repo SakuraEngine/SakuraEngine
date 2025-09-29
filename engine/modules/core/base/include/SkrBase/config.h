@@ -32,3 +32,7 @@
 
 // meta
 #include "./meta.h"
+
+#ifdef __cplusplus
+namespace d5 { using namespace skr; }
+#endif

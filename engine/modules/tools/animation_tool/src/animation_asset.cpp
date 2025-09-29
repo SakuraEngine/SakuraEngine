@@ -15,7 +15,7 @@
 
 #include "SkrProfile/profile.h"
 
-namespace skd::asset
+namespace skr
 {
 bool AnimCooker::Cook(CookContext* ctx)
 {
@@ -27,16 +27,16 @@ bool AnimCooker::Cook(CookContext* ctx)
     auto anim_asset_file = ctx->GetAssetMetaFile();
     auto& anim_asset = *anim_asset_file->GetMetadata<AnimAsset>();
     //-----emit static dependencies
-    if (anim_asset.skeletonAsset.get_serialized().is_zero())
+    if (anim_asset.skeletonAsset.get_guid().is_zero())
     {
         SKR_LOG_ERROR(u8"Failed to cook animation asset %s. No skeleton asset specified.", ctx->GetAssetMetaFile()->GetURI().string().c_str());
         return false;
     }
-    auto idx = ctx->AddStaticDependency(anim_asset.skeletonAsset.get_serialized(), true);
+    auto idx = ctx->AddStaticDependency(anim_asset.skeletonAsset.get_guid(), true);
 
-    if (ctx->GetStaticDependency(idx).get_status() == SKR_LOADING_STATUS_ERROR)
+    if (ctx->GetStaticDependency(idx).get_status() == EResourceLoadingStatus::Error)
         return false;
-    SkeletonResource* skeletonResource = (SkeletonResource*)ctx->GetStaticDependency(idx).get_ptr();
+    SkeletonResource* skeletonResource = (SkeletonResource*)ctx->GetStaticDependency(idx).get_loaded();
     auto& skeleton = skeletonResource->skeleton;
     //-----import resource object
     RawAnimation* rawAnimation = (RawAnimation*)ctx->Import<RawAnimation>();
@@ -139,4 +139,4 @@ bool AnimCooker::Cook(CookContext* ctx)
 
     return true;
 }
-} // namespace skd::asset
+} // namespace skr

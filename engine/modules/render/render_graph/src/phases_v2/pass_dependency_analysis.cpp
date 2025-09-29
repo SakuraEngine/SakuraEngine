@@ -9,7 +9,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 PassDependencyAnalysis::PassDependencyAnalysis(const PassInfoAnalysis& pass_info_analysis)
@@ -504,5 +504,5 @@ void PassDependencyAnalysis::generate_cross_queue_sync_points(const QueueSchedul
     }
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

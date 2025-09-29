@@ -1,11 +1,8 @@
 #pragma once
 #include "resources/mesh_resource.h"
-#include "SkrRuntime/sugoi/sugoi_meta.hpp"
-#include "SkrRenderer/primitive_draw.h"
 #include "SkrGraphics/api.h"
-#include "SkrRenderer/render_mesh.generated.h" // IWYU pragma: export
+#include "SkrRenderer/primitive_draw.h"
 
-#ifdef __cplusplus
 namespace skr
 {
 struct RenderMesh
@@ -27,17 +24,10 @@ struct RenderMesh
     uint64_t primitive_table_id_start = 0;
 };
 
-struct [[secs_managed_component, sattr(
-    guid = "c66ab7ef-bde9-4e0f-8023-a2d99ba5134c"
-    serde = @enable
-)]]MeshComponent
-{
-    skr::AsyncResource<skr::MeshResource> mesh_resource;
-};
-
 } // namespace skr
-#endif
 
-SKR_EXTERN_C SKR_RENDERER_API void skr_render_mesh_initialize(skr::RenderMesh* render_mesh, skr::MeshResource* mesh_resource);
+SKR_EXTERN_C SKR_RENDERER_API 
+void skr_render_mesh_initialize(skr::RenderMesh* render_mesh, skr::MeshResource* mesh_resource);
 
-SKR_EXTERN_C SKR_RENDERER_API void skr_render_mesh_free(skr::RenderMesh* render_mesh);
+SKR_EXTERN_C SKR_RENDERER_API 
+void skr_render_mesh_free(skr::RenderMesh* render_mesh);

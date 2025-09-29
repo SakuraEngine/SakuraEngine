@@ -9,7 +9,6 @@ struct [[sattr(guid = "4207334c-617c-4f7c-bf3c-fd2f9e018a9c"
 {
 public:
     SKR_GENERATE_BODY(RenderGridPaper)
-    using Super = RenderBox;
 
     void perform_layout() SKR_NOEXCEPT override;
     void paint(NotNull<PaintingContext*> context, Offsetf offset) SKR_NOEXCEPT override;

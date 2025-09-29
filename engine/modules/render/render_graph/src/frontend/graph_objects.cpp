@@ -6,7 +6,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 static const char* kMemoryPoolName = "RenderGraphFrontentObjects";
@@ -397,5 +397,5 @@ PassNode* AccelerationStructureReadEdge::get_pass_node()
     return (PassNode*)to();
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/types/guid.h"
+#include "SkrBase/types.h"
 
 namespace skr
 {

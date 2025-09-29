@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "SkrBase/types.h"
 #include "SkrAnim/ozz/animation.h"
 #include "SkrAnim/resources/animation_resource.generated.h" // IWYU pragma: export

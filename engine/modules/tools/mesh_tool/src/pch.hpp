@@ -12,7 +12,7 @@
 #include "SkrRuntime/io/ram_io.hpp"      // IWYU pragma: export
 
 #include "SkrCore/module/module.hpp"        // IWYU pragma: export
-#include "SkrRuntime/resource/config_resource.h" // IWYU pragma: export
+#include "SkrRuntime/resource/config_resource.hpp" // IWYU pragma: export
 
 #include "SkrContainers/string.hpp"  // IWYU pragma: export
 #include "SkrContainers/vector.hpp"  // IWYU pragma: export

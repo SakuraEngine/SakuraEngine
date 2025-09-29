@@ -198,9 +198,9 @@ class _Gen {
     const b = main_db.main_file
     const _gen_records = main_db.filter_record(_Gen.filter_record);
     const _gen_enums = main_db.filter_enum(_Gen.filter_enum);
-    this.source_batched(b, _gen_records, _gen_enums, main_db.config.module_name);
+    this.source_batched(b, _gen_records, _gen_enums, main_db.config.module_name, main_db.parent);
   }
-  static source_batched(b: CodeBuilder, in_records: db.Record[], in_enums: db.Enum[], module_name: string) {
+  static source_batched(b: CodeBuilder, in_records: db.Record[], in_enums: db.Enum[], module_name: string, project_db: db.Project) {
     const _gen_records = in_records;
     const _gen_enums = in_enums;
 
@@ -453,9 +453,10 @@ class _Gen {
       });
     });
     b.$line(`};`);
+    b.$line(``);
 
     // impl script mixin
-    b.$line(``);
+    b.$line(`// impl script mixin methods`);
     in_records.forEach(record => {
       const mixin_methods = record.methods.filter(method => method.ml_configs.rttr.script_mixin);
       if (mixin_methods.length > 0) {
@@ -491,6 +492,44 @@ class _Gen {
           })
         })
       }
+    });
+    b.$line(``);
+
+    // impl IRTTRBasic
+    b.$line(`// impl IRTTRBasic`);
+    in_records.forEach(record => {
+      // filter based on IRTTRBasic
+      if (!project_db.is_derived(record, "skr::IRTTRBasic")) return;
+
+      // generate
+      b.$line(`// IRTTRBasic of ${record.name}`);
+      b.$namespace(record.namespace.join("::"), (_b) => {
+        // static type
+        b.$line(`const ::skr::RTTRType* ${record.short_name}::StaticType() {`);
+        b.$indent((_b) => {
+          b.$line(`static auto _s_type = ::skr::type_of<${record.name}>();`);
+          b.$line(`return _s_type;`);
+        });
+        b.$line(`}`);
+        // rttr_get_type
+        b.$line(`const ::skr::RTTRType* ${record.short_name}::rttr_get_type() const {`);
+        b.$indent((_b) => {
+          b.$line(`return StaticType();`);
+        });
+        b.$line(`}`);
+        // rttr_get_typeid
+        b.$line(`::skr::GUID ${record.short_name}::rttr_get_typeid() const {`);
+        b.$indent((_b) => {
+          b.$line(`return ::skr::type_id_of<${record.name}>();`);
+        });
+        b.$line(`}`);
+        // rttr_get_head_ptr
+        b.$line(`void* ${record.short_name}::rttr_get_head_ptr() const {`);
+        b.$indent((_b) => {
+          b.$line(`return const_cast<void*>((const void*)this);`);
+        });
+        b.$line(`}`);
+      });
     });
 
     // bottom
@@ -630,22 +669,28 @@ class RttrGenerator extends gen.Generator {
         }
       }
 
-      // gen iobject body
-      if (this.project_db.is_derived(record, "skr::IObject")) {
+      // gen IRTTRBasic body
+      if (this.project_db.is_derived(record, "skr::IRTTRBasic")) {
         const b = record.generate_body_content;
-        b.$line(``);
-        b.$line(`::skr::GUID iobject_get_typeid() const override`);
-        b.$scope((_b) => {
-          b.$line(`using namespace ::skr;`);
-          b.$line(
-            `using ThisType = std::remove_cv_t<std::remove_pointer_t<decltype(this)>>;`,
-          );
-          b.$line(`return type_id_of<ThisType>();`);
-        });
-        b.$line(
-          `void* iobject_get_head_ptr() const override { return const_cast<void*>((const void*)this); }`,
-        );
-        b.$line(``);
+        b.$line(``)
+        // IRTTRBasic methods
+        b.$line(`static const ::skr::RTTRType* StaticType();`);
+        b.$line(`const ::skr::RTTRType* rttr_get_type() const override;`);
+        b.$line(`::skr::GUID rttr_get_typeid() const override;`);
+        b.$line(`void* rttr_get_head_ptr() const override;`);
+        // Super using
+        if (record.bases.length === 1) {
+          b.$line(`using Super = ::${record.bases[0]};`);
+        } else if (record.bases.length > 1) {
+          // use first found IRTTRBasic as Super
+          const super_base = record.bases.find(base => {
+            const base_record = this.project_db.find_record(base);
+            return base_record && this.project_db.is_derived(base_record, "skr::IRTTRBasic");
+          });
+          if (super_base) {
+            b.$line(`using Super = ::${super_base};`);
+          }
+        }
       }
     });
   }
@@ -696,7 +741,8 @@ class RttrGenerator extends gen.Generator {
           b,
           _batch_records,
           _batch_enums,
-          main_db.config.module_name
+          main_db.config.module_name,
+          main_db.parent,
         );
         main_db.batch_files[`rttr_${batch_idx}`] = b;
 

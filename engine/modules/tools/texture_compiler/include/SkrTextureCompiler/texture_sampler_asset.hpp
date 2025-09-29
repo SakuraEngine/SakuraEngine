@@ -3,7 +3,7 @@
 #include "SkrToolCore/cook_system/cooker.hpp"
 #include "SkrTextureCompiler/texture_sampler_asset.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 struct [[sattr(
     guid = "d2fc798b-af43-4865-b953-abba2b6d524a"
@@ -23,4 +23,4 @@ struct [[sattr(
     bool Cook(CookContext* ctx) override;
     uint32_t Version() override { return 1u; }
 };
-} // namespace skd::asset
+} // namespace skr

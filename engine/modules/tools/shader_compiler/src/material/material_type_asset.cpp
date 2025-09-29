@@ -2,7 +2,7 @@
 #include "SkrToolCore/project/project.hpp"
 #include "SkrShaderCompiler/assets/material_asset.hpp"
 
-namespace skd::asset
+namespace skr
 {
 
 void* MaterialTypeImporter::Import(skr::io::IRAMService* ioService, CookContext* context)
@@ -73,4 +73,4 @@ bool MaterialTypeCooker::Cook(CookContext* ctx)
     return true;
 }
 
-} // namespace skd::asset
+} // namespace skr

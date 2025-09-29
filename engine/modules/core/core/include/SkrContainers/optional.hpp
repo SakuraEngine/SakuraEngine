@@ -1,6 +1,6 @@
 #pragma once
 #include "SkrContainersDef/optional.hpp"
-#include "SkrBase/types/guid.h"
+#include "SkrBase/types/guid.hpp"
 
 // rttr
 #include "SkrRTTR/type_signature.hpp"

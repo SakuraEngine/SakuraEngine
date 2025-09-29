@@ -30,7 +30,7 @@ bool SCrashHandler::Initialize() SKR_NOEXCEPT
     prevSigILL = NULL;
     prevSigSEGV = NULL;
 
-    skr_create_guid(&guid);
+    guid = skr::GUID::Create();
     skr_init_mutex_recursive(&crash_lock);
     skr_init_mutex_recursive(&callbacks_lock);
     // set process exception handlers 

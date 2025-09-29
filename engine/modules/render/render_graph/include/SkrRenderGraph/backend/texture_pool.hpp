@@ -5,7 +5,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 class TexturePool
 {
@@ -58,5 +58,5 @@ protected:
     CGPUDeviceId device;
     skr::FlatHashMap<Key, skr::stl_deque<PooledTexture>, Key::hasher> textures;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

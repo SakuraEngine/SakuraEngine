@@ -54,7 +54,6 @@ namespace SB
 
         public static string? OutputDirectory { get; set; }
 
-
         public override bool EnableEmitter(Target Target) =>
             Target.HasFilesOf<CppFileList>() ||
             Target.HasFilesOf<CFileList>() ||

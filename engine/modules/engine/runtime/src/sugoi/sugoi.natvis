@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-    <Type Name="skr_guid_t">
-        <DisplayString>{{{Data1,Xb}-{Data2,Xb}-{Data3,Xb}-{((uint16_t*)Data4)[0],Xb}-{((uint16_t*)Data4)[1],Xb}{((uint32_t*)Data4)[1],Xb}}}</DisplayString>
-    </Type>
     <Type Name="sugoi_chunk_view_t">
         <Intrinsic Name="has_value" Expression="count != 0 &amp;&amp; chunk != nullptr"/>
         <DisplayString Condition="!has_value()">Empty</DisplayString>

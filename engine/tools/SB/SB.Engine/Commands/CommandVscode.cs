@@ -1,6 +1,5 @@
 using SB;
 using Serilog;
-using Cli = SB.Cli;
 
 namespace SB;
 

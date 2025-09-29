@@ -14,6 +14,10 @@ public enum EBuildStage
     /// </summary>
     PrepareCommandline,
     /// <summary>
+    /// 构建流程中最早的阶段，开始调用 CommandLine 前调用
+    /// </summary>
+    PrepareCallCommandLine,
+    /// <summary>
     /// 命令行配置完 configure 后调用
     /// </summary>
     SetupConfigure,

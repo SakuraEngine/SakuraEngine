@@ -1,13 +1,14 @@
 #pragma once
-#include "SkrRuntime/sugoi/sugoi.h" // IWYU pragma: export
+#include "SkrRuntime/sugoi/sugoi.h"        // IWYU pragma: export
 #include "SkrRuntime/sugoi/sugoi_meta.hpp" // IWYU pragma: export
-#include "SkrRuntime/sugoi/array.hpp" // IWYU pragma: export
-#include "SkrRuntime/sugoi/storage.hpp" // IWYU pragma: export
-#include "SkrRuntime/sugoi/chunk.hpp" // IWYU pragma: export
-#include "SkrRuntime/sugoi/archetype.hpp" // IWYU pragma: export
-#include "SkrRuntime/sugoi/array.hpp" // IWYU pragma: export
+#include "SkrRuntime/sugoi/array.hpp"      // IWYU pragma: export
+#include "SkrRuntime/sugoi/storage.hpp"    // IWYU pragma: export
+#include "SkrRuntime/sugoi/chunk.hpp"      // IWYU pragma: export
+#include "SkrRuntime/sugoi/archetype.hpp"  // IWYU pragma: export
+#include "SkrRuntime/sugoi/array.hpp"      // IWYU pragma: export
 
-namespace skr::ecs {
+namespace skr::ecs
+{
 
 struct ECSWorld;
 using TypeIndex = sugoi_type_index_t;
@@ -27,7 +28,8 @@ struct ComponentStorage<T, std::enable_if_t<(sugoi_array_count<std::decay_t<T>> 
 struct Entity
 {
 public:
-    explicit Entity(sugoi_entity_t InEntityId = sugoi::kEntityNull);
+    Entity();
+    explicit Entity(sugoi_entity_t InEntityId);
     bool operator==(Entity Other) const;
     bool operator==(sugoi_entity_t Other) const;
     explicit operator sugoi_entity_t() const;
@@ -48,7 +50,11 @@ struct ComponentViewBase
 {
 protected:
     ComponentViewBase(void* ptr = nullptr, uint32_t local_type = 0, uint32_t offset = 0)
-        : _ptr(ptr), _local_type(local_type), _offset(offset) {}
+        : _ptr(ptr)
+        , _local_type(local_type)
+        , _offset(offset)
+    {
+    }
     friend struct ECSWorld;
     friend struct TaskContext;
     void* _ptr = nullptr;
@@ -70,20 +76,24 @@ public:
     {
         return _ptr != nullptr;
     }
-    
+
     const Storage* at(uint32_t Index) const
     {
         return _ptr ? ((Storage*)_ptr) + Index + _offset : nullptr;
     }
 
     ComponentView()
-        : ComponentViewBase(nullptr, 0) {}
+        : ComponentViewBase(nullptr, 0)
+    {
+    }
 
 protected:
     friend struct ECSWorld;
     friend struct TaskContext;
     ComponentView(T* ptr, uint32_t local_type, uint32_t offset)
-        : ComponentViewBase(ptr, local_type, offset) {}
+        : ComponentViewBase(ptr, local_type, offset)
+    {
+    }
 };
 
 template <>
@@ -99,15 +109,20 @@ public:
     {
         return _ptr ? (const uint8_t*)_ptr + (_offset + i) * _size : nullptr;
     }
-    
+
     ComponentView()
-        : ComponentViewBase(nullptr, 0) {}
+        : ComponentViewBase(nullptr, 0)
+    {
+    }
 
 protected:
     friend struct ECSWorld;
     friend struct TaskContext;
     ComponentView(const void* ptr, uint32_t local_type, uint32_t offset, uint32_t size)
-        : ComponentViewBase((void*)ptr, local_type, offset), _size(size) {}
+        : ComponentViewBase((void*)ptr, local_type, offset)
+        , _size(size)
+    {
+    }
     uint32_t _size = 0;
 };
 
@@ -124,15 +139,20 @@ public:
     {
         return (uint8_t*)_ptr + (_offset + i) * _size;
     }
-    
+
     ComponentView()
-        : ComponentViewBase(nullptr, 0) {}
+        : ComponentViewBase(nullptr, 0)
+    {
+    }
 
 protected:
     friend struct ECSWorld;
     friend struct TaskContext;
     ComponentView(void* ptr, uint32_t local_type, uint32_t offset, uint32_t size)
-        : ComponentViewBase(ptr, local_type, offset), _size(size) {}
+        : ComponentViewBase(ptr, local_type, offset)
+        , _size(size)
+    {
+    }
     uint32_t _size = 0;
 };
 
@@ -157,7 +177,7 @@ protected:
         sugoi_chunk_view_t view = World->entity_view((sugoi_entity_t)entity);
         if (view.chunk == nullptr)
             return nullptr;
-        if(CachedPtr != nullptr && CachedView.chunk == view.chunk)
+        if (CachedPtr != nullptr && CachedView.chunk == view.chunk)
         {
             auto Offset = (int64_t)view.start - (int64_t)CachedView.start;
             return ((Storage*)CachedPtr) + Offset;
@@ -202,7 +222,7 @@ template <>
 struct RandomComponentReader<void> : public ComponentAccessorBase
 {
     template <typename T>
-    const T* get(Entity entity) {  return ComponentAccessorBase::get<T>(entity); }
+    const T* get(Entity entity) { return ComponentAccessorBase::get<T>(entity); }
 };
 
 template <class T>
@@ -230,19 +250,23 @@ struct RandomComponentReadWrite : public ComponentAccessorBase
         auto& v = get_checked<Storage>(entity);
         v = value;
     }
-    
+
     Storage* get(Entity entity) { return ComponentAccessorBase::get<Storage>(entity); }
 };
 
 } // namespace skr::ecs
 
 // inline implementations
-namespace skr::ecs {
+namespace skr::ecs
+{
 
+inline Entity::Entity()
+    : EntityId(sugoi::kEntityNull)
+{
+}
 inline Entity::Entity(sugoi_entity_t InEntityId)
     : EntityId(InEntityId)
 {
-
 }
 
 inline bool Entity::operator==(Entity Other) const

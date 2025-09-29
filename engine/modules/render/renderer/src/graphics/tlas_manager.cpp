@@ -235,20 +235,20 @@ public:
         }
     }
     
-    void Request(skr::render_graph::RenderGraph* graph, const TLASUpdateRequest& request) override
+    void Request(skr::RG::RenderGraph* graph, const TLASUpdateRequest& request) override
     {
         auto tlas = GetTLASForUpdate(graph, false);
         tlas->Update(device, cmd_pool, request, version++);
     }
 
-    TLASHandle GetLatestTLAS(skr::render_graph::RenderGraph* graph) const override
+    TLASHandle GetLatestTLAS(skr::RG::RenderGraph* graph) const override
     {
         auto tlas = GetTLASToUse(graph);
         return tlas ? tlas->Use(graph->get_frame_index()) : TLASHandle();
     }
 
 private:
-    AsyncTLASInstanceImpl* GetTLASForUpdate(skr::render_graph::RenderGraph* graph, bool sync_ready) const
+    AsyncTLASInstanceImpl* GetTLASForUpdate(skr::RG::RenderGraph* graph, bool sync_ready) const
     {
         uint64_t oldest_version = UINT64_MAX;
         AsyncTLASInstanceImpl* oldest_tlas = nullptr;
@@ -286,7 +286,7 @@ private:
         return oldest_tlas;
     }
 
-    AsyncTLASInstanceImpl* GetTLASToUse(skr::render_graph::RenderGraph* graph) const
+    AsyncTLASInstanceImpl* GetTLASToUse(skr::RG::RenderGraph* graph) const
     {
         AsyncTLASInstanceImpl* chosen = nullptr;
 

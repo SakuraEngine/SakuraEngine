@@ -255,7 +255,7 @@ void V8Isolate::on_object_destroyed(
     ScriptbleObject* obj
 )
 {
-    auto found = _bind_proxy_map.find(obj->iobject_get_head_ptr());
+    auto found = _bind_proxy_map.find(obj->rttr_get_head_ptr());
     SKR_ASSERT(found);
     found.value()->invalidate();
 }
@@ -279,9 +279,9 @@ bool V8Isolate::try_invoke_mixin(
     }
 
     // find bound object
-    if (auto found_bp = _bind_proxy_map.find(obj->iobject_get_head_ptr()))
+    if (auto found_bp = _bind_proxy_map.find(obj->rttr_get_head_ptr()))
     {
-        auto* bind_proxy = found_bp.value()->type_cast_fast<V8BPObject>();
+        auto* bind_proxy = found_bp.value()->rttr_cast<V8BPObject>();
 
         // find method export data
         auto found_method = bind_proxy->bind_tp->find_method(name);
@@ -357,7 +357,7 @@ bool V8Isolate::try_invoke_mixin(
     }
     else
     {
-        SKR_LOG_ERROR(u8"V8Isolate::try_invoke_mixin: bind proxy not found for object {}", obj->iobject_get_head_ptr());
+        SKR_LOG_ERROR(u8"V8Isolate::try_invoke_mixin: bind proxy not found for object {}", obj->rttr_get_head_ptr());
         return false;
     }
 }
@@ -482,7 +482,7 @@ V8BindTemplate* V8Isolate::solve_bind_tp(
 // bind proxy pool
 void V8Isolate::destroy_bind_proxy(V8BindProxy* bind_proxy)
 {
-    auto& pool = _bind_proxy_pools.find(bind_proxy->iobject_get_typeid()).value();
+    auto& pool = _bind_proxy_pools.find(bind_proxy->rttr_get_typeid()).value();
     pool.take_back(bind_proxy);
 }
 

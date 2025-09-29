@@ -1,7 +1,7 @@
 #pragma once
 #include "SkrSystem/window.h"
 #include "SkrContainers/string.hpp"
-#include "SkrBase/math.h"
+#include "SkrBase/math.hpp"
 
 #ifdef __OBJC__
 #import <Cocoa/Cocoa.h>

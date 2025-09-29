@@ -4,7 +4,7 @@
 #include "SkrContainers/hashmap.hpp"
 #include "SkrContainersDef/stl_vector.hpp"
 #include "SkrRuntime/io/ram_io.hpp"
-#include "SkrRuntime/resource/resource_factory.h"
+#include "SkrRuntime/resource/resource_factory.hpp"
 #include "SkrContainersDef/concurrent_queue.hpp"
 
 #include "SkrRuntime/sugoi/entity_registry.hpp"
@@ -25,11 +25,11 @@ public:
     bool WaitRequest() final override;
     void Quit() final override;
 
-    void LoadResource(SResourceHandle& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType) final override;
-    void UnloadResource(SResourceHandle& handle) final override;
-    void _UnloadResource(SResourceRecord* record);
-    void FlushResource(SResourceHandle& handle) final override;
-    ESkrLoadingStatus GetResourceStatus(const GUID& handle) final override;
+    SResourceRecord* LoadResource(const SResourceHandle& handle, bool requireInstalled) final override;
+    SResourceRecord* FindResourceRecord(const GUID& guid) final override;
+    SResourceHandle EnqueueResource(skr::GUID guid, skr::GUID type, void* resource, bool requireInstalled, skr::Vector<SResourceHandle> dependencies, EResourceLoadingStatus status) final override;
+    void UnloadResource(const SResourceHandle& handle) final override;
+    void FlushResource(const SResourceHandle& handle) final override;
 
     ResourceFactory* FindFactory(GUID type) const final override;
     void RegisterFactory(ResourceFactory* factory) final override;
@@ -40,10 +40,9 @@ public:
 
 protected:
     SResourceRecord* _GetOrCreateRecord(const GUID& guid) final override;
-    SResourceRecord* _GetRecord(const GUID& guid) final override;
     SResourceRecord* _GetRecord(void* resource) final override;
+    void _UnloadResource(SResourceRecord* record);
     void _DestroyRecord(SResourceRecord* record) final override;
-    void _UpdateAsyncSerde();
     void _ClearFinishedRequests();
 
     ResourceRegistry* resourceRegistry = nullptr;
@@ -66,7 +65,6 @@ protected:
     skr::stl_vector<ResourceRequest*> toUpdateRequests;
     skr::stl_vector<ResourceRequest*> serdeBatch;
 
-    sugoi::EntityRegistry resourceIds;
     task::counter_t counter;
     bool quit = false;
     skr::ParallelFlatHashMap<GUID, SResourceRecord*, skr::Hash<GUID>> resourceRecords;
@@ -83,22 +81,7 @@ ResourceSystemImpl::~ResourceSystemImpl()
 {
 }
 
-SResourceRecord* ResourceSystemImpl::_GetOrCreateRecord(const GUID& guid)
-{
-    SMutexLock Lock(recordMutex.mMutex);
-    auto record = _GetRecord(guid);
-    if (!record)
-    {
-        record = SkrNew<SResourceRecord>();
-        resourceIds.new_entities(&record->id, 1);
-        record->header.guid = guid;
-        // record->header.type = type;
-        resourceRecords.insert(std::make_pair(guid, record));
-    }
-    return record;
-}
-
-SResourceRecord* ResourceSystemImpl::_GetRecord(const GUID& guid)
+SResourceRecord* ResourceSystemImpl::FindResourceRecord(const GUID& guid)
 {
     auto iter = resourceRecords.find(guid);
     return iter == resourceRecords.end() ? nullptr : iter->second;
@@ -119,7 +102,6 @@ void ResourceSystemImpl::_DestroyRecord(SResourceRecord* record)
     resourceRecords.erase(record->header.guid);
     if (record->resource)
         resourceToRecord.erase(record->resource);
-    resourceIds.free_entities(&record->id, 1);
     SkrDelete(record);
 }
 
@@ -155,87 +137,124 @@ void ResourceSystemImpl::UnregisterFactory(GUID type)
     resourceFactories.erase(iter);
 }
 
-void ResourceSystemImpl::LoadResource(SResourceHandle& handle, bool requireInstalled, uint64_t requester, ESkrRequesterType requesterType)
+SResourceRecord* ResourceSystemImpl::_GetOrCreateRecord(const GUID& guid)
+{
+    SMutexLock Lock(recordMutex.mMutex);
+    auto record = FindResourceRecord(guid);
+    if (!record)
+    {
+        record = SkrNew<SResourceRecord>();
+        record->header.guid = guid;
+        resourceRecords.insert(std::make_pair(guid, record));
+    }
+    return record;
+}
+
+SResourceRecord* ResourceSystemImpl::LoadResource(const SResourceHandle& handle, bool requireInstalled)
 {
     SKR_ASSERT(!quit);
-    SKR_ASSERT(!handle.is_resolved());
+    SKR_ASSERT(handle.is_guid());
     auto record = _GetOrCreateRecord(handle.get_guid());
-    auto requesterId = record->AddReference(requester, requesterType);
-    handle.set_resolved(record, requesterId, requesterType);
-    if ((!requireInstalled && record->loadingStatus >= SKR_LOADING_STATUS_LOADED && record->loadingStatus < SKR_LOADING_STATUS_UNLOADING) ||
-        (requireInstalled && record->loadingStatus == SKR_LOADING_STATUS_INSTALLED) ||
-        record->loadingStatus == SKR_LOADING_STATUS_ERROR) // already loaded
-        return;
-    auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
-    if (request)
+    if (record->loadingStatus >= EResourceLoadingStatus::Loading) // already loaded
+        return record;
+        
+    if (auto request = static_cast<SResourceRequestImpl*>(record->activeRequest))
     {
-        request->requireLoading = true;
         request->requestInstall = requireInstalled;
     }
     else
     {
-        auto request = SkrNew<SResourceRequestImpl>();
+        request = SkrNew<SResourceRequestImpl>();
         request->requestInstall = requireInstalled;
         request->resourceRecord = record;
-        request->isLoading = request->requireLoading = true;
         request->system = this;
-        request->currentPhase = SKR_LOADING_PHASE_REQUEST_RESOURCE;
         request->factory = nullptr;
         request->vfs = nullptr;
         record->activeRequest = request;
-        record->loadingStatus = SKR_LOADING_STATUS_LOADING;
+        record->loadingStatus = EResourceLoadingStatus::Loading;
         counter.add(1);
         requests.enqueue(request);
     }
+    return record;
 }
 
-void ResourceSystemImpl::UnloadResource(SResourceHandle& handle)
+SResourceHandle ResourceSystemImpl::EnqueueResource(skr::GUID guid, skr::GUID type, void* resource, bool requireInstalled, skr::Vector<SResourceHandle> dependencies, EResourceLoadingStatus status)
 {
-    if (quit)
-        return;
-    SKR_ASSERT(handle.is_resolved() && !handle.is_null());
-    auto record = handle.get_record();
-    SKR_ASSERT(record->loadingStatus != SKR_LOADING_STATUS_UNLOADED);
-    record->RemoveReference(handle.get_requester_id(), handle.get_requester_type());
-    // reset to zero otherwise set_guid will trigger unload again
-    memset((void*)&handle, 0, sizeof(SResourceHandle));
-    handle.set_guid(record->header.guid);
-    if (!record->IsReferenced()) // unload
+    SResourceHandle handle = guid;
+    SResourceRecord* record = FindResourceRecord(guid);
+    if (record == nullptr)
     {
-        _UnloadResource(record);
+        record = _GetOrCreateRecord(guid);
+    }
+    handle.acquire_record(record);
+
+    if (auto request = static_cast<SResourceRequestImpl*>(record->activeRequest))
+    {
+        request->requestInstall = requireInstalled;
+    }
+    else
+    {
+        request = SkrNew<SResourceRequestImpl>();
+        request->requestInstall = requireInstalled;
+        request->resourceRecord = record;
+        request->system = this;
+        request->factory = FindFactory(type);
+        counter.add(1);
+        requests.enqueue(request);
+    
+        record->activeRequest = request;
+        record->loadingStatus = status;
+        record->resource = resource;
+        record->header.guid = guid;
+        record->header.type = type;
+        record->header.dependencies = dependencies;
+    }
+    return handle;
+}
+
+void ResourceSystemImpl::UnloadResource(const SResourceHandle& handle)
+{
+    if (quit) return;
+
+    SKR_ASSERT(!handle.is_null());
+    if (auto record = handle.get_record())
+    {
+        SKR_ASSERT(record->loadingStatus != EResourceLoadingStatus::Unloaded);
+        record->RemoveReference();
+        memset((void*)&handle, 0, sizeof(SResourceHandle));
+        if (!record->IsReferenced()) // unload
+        {
+            _UnloadResource(record);
+        }
     }
 }
 
 void ResourceSystemImpl::_UnloadResource(SResourceRecord* record)
 {
     SKR_ASSERT(!quit);
-    if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
+    if (record->loadingStatus == EResourceLoadingStatus::Error || record->loadingStatus == EResourceLoadingStatus::Unloading)
     {
         _DestroyRecord(record);
         return;
     }
-    auto request = static_cast<SResourceRequestImpl*>(record->activeRequest);
-    if (request)
+    if (auto request = static_cast<SResourceRequestImpl*>(record->activeRequest))
     {
-        request->requireLoading = false;
+
     }
     else // new unload
     {
-        auto request = SkrNew<SResourceRequestImpl>();
+        request = SkrNew<SResourceRequestImpl>();
         request->requestInstall = false;
         request->resourceRecord = record;
-        request->isLoading = request->requireLoading = false;
         request->system = this;
         request->vfs = nullptr;
-        if (record->loadingStatus == SKR_LOADING_STATUS_INSTALLED)
+        if (record->loadingStatus == EResourceLoadingStatus::Installed)
         {
-            request->currentPhase = SKR_LOADING_PHASE_UNINSTALL_RESOURCE;
-            record->loadingStatus = SKR_LOADING_STATUS_UNINSTALLING;
+            record->loadingStatus = EResourceLoadingStatus::Uninstalling;
         }
-        else if (record->loadingStatus == SKR_LOADING_STATUS_LOADED)
+        else if (record->loadingStatus == EResourceLoadingStatus::Loaded)
         {
-            request->currentPhase = SKR_LOADING_PHASE_UNLOAD_RESOURCE;
-            record->loadingStatus = SKR_LOADING_STATUS_UNLOADING;
+            record->loadingStatus = EResourceLoadingStatus::Unloading;
         }
         else
             SKR_UNREACHABLE_CODE();
@@ -246,17 +265,9 @@ void ResourceSystemImpl::_UnloadResource(SResourceRecord* record)
     }
 }
 
-void ResourceSystemImpl::FlushResource(SResourceHandle& handle){
+void ResourceSystemImpl::FlushResource(const SResourceHandle& handle){
     // flush load handle
     SKR_UNIMPLEMENTED_FUNCTION()
-}
-
-ESkrLoadingStatus ResourceSystemImpl::GetResourceStatus(const GUID& handle)
-{
-    SMutexLock Lock(recordMutex.mMutex);
-    auto record = _GetRecord(handle);
-    if (!record) return SKR_LOADING_STATUS_UNLOADED;
-    return record->loadingStatus;
 }
 
 void ResourceSystemImpl::Initialize(ResourceRegistry* provider, skr::io::IRAMService* service)
@@ -276,7 +287,7 @@ void ResourceSystemImpl::Shutdown()
     for (auto& pair : resourceRecords)
     {
         auto record = pair.second;
-        if (record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED)
+        if (record->loadingStatus == EResourceLoadingStatus::Unloaded || record->loadingStatus == EResourceLoadingStatus::Error)
             continue;
         _UnloadResource(record);
     }
@@ -290,7 +301,7 @@ void ResourceSystemImpl::Shutdown()
     for (auto pair : resourceRecords)
     {
         auto record = pair.second;
-        SKR_ASSERT(record->loadingStatus == SKR_LOADING_STATUS_ERROR || record->loadingStatus == SKR_LOADING_STATUS_UNLOADED);
+        SKR_ASSERT(record->loadingStatus == EResourceLoadingStatus::Error || record->loadingStatus == EResourceLoadingStatus::Unloaded);
         SkrDelete(record);
     }
     resourceRecords.clear();
@@ -307,12 +318,6 @@ void ResourceSystemImpl::_ClearFinishedRequests()
             if (request->resourceRecord)
             {
                 request->resourceRecord->activeRequest = nullptr;
-                if (!request->isLoading)
-                {
-                    auto guid = request->resourceRecord->header.guid;
-                    (void)guid;
-                    _DestroyRecord(request->resourceRecord);
-                }
             }
             SkrDelete(request);
             counter.decrement();
@@ -355,20 +360,20 @@ void ResourceSystemImpl::Update()
         for (auto req : toUpdateRequests)
         {
             auto request = static_cast<SResourceRequestImpl*>(req);
+            auto record = request->resourceRecord;
             uint32_t spinCounter = 0;
-            ESkrLoadingPhase LastPhase;
-            while (!request->Okay() && !request->AsyncSerde() && spinCounter < 16)
+            EResourceLoadingStatus LastPhase;
+            while (!request->Okay()&& spinCounter < 16)
             {
-                LastPhase = request->currentPhase;
+                LastPhase = record->loadingStatus;
                 request->Update();
-                if (LastPhase == request->currentPhase)
+                if (LastPhase == record->loadingStatus)
                     spinCounter++;
                 else
                     spinCounter = 0;
             };
         }
     }
-    _UpdateAsyncSerde();
 }
 
 bool ResourceSystemImpl::WaitRequest()
@@ -383,44 +388,6 @@ void ResourceSystemImpl::Quit()
 {
     quit = true;
     counter.add(1);
-}
-
-void ResourceSystemImpl::_UpdateAsyncSerde()
-{
-    serdeBatch.clear();
-    serdeBatch.reserve(100);
-    float timeBudget = 100.f;
-    for (auto req : toUpdateRequests)
-    {
-        auto request = static_cast<SResourceRequestImpl*>(req);
-        if (request->currentPhase == SKR_LOADING_PHASE_WAITFOR_LOAD_RESOURCE && !request->serdeScheduled)
-        {
-            request->serdeScheduled = true;
-            auto factor = request->factory->AsyncSerdeLoadFactor();
-            timeBudget -= factor;
-            serdeBatch.push_back(request);
-            if (timeBudget < 0.f)
-            {
-                timeBudget = 0.f;
-                skr::task::schedule([batch = std::move(serdeBatch)]() {
-                    for (auto request : batch)
-                    {
-                        request->LoadTask();
-                    }
-                },
-                    nullptr);
-                timeBudget = 100.f;
-            }
-        }
-    }
-    if (!serdeBatch.empty())
-    {
-        // run rest requests on main thread
-        for (auto request : serdeBatch)
-        {
-            request->LoadTask();
-        }
-    }
 }
 
 ResourceSystem* GetResourceSystem()

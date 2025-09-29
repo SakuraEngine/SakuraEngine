@@ -37,7 +37,6 @@ float4 trace(uint2 tid, uint2 tsize) {
 }
 
 // 计算着色器入口点
-[[compute_shader("compute_main")]]
 [[numthreads(32, 32, 1)]]
 void compute_main([[builtin("ThreadID")]] uint3 tid) 
 {

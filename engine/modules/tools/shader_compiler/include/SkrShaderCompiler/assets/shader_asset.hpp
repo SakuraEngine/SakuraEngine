@@ -4,7 +4,7 @@
 #include "SkrRenderer/resources/shader_meta_resource.hpp"
 #include "SkrShaderCompiler/assets/shader_asset.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 struct [[sattr(
     guid = "067d4b86-f888-4bd7-841c-bc831043e50c"
@@ -50,4 +50,4 @@ struct [[sattr(
     bool Cook(CookContext* ctx) override;
     uint32_t Version() override;
 };
-} // namespace skd::asset
+} // namespace skr

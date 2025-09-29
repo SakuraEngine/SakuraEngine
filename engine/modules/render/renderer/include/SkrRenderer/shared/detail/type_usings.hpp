@@ -1,5 +1,5 @@
 #pragma once
-#include "SkrBase/math.h" // IWYU pragma: export
+#include "SkrBase/math.hpp" // IWYU pragma: export
 #include "SkrRuntime/ecs/component.hpp" // IWYU pragma: export
 #include "SkrContainersDef/array.hpp"
 

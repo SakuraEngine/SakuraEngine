@@ -11,14 +11,14 @@ struct RawSkeleton;
 struct RawAnimation;
 } // namespace ozz::animation::offline
 
-namespace skd::asset
+namespace skr
 {
 
 using RawSkeleton = ozz::animation::offline::RawSkeleton;
 
 struct [[sattr(
     guid = "1719ab02-7a48-45db-b101-949155f92cad" serde = @enable
-)]] SKR_ANIMTOOL_API GltfSkelImporter : public skd::asset::Importer
+)]] SKR_ANIMTOOL_API GltfSkelImporter : public skr::Importer
 {
     // bool skeleton;
     // bool marker;
@@ -34,7 +34,7 @@ struct [[sattr(
 };
 
 struct [[sattr(guid = "0198a872-01db-74ca-9382-8f1df4026ca0" serde = @enable)]]
-SkeletonAsset : public skd::asset::AssetMetadata
+SkeletonAsset : public skr::AssetMetadata
 {
     int placeholder; // for future use
 };
@@ -46,4 +46,4 @@ struct [[sattr(
     bool Cook(CookContext* ctx) override;
     uint32_t Version() override { return kDevelopmentVersion; }
 };
-} // namespace skd::asset
+} // namespace skr

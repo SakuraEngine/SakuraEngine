@@ -13,7 +13,8 @@ struct SPWeak;
 
 // 保守 unique pointer 实现，允许协变，但是不处理虚析构情况，禁止 custom deleter，只用于 RAII 的内存管理
 template <typename T>
-struct UPtr {
+struct UPtr
+{
     // ctor & dtor
     UPtr();
     UPtr(std::nullptr_t);
@@ -29,11 +30,13 @@ struct UPtr {
     UPtr(UPtr<U>&& rhs);
 
     // assign & move assign
-    UPtr& operator=(std::nullptr_t);
     UPtr& operator=(const UPtr& rhs) = delete;
     UPtr& operator=(UPtr&& rhs);
     template <SPConvertible<T> U>
     UPtr& operator=(UPtr<U>&& rhs);
+
+    // pointer assign
+    UPtr& operator=(std::nullptr_t);
 
     // factory
     template <typename... Args>
@@ -55,7 +58,7 @@ struct UPtr {
     void reset(T* ptr);
     template <SPConvertible<T> U>
     void reset(U* ptr);
-    T*   release();
+    T* release();
     void swap(UPtr& rhs);
 
     // pointer behaviour
@@ -72,7 +75,8 @@ private:
 
 // shared pointer
 template <typename T>
-struct SP {
+struct SP
+{
     friend struct SPWeak<T>;
 
     // ctor & dtor
@@ -95,16 +99,18 @@ struct SP {
     SP(SP<U>&& rhs);
 
     // assign & move assign
-    SP& operator=(std::nullptr_t);
-    SP& operator=(T* ptr);
     SP& operator=(const SP& rhs);
     SP& operator=(SP&& rhs);
-    template <SPConvertible<T> U>
-    SP& operator=(U* ptr);
     template <SPConvertible<T> U>
     SP& operator=(const SP<U>& rhs);
     template <SPConvertible<T> U>
     SP& operator=(SP<U>&& rhs);
+
+    // pointer assign & unique move
+    SP& operator=(std::nullptr_t);
+    SP& operator=(T* ptr);
+    template <SPConvertible<T> U>
+    SP& operator=(U* ptr);
     template <SPConvertible<T> U>
     SP& operator=(UPtr<U>&& rhs);
 
@@ -152,13 +158,14 @@ private:
     void _release();
 
 private:
-    T*            _ptr     = nullptr;
+    T* _ptr = nullptr;
     SPRefCounter* _counter = nullptr;
 };
 
 // weak pointer
 template <typename T>
-struct SPWeak {
+struct SPWeak
+{
     // ctor & dtor
     SPWeak();
     SPWeak(std::nullptr_t);
@@ -176,18 +183,20 @@ struct SPWeak {
     SPWeak(SPWeak<U>&& rhs);
 
     // assign & move assign
-    SPWeak& operator=(std::nullptr_t);
     SPWeak& operator=(const SPWeak& rhs);
     SPWeak& operator=(SPWeak&& rhs);
     template <SPConvertible<T> U>
     SPWeak& operator=(const SPWeak<U>& rhs);
     template <SPConvertible<T> U>
     SPWeak& operator=(SPWeak<U>&& rhs);
+
+    // pointer assign & sp assign
+    SPWeak& operator=(std::nullptr_t);
     template <SPConvertible<T> U>
     SPWeak& operator=(const SP<U>& rhs);
 
     // unsafe getter
-    T*            get_unsafe() const;
+    T* get_unsafe() const;
     SPRefCounter* get_counter() const;
 
     // count getter
@@ -216,7 +225,7 @@ struct SPWeak {
     static skr_hash _skr_hash(const SPWeak& obj);
 
 private:
-    T*            _ptr     = nullptr;
+    T* _ptr = nullptr;
     SPRefCounter* _counter = nullptr;
 };
 } // namespace skr
@@ -274,12 +283,6 @@ inline UPtr<T>::UPtr(UPtr<U>&& rhs)
 
 // assign & move assign
 template <typename T>
-inline UPtr<T>& UPtr<T>::operator=(std::nullptr_t)
-{
-    reset();
-    return *this;
-}
-template <typename T>
 inline UPtr<T>& UPtr<T>::operator=(UPtr&& rhs)
 {
     if (!rhs.is_empty())
@@ -306,6 +309,14 @@ inline UPtr<T>& UPtr<T>::operator=(UPtr<U>&& rhs)
     {
         reset();
     }
+    return *this;
+}
+
+// pointer assign
+template <typename T>
+inline UPtr<T>& UPtr<T>::operator=(std::nullptr_t)
+{
+    reset();
     return *this;
 }
 
@@ -504,7 +515,7 @@ inline T* UPtr<T>::release()
     if (_ptr)
     {
         T* tmp = _ptr;
-        _ptr   = nullptr;
+        _ptr = nullptr;
         return tmp;
     }
     return nullptr;
@@ -514,8 +525,8 @@ inline void UPtr<T>::swap(UPtr& rhs)
 {
     if (this != &rhs)
     {
-        T* tmp   = _ptr;
-        _ptr     = rhs._ptr;
+        T* tmp = _ptr;
+        _ptr = rhs._ptr;
         rhs._ptr = tmp;
     }
 }
@@ -595,7 +606,7 @@ inline SP<T>::SP(U* ptr)
     static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
     if (ptr)
     {
-        _ptr     = ptr;
+        _ptr = ptr;
         _counter = SkrNew<SPRefCounter>();
         _counter->add_ref();
     }
@@ -607,7 +618,7 @@ inline SP<T>::SP(UPtr<U>&& rhs)
     static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.release());
+        _ptr = static_cast<T*>(rhs.release());
         _counter = SkrNew<SPRefCounter>();
         _counter->add_ref();
     }
@@ -634,7 +645,7 @@ inline SP<T>::SP(SP&& rhs)
     : _ptr(rhs._ptr)
     , _counter(rhs._counter)
 {
-    rhs._ptr     = nullptr;
+    rhs._ptr = nullptr;
     rhs._counter = nullptr;
 }
 template <typename T>
@@ -644,7 +655,7 @@ inline SP<T>::SP(const SP<U>& rhs)
     static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.get());
+        _ptr = static_cast<T*>(rhs.get());
         _counter = rhs.get_counter();
         _counter->add_ref();
     }
@@ -656,7 +667,7 @@ inline SP<T>::SP(SP<U>&& rhs)
     static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.get());
+        _ptr = static_cast<T*>(rhs.get());
         _counter = rhs.get_counter();
         _counter->add_ref();
         rhs.reset();
@@ -665,24 +676,12 @@ inline SP<T>::SP(SP<U>&& rhs)
 
 // assign & move assign
 template <typename T>
-inline SP<T>& SP<T>::operator=(std::nullptr_t)
-{
-    reset();
-    return *this;
-}
-template <typename T>
-inline SP<T>& SP<T>::operator=(T* ptr)
-{
-    reset(ptr);
-    return *this;
-}
-template <typename T>
 inline SP<T>& SP<T>::operator=(const SP& rhs)
 {
     reset();
     if (this != &rhs)
     {
-        _ptr     = rhs._ptr;
+        _ptr = rhs._ptr;
         _counter = rhs._counter;
         if (_counter)
         {
@@ -697,11 +696,52 @@ inline SP<T>& SP<T>::operator=(SP&& rhs)
     reset();
     if (this != &rhs)
     {
-        _ptr         = rhs._ptr;
-        _counter     = rhs._counter;
-        rhs._ptr     = nullptr;
+        _ptr = rhs._ptr;
+        _counter = rhs._counter;
+        rhs._ptr = nullptr;
         rhs._counter = nullptr;
     }
+    return *this;
+}
+template <typename T>
+template <SPConvertible<T> U>
+inline SP<T>& SP<T>::operator=(const SP<U>& rhs)
+{
+    reset();
+    if (!rhs.is_empty())
+    {
+        _ptr = static_cast<T*>(rhs.get());
+        _counter = rhs.get_counter();
+        _counter->add_ref();
+    }
+    return *this;
+}
+template <typename T>
+template <SPConvertible<T> U>
+inline SP<T>& SP<T>::operator=(SP<U>&& rhs)
+{
+    reset();
+    if (!rhs.is_empty())
+    {
+        _ptr = static_cast<T*>(rhs.get());
+        _counter = rhs.get_counter();
+        _counter->add_ref();
+        rhs.reset();
+    }
+    return *this;
+}
+
+// pointer assign & unique move
+template <typename T>
+inline SP<T>& SP<T>::operator=(std::nullptr_t)
+{
+    reset();
+    return *this;
+}
+template <typename T>
+inline SP<T>& SP<T>::operator=(T* ptr)
+{
+    reset(ptr);
     return *this;
 }
 template <typename T>
@@ -720,40 +760,13 @@ inline SP<T>& SP<T>::operator=(U* ptr)
 }
 template <typename T>
 template <SPConvertible<T> U>
-inline SP<T>& SP<T>::operator=(const SP<U>& rhs)
-{
-    reset();
-    if (!rhs.is_empty())
-    {
-        _ptr     = static_cast<T*>(rhs.get());
-        _counter = rhs.get_counter();
-        _counter->add_ref();
-    }
-    return *this;
-}
-template <typename T>
-template <SPConvertible<T> U>
-inline SP<T>& SP<T>::operator=(SP<U>&& rhs)
-{
-    reset();
-    if (!rhs.is_empty())
-    {
-        _ptr     = static_cast<T*>(rhs.get());
-        _counter = rhs.get_counter();
-        _counter->add_ref();
-        rhs.reset();
-    }
-    return *this;
-}
-template <typename T>
-template <SPConvertible<T> U>
 inline SP<T>& SP<T>::operator=(UPtr<U>&& rhs)
 {
     static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
     reset();
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.release());
+        _ptr = static_cast<T*>(rhs.release());
         _counter = SkrNew<SPRefCounter>();
         _counter->add_ref();
         rhs.reset();
@@ -962,7 +975,7 @@ inline void SP<T>::reset()
     if (_ptr)
     {
         _release();
-        _ptr     = nullptr;
+        _ptr = nullptr;
         _counter = nullptr;
     }
 }
@@ -1000,12 +1013,12 @@ inline void SP<T>::swap(SP& rhs)
 {
     if (this != &rhs)
     {
-        T*            tmp_ptr     = _ptr;
+        T* tmp_ptr = _ptr;
         SPRefCounter* tmp_counter = _counter;
-        _ptr                      = rhs._ptr;
-        _counter                  = rhs._counter;
-        rhs._ptr                  = tmp_ptr;
-        rhs._counter              = tmp_counter;
+        _ptr = rhs._ptr;
+        _counter = rhs._counter;
+        rhs._ptr = tmp_ptr;
+        rhs._counter = tmp_counter;
     }
 }
 
@@ -1079,7 +1092,7 @@ inline SPWeak<T>::SPWeak(const SP<U>& ptr)
     static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
     if (!ptr.is_empty())
     {
-        _ptr     = static_cast<T*>(ptr.get());
+        _ptr = static_cast<T*>(ptr.get());
         _counter = ptr.get_counter();
         _counter->add_ref_weak();
     }
@@ -1106,7 +1119,7 @@ inline SPWeak<T>::SPWeak(SPWeak&& rhs)
     : _ptr(rhs._ptr)
     , _counter(rhs._counter)
 {
-    rhs._ptr     = nullptr;
+    rhs._ptr = nullptr;
     rhs._counter = nullptr;
 }
 template <typename T>
@@ -1116,7 +1129,7 @@ inline SPWeak<T>::SPWeak(const SPWeak<U>& rhs)
     static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.get_unsafe());
+        _ptr = static_cast<T*>(rhs.get_unsafe());
         _counter = rhs.get_counter();
         _counter->add_ref_weak();
     }
@@ -1128,7 +1141,7 @@ inline SPWeak<T>::SPWeak(SPWeak<U>&& rhs)
     static_assert(std::is_same_v<U, T> || std::has_virtual_destructor_v<T>, "when use covariance, T must have virtual destructor for safe delete");
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.get_unsafe());
+        _ptr = static_cast<T*>(rhs.get_unsafe());
         _counter = rhs.get_counter();
         _counter->add_ref_weak();
         rhs.reset();
@@ -1137,12 +1150,6 @@ inline SPWeak<T>::SPWeak(SPWeak<U>&& rhs)
 
 // assign & move assign
 template <typename T>
-inline SPWeak<T>& SPWeak<T>::operator=(std::nullptr_t)
-{
-    reset();
-    return *this;
-}
-template <typename T>
 inline SPWeak<T>& SPWeak<T>::operator=(const SPWeak& rhs)
 {
     if (this != &rhs)
@@ -1150,7 +1157,7 @@ inline SPWeak<T>& SPWeak<T>::operator=(const SPWeak& rhs)
         reset();
         if (!rhs.is_empty())
         {
-            _ptr     = rhs._ptr;
+            _ptr = rhs._ptr;
             _counter = rhs._counter;
             _counter->add_ref_weak();
         }
@@ -1163,9 +1170,9 @@ inline SPWeak<T>& SPWeak<T>::operator=(SPWeak&& rhs)
     if (this != &rhs)
     {
         reset();
-        _ptr         = rhs._ptr;
-        _counter     = rhs._counter;
-        rhs._ptr     = nullptr;
+        _ptr = rhs._ptr;
+        _counter = rhs._counter;
+        rhs._ptr = nullptr;
         rhs._counter = nullptr;
     }
     return *this;
@@ -1178,7 +1185,7 @@ inline SPWeak<T>& SPWeak<T>::operator=(const SPWeak<U>& rhs)
     reset();
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.get_unsafe());
+        _ptr = static_cast<T*>(rhs.get_unsafe());
         _counter = rhs.get_counter();
         _counter->add_ref_weak();
     }
@@ -1192,11 +1199,19 @@ inline SPWeak<T>& SPWeak<T>::operator=(SPWeak<U>&& rhs)
     reset();
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.get_unsafe());
+        _ptr = static_cast<T*>(rhs.get_unsafe());
         _counter = rhs.get_counter();
         _counter->add_ref_weak();
         rhs.reset();
     }
+    return *this;
+}
+
+// pointer assign & sp assign
+template <typename T>
+inline SPWeak<T>& SPWeak<T>::operator=(std::nullptr_t)
+{
+    reset();
     return *this;
 }
 template <typename T>
@@ -1207,7 +1222,7 @@ inline SPWeak<T>& SPWeak<T>::operator=(const SP<U>& rhs)
     reset();
     if (!rhs.is_empty())
     {
-        _ptr     = static_cast<T*>(rhs.get());
+        _ptr = static_cast<T*>(rhs.get());
         _counter = rhs.get_counter();
         _counter->add_ref_weak();
     }
@@ -1318,7 +1333,7 @@ inline SP<T> SPWeak<T>::lock() const
     if (_counter && _counter->try_lock_weak())
     {
         SP<T> result;
-        result._ptr     = _ptr;
+        result._ptr = _ptr;
         result._counter = _counter;
         return result;
     }
@@ -1358,7 +1373,7 @@ inline void SPWeak<T>::reset()
     if (_ptr)
     {
         _counter->release_weak();
-        _ptr     = nullptr;
+        _ptr = nullptr;
         _counter = nullptr;
     }
 }
@@ -1372,7 +1387,7 @@ inline void SPWeak<T>::reset(const SP<U>& ptr)
         reset();
         if (!ptr.is_empty())
         {
-            _ptr     = static_cast<T*>(ptr.get());
+            _ptr = static_cast<T*>(ptr.get());
             _counter = ptr.get_counter();
             _counter->add_ref_weak();
         }
@@ -1383,12 +1398,12 @@ inline void SPWeak<T>::swap(SPWeak& rhs)
 {
     if (this != &rhs)
     {
-        T*            tmp_ptr     = _ptr;
+        T* tmp_ptr = _ptr;
         SPRefCounter* tmp_counter = _counter;
-        _ptr                      = rhs._ptr;
-        _counter                  = rhs._counter;
-        rhs._ptr                  = tmp_ptr;
-        rhs._counter              = tmp_counter;
+        _ptr = rhs._ptr;
+        _counter = rhs._counter;
+        rhs._ptr = tmp_ptr;
+        rhs._counter = tmp_counter;
     }
 }
 

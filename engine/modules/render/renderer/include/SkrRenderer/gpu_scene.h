@@ -1,6 +1,5 @@
 #pragma once
 #include "SkrCore/id_range_allocator.hpp"
-#include "SkrContainersDef/map.hpp"
 #include "SkrGraphics/raytracing.h"
 #include "SkrRuntime/ecs/world.hpp"
 #include "SkrRenderGraph/frontend/render_graph.hpp"
@@ -8,6 +7,7 @@
 #include "SkrRenderer/render_device.h"
 #include "SkrRenderer/graphics/gpu_table.hpp"
 #include "SkrRenderer/graphics/tlas_manager.hpp"
+#include "SkrRenderer/shared/gpu_scene.hpp"
 #include "SkrRenderer/gpu_scene.generated.h" // IWYU pragma: export
 
 namespace sugoi
@@ -23,25 +23,7 @@ using GPUArchetypeID = uint16_t;
 using CPUTypeID = skr::ecs::TypeIndex;
 static constexpr GPUSceneInstanceID INVALID_GPU_SCENE_INSTANCE_ID = 0xFFFFFFFF;
 
-// D3D12 24位 InstanceID 限制
-struct GPUSceneCustomIndex
-{
-    GPUSceneCustomIndex()
-        : packed(0x00FFFFFF)
-    {
-    }
-    GPUSceneCustomIndex(uint32_t index)
-        : packed(index)
-    {
-        SKR_ASSERT(index <= 0x00FFFFFF);
-    }
-    uint32_t GetInstanceID() const { return packed & 0x00FFFFFF; }
-
-private:
-    uint32_t packed;
-};
-
-struct [[secs_managed_component, sattr(guid = "fd6cd47d-bb68-4d1c-bd26-ad3717f10ea7")]]
+struct [[secs_component, sattr(guid = "fd6cd47d-bb68-4d1c-bd26-ad3717f10ea7")]]
 GPUSceneInstance
 {
 public:
@@ -49,7 +31,6 @@ public:
     std::atomic_bool _ready_on_gpu = false;
 };
 
-// 主管理器
 struct SKR_RENDERER_API GPUScene final
 {
 public:
@@ -63,21 +44,25 @@ public:
     void RemoveEntity(skr::ecs::Entity entity);
 
     void RequireUpload(skr::ecs::Entity entity);
-    void ExecuteUpload(skr::render_graph::RenderGraph* graph);
+    void ExecuteUpload(skr::RG::RenderGraph* graph);
 
     inline skr::ecs::ECSWorld* GetECSWorld() const { return ecs_world; }
-    inline skr::render_graph::BufferHandle GetSceneBuffer(skr::render_graph::RenderGraph* graph) const
+    inline skr::RG::BufferHandle GetSceneBuffer(skr::RG::RenderGraph* graph) const
     {
         return frame_ctxs.get(graph).instance_table_handle;
     }
-    skr::render_graph::AccelerationStructureHandle GetTLAS(skr::render_graph::RenderGraph* graph) const
+    inline skr::RG::BufferHandle GetMatIDBuffer(skr::RG::RenderGraph* graph) const
+    {
+        return frame_ctxs.get(graph).matid_table_handle;
+    }
+    skr::RG::AccelerationStructureHandle GetTLAS(skr::RG::RenderGraph* graph) const
     {
         return frame_ctxs.get(graph).tlas_handle;
     }
     inline uint32_t GetInstanceCount() const { return total_inst_count; }
 
 protected:
-    void AdjustDatabase(skr::render_graph::RenderGraph* graph);
+    void AdjustDatabase(skr::RG::RenderGraph* graph);
 
 private:
     friend struct GPUSceneInstanceTask;
@@ -98,6 +83,9 @@ private:
     std::atomic<GPUSceneInstanceID> free_inst_count = 0;
     std::atomic<GPUSceneInstanceID> latest_inst_index = 0;
     std::atomic<GPUSceneInstanceID> total_inst_count = 0;
+
+    skr::RC<gpu::TableInstance> matid_table;
+    IdRangeAllocator matid_range_allocator;
 
 private:
     static constexpr uint32_t kLaneCount = 2;
@@ -125,7 +113,7 @@ private:
         skr::task::event_t add_finish = skr::task::event_t(true);
         skr::task::event_t scan_finish = skr::task::event_t(true);
     };
-    skr::render_graph::FrameResource<UploadContext> upload_ctxs;
+    skr::RG::FrameResource<UploadContext> upload_ctxs;
 
     // Buffer with FrameResource for deferred destruction
     struct FrameContext
@@ -138,10 +126,11 @@ private:
 
         // Single buffer to discard when this frame comes around again
         TLASHandle frame_tlas;
-        skr::render_graph::AccelerationStructureHandle tlas_handle;
-        skr::render_graph::BufferHandle instance_table_handle;
+        skr::RG::AccelerationStructureHandle tlas_handle;
+        skr::RG::BufferHandle instance_table_handle;
+        skr::RG::BufferHandle matid_table_handle;
     };
-    skr::render_graph::FrameResource<FrameContext> frame_ctxs;
+    skr::RG::FrameResource<FrameContext> frame_ctxs;
 };
 
 } // namespace skr

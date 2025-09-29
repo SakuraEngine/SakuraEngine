@@ -7,9 +7,10 @@
 #include "SkrShaderCompiler/assets/material_asset.hpp"
 #include "SkrTextureCompiler/texture_compiler.hpp"
 #include "SkrMeshTool/mesh_asset.hpp"
-#include "SkrMeshTool/mesh_processing.hpp"
+#include "SkrMeshTool/gltf_processing.hpp"
 #include "cgltf/cgltf.h"
-namespace skd::asset
+
+namespace skr
 {
 
 void* GltfMeshImporter::Import(skr::io::IRAMService* ioService, CookContext* context)
@@ -18,7 +19,7 @@ void* GltfMeshImporter::Import(skr::io::IRAMService* ioService, CookContext* con
     auto path = context->AddSourceFile(assetPath);
     auto vfs = assetMetaFile->GetProject()->GetAssetVFS();
     auto result = SkrNew<ImportData>();
-    result->gltf_data = ImportGLTFWithData(path.string().c_str(), ioService, vfs);
+    result->gltf_data = ImportGLTFData(path.string().c_str(), ioService, vfs);
     if (import_all_materials)
     {
         ImportMaterials(result, context);
@@ -40,7 +41,7 @@ void GltfMeshImporter::ImportMaterials(ImportData* import_data, CookContext* con
     auto project = context->GetAssetMetaFile()->GetProject();
     const auto AssetDirectory = skr::Path(context->GetAssetPath()).parent_directory();
     const auto GLTFDirectory = skr::Path(assetPath).parent_directory();
-    auto& CookSystem = *skd::asset::GetCookSystem();
+    auto& CookSystem = *skr::GetCookSystem();
 
     skr::Map<uint64_t, skr::GUID> ImportedTextures;
     auto ImportTextureOnce = [&](cgltf_texture* t) {
@@ -56,11 +57,11 @@ void GltfMeshImporter::ImportMaterials(ImportData* import_data, CookContext* con
         auto TexImporter = Importer::Create<TextureImporter>();
         TexImporter->assetPath = TextureSourcePath;
 
-        auto AssetFile = skr::RC<skd::asset::AssetMetaFile>::New(
+        auto AssetFile = skr::RC<skr::AssetMetaFile>::New(
             TextureAssetPath,                            // virtual uri for this asset in the project
             TextureAssetID,                              // guid for this asset
             skr::type_id_of<skr::TextureResource>(),     // output resource is a mesh resource
-            skr::type_id_of<skd::asset::TextureCooker>() // this cooker cooks t he raw mesh data to mesh resource
+            skr::type_id_of<skr::TextureCooker>() // this cooker cooks t he raw mesh data to mesh resource
         );
 
         CookSystem.ImportAssetMeta(project, AssetFile, TexImporter);
@@ -84,16 +85,27 @@ void GltfMeshImporter::ImportMaterials(ImportData* import_data, CookContext* con
         if (auto basecolor = pbr.base_color_factor)
         {
             auto& v = MatImporter->asset->override_values.emplace().ref();
-            v.prop_type = EMaterialPropertyType::FLOAT4;
-            v.slot_name = u8"pbrBaseColorFactor";
+            v.prop_type = EMaterialPropertyType::FLOAT3;
+            v.slot_name = u8"BaseColor";
             v.vec = { basecolor[0], basecolor[1], basecolor[2], basecolor[3] };
         }
-
+        {
+            auto& v = MatImporter->asset->override_values.emplace().ref();
+            v.prop_type = EMaterialPropertyType::FLOAT;
+            v.slot_name = u8"Metallic";
+            v.value = pbr.metallic_factor;
+        }
+        {
+            auto& v = MatImporter->asset->override_values.emplace().ref();
+            v.prop_type = EMaterialPropertyType::FLOAT;
+            v.slot_name = u8"Roughness";
+            v.value = pbr.roughness_factor;
+        }
         if (auto basecolor = pbr.base_color_texture.texture)
         {
             auto& v = MatImporter->asset->override_values.emplace().ref();
             v.prop_type = EMaterialPropertyType::TEXTURE;
-            v.slot_name = u8"BaseColor";
+            v.slot_name = u8"BaseColorTexture";
             v.resource = ImportTextureOnce(basecolor);
         }
         if (auto normal = material.normal_texture.texture)
@@ -119,11 +131,11 @@ void GltfMeshImporter::ImportMaterials(ImportData* import_data, CookContext* con
         }
 
         auto MaterialAssetPath = (AssetDirectory / (const char8_t*)material.name).string();
-        auto AssetFile = skr::RC<skd::asset::AssetMetaFile>::New(
+        auto AssetFile = skr::RC<skr::AssetMetaFile>::New(
             MaterialAssetPath,                            // virtual uri for this asset in the project
             MaterialAssetID,                              // guid for this asset
             skr::type_id_of<skr::MaterialResource>(),     // output resource is a mesh resource
-            skr::type_id_of<skd::asset::MaterialCooker>() // this cooker cooks t he raw mesh data to mesh resource
+            skr::type_id_of<skr::MaterialCooker>() // this cooker cooks t he raw mesh data to mesh resource
         );
         CookSystem.ImportAssetMeta(project, AssetFile, MatImporter);
         import_data->import_materials.add_unique(MaterialAssetID);
@@ -143,4 +155,4 @@ void GltfMeshImporter::ImportMaterials(ImportData* import_data, CookContext* con
     }
 }
 
-} // namespace skd::asset
+} // namespace skr

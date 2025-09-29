@@ -1,11 +1,11 @@
 #pragma once
-#include "SkrBase/types/guid.h"
+#include "SkrBase/types/guid.hpp"
 #include "SkrCore/memory/rc.hpp"
 #include "SkrCore/serialize/json_archive.hpp"
 #include "SkrToolCore/fwd_types.hpp"
 #include "SkrToolCore/cook_system/importer.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 using namespace skr;
 template <class T>
@@ -77,10 +77,10 @@ struct ImporterRegistry
 };
 
 TOOL_CORE_API ImporterRegistry* GetImporterRegistry();
-} // namespace skd::asset
+} // namespace skr
 
 template <class T>
-void skd::asset::RegisterImporter(skr::GUID guid)
+void skr::RegisterImporter(skr::GUID guid)
 {
     auto registry = GetImporterRegistry();
     auto create = +[]() {

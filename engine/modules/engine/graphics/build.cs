@@ -54,6 +54,9 @@ public static class SkrGraphics
                 .Require("DirectStorage", new PackageConfig { Version = new Version(1, 3, 0) })
                 .Depend(Visibility.Private, "DirectStorage@DirectStorage")
 
+                .Require("NvStreamline", new PackageConfig { Version = new Version(2, 9, 0) })
+                .Depend(Visibility.Private, "NvStreamline@NvStreamline")
+
                 .Require("NvML", new PackageConfig { Version = new Version(13, 0, 0) })
                 .Depend(Visibility.Private, "NvML@NvML")
 

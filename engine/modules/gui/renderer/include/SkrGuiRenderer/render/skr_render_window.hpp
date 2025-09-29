@@ -37,8 +37,8 @@ private:
     CGPUSwapChainId             _cgpu_swapchain   = nullptr;
     CGPUFenceId                 _cgpu_fence       = nullptr;
     uint32_t                    _backbuffer_index = 0;
-    render_graph::TextureHandle _back_buffer      = {};
-    render_graph::TextureHandle _depth_buffer     = {};
+    RG::TextureHandle _back_buffer      = {};
+    RG::TextureHandle _depth_buffer     = {};
 
     // draw data
     Array<PaintVertex>     _vertices;
@@ -49,7 +49,7 @@ private:
     // placeholder0:   [_, _, _, _]
     // placeholder1:   [_, _, _, _]
     // placeholder2:   [_, _, _, _]
-    Array<skr_float4x4_t> _render_data;
+    Array<skr::float4x4> _render_data;
     struct DrawCommand {
         // CPU data
         IImage* texture         = nullptr;
@@ -70,10 +70,10 @@ private:
     Array<DrawCommand> _commands;
 
     // buffer
-    skr::render_graph::BufferHandle _vertex_buffer      = {};
-    skr::render_graph::BufferHandle _index_buffer       = {};
-    skr::render_graph::BufferHandle _transform_buffer   = {};
-    skr::render_graph::BufferHandle _projection_buffer  = {};
-    skr::render_graph::BufferHandle _render_data_buffer = {};
+    skr::RG::BufferHandle _vertex_buffer      = {};
+    skr::RG::BufferHandle _index_buffer       = {};
+    skr::RG::BufferHandle _transform_buffer   = {};
+    skr::RG::BufferHandle _projection_buffer  = {};
+    skr::RG::BufferHandle _render_data_buffer = {};
 };
 } // namespace skr::gui

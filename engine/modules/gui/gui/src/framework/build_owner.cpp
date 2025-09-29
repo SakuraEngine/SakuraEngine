@@ -93,7 +93,7 @@ void BuildOwner::register_native_window(NotNull<RenderNativeWindowElement*> nati
     _native_windows.add_unique(native_window);
     if (_input_manager)
     {
-        auto render_object = native_window->render_object()->type_cast_fast<RenderNativeWindow>();
+        auto render_object = native_window->render_object()->rttr_cast<RenderNativeWindow>();
         _input_manager->register_context(render_object);
     }
 }
@@ -102,7 +102,7 @@ void BuildOwner::unregister_native_window(NotNull<RenderNativeWindowElement*> na
     _native_windows.remove(native_window);
     if (_input_manager)
     {
-        auto render_object = native_window->render_object()->type_cast_fast<RenderNativeWindow>();
+        auto render_object = native_window->render_object()->rttr_cast<RenderNativeWindow>();
         _input_manager->unregister_context(render_object);
     }
 }

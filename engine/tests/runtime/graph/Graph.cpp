@@ -51,41 +51,41 @@ TEST_CASE_METHOD(GraphTest, "DependencyGraph")
 
 TEST_CASE_METHOD(GraphTest, "RenderGraphFrontEnd")
 {
-    namespace render_graph = skr::render_graph;
-    auto graph = render_graph::RenderGraph::create(
-    [](render_graph::RenderGraphBuilder& builder) {
+    namespace RG = skr::RG;
+    auto graph = RG::RenderGraph::create(
+    [](RG::RenderGraphBuilder& builder) {
         builder.frontend_only();
     });
     auto back_buffer = graph->create_texture(
-    [=](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
+    [=](RG::RenderGraph&, RG::TextureBuilder& builder) {
         builder.set_name(u8"backbuffer");
     });
     auto gbuffer0 = graph->create_texture(
-    [](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
+    [](RG::RenderGraph&, RG::TextureBuilder& builder) {
         builder.set_name(u8"gbuffer0")
         .allow_render_target()
         .format(CGPU_FORMAT_B8G8R8A8_UNORM);
     });
     auto gbuffer1 = graph->create_texture(
-    [](render_graph::RenderGraph&, render_graph::TextureBuilder& builder) {
+    [](RG::RenderGraph&, RG::TextureBuilder& builder) {
         builder.set_name(u8"gbuffer1")
         .allow_render_target()
         .format(CGPU_FORMAT_B8G8R8A8_UNORM);
     });
     graph->add_render_pass(
-    [=](render_graph::RenderGraph&, render_graph::RenderPassBuilder& builder) {
+    [=](RG::RenderGraph&, RG::RenderPassBuilder& builder) {
         builder.set_name(u8"gbuffer_pass")
         .write(0, gbuffer0)
         .write(1, gbuffer1);
     },
-    render_graph::RenderPassExecuteFunction());
+    RG::RenderPassExecuteFunction());
     graph->add_render_pass(
-    [=](render_graph::RenderGraph&, render_graph::RenderPassBuilder& builder) {
+    [=](RG::RenderGraph&, RG::RenderPassBuilder& builder) {
         builder.set_name(u8"defer_lighting")
         .read(u8"GBuffer0", gbuffer0)
         .read(u8"GBuffer1", gbuffer1)
         .write(0, back_buffer);
     },
-    render_graph::RenderPassExecuteFunction());
-    render_graph::RenderGraph::destroy(graph);
+    RG::RenderPassExecuteFunction());
+    RG::RenderGraph::destroy(graph);
 }

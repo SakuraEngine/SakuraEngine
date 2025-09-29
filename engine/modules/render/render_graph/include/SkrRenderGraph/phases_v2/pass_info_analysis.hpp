@@ -6,7 +6,7 @@
 // Forward declare types from dependency analysis
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 // Resource access type
@@ -101,5 +101,5 @@ private:
     StackHashMap<ResourceNode*, ResourceInfo> resource_infos; // For dependency analysis
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

@@ -43,7 +43,7 @@ GestureArena* GestureArenaManager::find_arena_or_add(CombinePointerId pointer)
 
 bool GestureArenaManager::route_event(Event* event)
 {
-    if (auto pointer_event = event->type_cast<PointerEvent>())
+    if (auto pointer_event = event->rttr_cast<PointerEvent>())
     {
         auto arena    = find_arena({ pointer_event->pointer_id, static_cast<uint32_t>(pointer_event->button) });
         bool listened = false;

@@ -3,7 +3,7 @@
 #include "SkrRenderGraph/stack_allocator.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 struct SKR_RENDER_GRAPH_API CullPhase : public IRenderGraphPhase
 {
@@ -13,5 +13,5 @@ struct SKR_RENDER_GRAPH_API CullPhase : public IRenderGraphPhase
     StackVector<ResourceNode*> culled_resources;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

@@ -126,9 +126,8 @@ float4 trace_scene(uint2 pixel_coord, uint2 screen_size)
 }
 
 // Compute shader entry point
-[[compute_shader("cs_main")]]
 [[numthreads(16, 16, 1)]]
-void compute_main([[sv_thread_id]] uint3 thread_id) 
+void cs_main([[sv_thread_id]] uint3 thread_id) 
 {
     uint2 screen_size = uint2(camera_constants.screenSize);
     uint2 pixel_coord = thread_id.xy;

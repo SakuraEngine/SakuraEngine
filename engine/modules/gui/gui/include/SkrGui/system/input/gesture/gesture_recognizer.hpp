@@ -38,7 +38,7 @@ struct CombinePointerId
 //
 // 但是，出于某些手势的复用性考虑，这里不进行继承结构上的区分
 struct [[sattr(guid = "8fb085fd-9412-4a1b-bc95-a518e32746f2"
-)]] SKR_GUI_API GestureRecognizer : virtual public skr::IObject
+)]] SKR_GUI_API GestureRecognizer : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(GestureRecognizer)
 

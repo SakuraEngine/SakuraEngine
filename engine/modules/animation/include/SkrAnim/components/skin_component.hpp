@@ -8,7 +8,7 @@
 namespace skr
 {
 
-struct [[secs_managed_component, sattr(
+struct [[secs_component, sattr(
     guid = "05B43406-4BCF-4E59-B2D8-ACED7D37E776"; 
     serde = @enable
 )]] SKR_ANIM_API SkinComponent
@@ -34,7 +34,7 @@ struct [[sattr(
     skr::Span<skr_vertex_buffer_view_t> views;
 };
 
-struct [[secs_managed_component, sattr(
+struct [[secs_component, sattr(
     guid = "02753B87-0D94-4C35-B768-DE3BFE3E0DEB"; 
     serde = @enable
 )]] SKR_ANIM_API AnimComponent

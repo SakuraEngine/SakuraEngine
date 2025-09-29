@@ -6,7 +6,7 @@
 #include "SkrToolCore/project/project.hpp"
 #include "SkrToolCore/cook_system/cook_system.hpp"
 
-namespace skd::asset
+namespace skr
 {
 struct CookContextImpl : public CookContext
 {
@@ -211,31 +211,33 @@ const SResourceHandle& CookContextImpl::GetStaticDependency(uint32_t index) cons
 
 uint32_t CookContextImpl::AddStaticDependency(skr::GUID resource, bool install)
 {
-    auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto& dep) { return dep.get_serialized() == resource; });
+    auto iter = std::find_if(staticDependencies.begin(), staticDependencies.end(), [&](const auto& dep) { return dep.get_guid() == resource; });
     if (iter == staticDependencies.end())
     {
         auto counter = GetCookSystem()->EnsureCooked(resource);
         if (counter) counter.wait(false);
         SResourceHandle handle{ resource };
-        handle.resolve(install, (uint64_t)this, SKR_REQUESTER_SYSTEM);
-        if (!handle.get_resolved())
-        {
-            auto record = handle.get_record();
-            task::event_t event;
-            auto callback = [&]() {
-                event.signal();
-            };
-            record->AddCallback(SKR_LOADING_STATUS_ERROR, callback);
-            record->AddCallback(install ? SKR_LOADING_STATUS_INSTALLED : SKR_LOADING_STATUS_LOADED, callback);
-            if (!handle.get_resolved())
-            {
-                event.wait(false);
-            }
-        }
-        SKR_ASSERT(handle.is_resolved());
+        
+        if (install)
+            handle.install();
+        else
+            handle.load();
+
+        skr::task::wait(true, [&](){
+            if (install)
+                return handle.is_installed();
+            else
+                return handle.is_loaded();
+        });
+
+        if (install)
+            SKR_ASSERT(handle.is_installed());
+        else
+            SKR_ASSERT(handle.is_loaded());
+
         staticDependencies.add(std::move(handle));
         return (uint32_t)(staticDependencies.size() - 1);
     }
     return (uint32_t)(staticDependencies.end() - iter);
 }
-} // namespace skd::asset
+} // namespace skr

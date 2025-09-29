@@ -51,9 +51,12 @@ static void iter_ref_impl(sugoi_chunk_view_t view, type_index_t type, EIndex off
         {
             forloop (j, 0, view.count)
             {
-                auto array = (sugoi_array_comp_t*)((size_t)j * size + src);
-                for (char* curr = (char*)array->BeginX; curr < array->EndX; curr += elemSize)
-                    iter_element(view.chunk, view.start + j, curr);
+                auto array = (ArrayComponentBase*)((size_t)j * size + src);
+                for (uint64_t i = 0; i < array->size(); ++i)
+                {
+                    auto* curr = ::skr::memory::offset_item(array->unsafe_data(), elemSize, i);
+                    iter_element(view.chunk, view.start + i, (char*)curr);
+                }
                 iter.move();
             }
         }
@@ -73,17 +76,17 @@ void iterator_ref_view(const sugoi_chunk_view_t& view, F&& iter) noexcept
     archetype_t* type = view.chunk->structure;
     const auto* offsets = type->offsets[(int)view.chunk->pt];
     const auto* sizes = type->sizes;
-    const auto* elemSizes = type->elemSizes;
+    const auto* elemSizes = type->arrElemSizes;
     forloop (i, 0, type->firstChunkComponent)
         iter_ref_impl(view, type->type.data[i], offsets[i], sizes[i], elemSizes[i], std::forward<F>(iter));
 }
-template<class F>
+template <class F>
 void iterator_ref_chunk(sugoi_chunk_t* chunk, F&& iter) noexcept
 {
     archetype_t* type = chunk->structure;
     const auto* offsets = type->offsets[(int)chunk->pt];
     const auto* sizes = type->sizes;
-    const auto* elemSizes = type->elemSizes;
+    const auto* elemSizes = type->arrElemSizes;
     forloop (i, type->firstChunkComponent, type->type.length)
         iter_ref_impl({ chunk, 0, 1 }, type->type.data[i], offsets[i], sizes[i], elemSizes[i], std::forward<F>(iter));
 }

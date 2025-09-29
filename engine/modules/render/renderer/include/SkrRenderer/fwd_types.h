@@ -52,7 +52,7 @@ struct StableShaderHash;
 struct PlatformShaderHash;
 struct PlatformShaderIdentifier;
 struct ShaderMap;
-typedef skr_guid_t VertexLayoutId;
+typedef skr::GUID VertexLayoutId;
 } // namespace skr
 
 typedef struct skr::RenderDevice SRenderDevice;

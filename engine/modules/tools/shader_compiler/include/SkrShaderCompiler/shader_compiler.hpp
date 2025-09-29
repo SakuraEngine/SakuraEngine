@@ -4,7 +4,7 @@
 #include "SkrRenderer/fwd_types.h"
 #include "SkrShaderCompiler/shader_compiler.generated.h" // IWYU pragma: export
 
-namespace skd::asset
+namespace skr
 {
 using namespace skr;
 struct ShaderImporter;
@@ -62,4 +62,4 @@ IShaderCompiler* SkrShaderCompiler_CreateByType(EShaderSourceType type) SKR_NOEX
 void SkrShaderCompiler_Destroy(IShaderCompiler* compiler) SKR_NOEXCEPT;
 void Util_ShaderCompilerRegister(EShaderSourceType type, IShaderCompiler* (*ctor)(), void (*dtor)(IShaderCompiler*)) SKR_NOEXCEPT;
 EShaderSourceType Util_GetShaderSourceTypeWithExtensionString(const char8_t* ext) SKR_NOEXCEPT;
-} // namespace skd::asset
+} // namespace skr

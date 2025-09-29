@@ -5,7 +5,8 @@
 #include "SkrRenderer/render_device.h"
 #include "SkrRenderer/render_mesh.h"
 #include "SkrRenderer/shared/gpu_scene.hpp"
-#include "SkrSceneCore/scene_components.h"
+#include "SkrRenderer/resources/material_resource.hpp"
+#include "SkrScene/basic_components.hpp"
 #include "SkrProfile/profile.h"
 #include <atomic>
 
@@ -43,54 +44,62 @@ struct AddEntityToGPUScene : public GPUSceneInstanceTask
             {
                 auto entity = Context.entities()[i];
                 const auto& mesh = meshes[i];
-                const bool MeshNotResolved = !mesh.mesh_resource.is_resolved();
+                auto& instance_data = instances[i];
+                instance_data.entity = entity;
+
+                const bool MeshNotResolved = !mesh.GetMeshResource().is_installed();
                 if (MeshNotResolved)
                 {
                     pScene->AddEntity(entity);
                     continue;
                 }
 
-                auto mesh_resource = mesh.mesh_resource.get_resolved();
+                auto mesh_resource = mesh.GetMeshResource().get_installed();
                 if (mesh_resource->render_mesh->need_build_blas)
                 {
                     pScene->dirty_blases.enqueue(mesh_resource->render_mesh->blas);
                     mesh_resource->render_mesh->need_build_blas = false;
                 }
 
+                // 分配 material IDs
+                auto mat_range = pScene->matid_range_allocator.allocate(mesh_resource->materials.size());
+                for (uint32_t j = 0; j < mesh_resource->materials.size(); j++)
+                {
+                    gpu::MaterialID matid = {};
+                    matid.index = mesh_resource->materials[j].install()->GetMaterialIndex();
+                    gpu::GPUDatablock<gpu::MaterialID>::StoreInstance(*pScene->matid_table, mat_range.start + j, matid);
+                }
+
                 const auto entity_transform = transforms[i].get().to_matrix();
                 auto& multi_insts = gpu_instances[i];
-                auto& instance_data = instances[i];
-                instance_data.entity = entity;
                 for (auto& gpu_inst : multi_insts)
                 {
-                   // 分配 instance id
+                    gpu_inst.materials = gpu::Range<gpu::MaterialID>(mat_range.start, mat_range.length);
+
+                    // assign instance id
                     if (pScene->free_insts.try_dequeue(gpu_inst.global_index))
                         pScene->free_inst_count -= 1;
                     else
                         gpu_inst.global_index = pScene->latest_inst_index++;
 
-                    // 分配 prim ids
+                    // assign prim ids
                     gpu_inst.primitives = gpu::Range<gpu::Primitive>(
                         mesh_resource->render_mesh->primitive_table_id_start,
                         (uint32_t)mesh_resource->primitives.size()
                     );
 
                     // add tlas
-                    gpu_inst.transform = entity_transform * gpu_inst.transform;
-                    const auto& transform = gpu_inst.transform;
+                    const auto transform = entity_transform * gpu_inst.transform;
                     auto& tlas_instance = pScene->tlas_instances[gpu_inst.global_index];
                     tlas_instance.bottom = mesh_resource->render_mesh->blas;
                     tlas_instance.instance_id = gpu_inst.global_index;
                     tlas_instance.instance_mask = 255;
                     float transform34[12] = {
-                        transform.m00, transform.m10, transform.m20, transform.m30, // Row 0: X axis + X translation
-                        transform.m01,
-                        transform.m11,
-                        transform.m21,
+                        transform.m00, transform.m10, transform.m20,
+                        transform.m30, // Row 0: X axis + X translation
+                        transform.m01, transform.m11, transform.m21,
                         transform.m31, // Row 1: Y axis + Y translation
-                        transform.m02,
-                        transform.m12,
-                        transform.m22,
+                        transform.m02, transform.m12, transform.m22,
                         transform.m32 // Row 2: Z axis + Z translation
                     };
                     memcpy(tlas_instance.transform, transform34, sizeof(transform34));
@@ -106,7 +115,7 @@ struct AddEntityToGPUScene : public GPUSceneInstanceTask
     skr::ecs::ComponentView<const MeshComponent> meshes;
     skr::ecs::ComponentView<GPUSceneInstance> instances;
     skr::ecs::ComponentView<gpu::Instance> gpu_instances;
-    skr::ecs::ComponentView<const skr::scene::TransformComponent> transforms;
+    skr::ecs::ComponentView<const skr::SolvedTransformComponent> transforms;
 };
 
 struct ScanGPUScene : public GPUSceneInstanceTask
@@ -138,15 +147,15 @@ struct ScanGPUScene : public GPUSceneInstanceTask
             }
         }
     }
-    ScanGPUScene(skr::render_graph::RenderGraph* g)
+    ScanGPUScene(skr::RG::RenderGraph* g)
         : graph(g)
     {
     }
-    skr::render_graph::RenderGraph* graph;
+    skr::RG::RenderGraph* graph;
     skr::ecs::ComponentView<const gpu::Instance> gpu_instances;
 };
 
-void GPUScene::AdjustDatabase(skr::render_graph::RenderGraph* graph)
+void GPUScene::AdjustDatabase(skr::RG::RenderGraph* graph)
 {
     SkrZoneScopedN("GPUScene::AdjustBuffer");
     const auto& Lane = GetLaneForUpload();
@@ -159,11 +168,14 @@ void GPUScene::AdjustDatabase(skr::render_graph::RenderGraph* graph)
     }
     const auto required_instances = tlas_instances.size();
     frame_ctx.instance_table_handle = instance_table->UpdateTableBuffer(graph, required_instances);
+
+    // TODO: MAT COUNT
+    frame_ctx.matid_table_handle = matid_table->UpdateTableBuffer(graph, required_instances * 128);
 }
 
-void GPUScene::ExecuteUpload(skr::render_graph::RenderGraph* graph)
+void GPUScene::ExecuteUpload(skr::RG::RenderGraph* graph)
 {
-    using namespace skr::render_graph;
+    using namespace skr::RG;
 
     SkrZoneScopedN("GPUScene::ExecuteUpload");
     SwitchLane();
@@ -234,8 +246,14 @@ void GPUScene::ExecuteUpload(skr::render_graph::RenderGraph* graph)
         }
     }
 
+    matid_table->DispatchSparseUpload(graph, 
+        [this](skr::RG::RenderGraph& g, skr::RG::ComputePassContext& ctx) {
+            auto& upload_ctx = upload_ctxs.get(ctx.graph);
+            upload_ctx.add_finish.wait(true);
+        });
+
     instance_table->DispatchSparseUpload(graph, 
-        [this](skr::render_graph::RenderGraph& g, skr::render_graph::ComputePassContext& ctx) {
+        [this](skr::RG::RenderGraph& g, skr::RG::ComputePassContext& ctx) {
         auto& upload_ctx = upload_ctxs.get(ctx.graph);
         upload_ctx.add_finish.wait(true);
         upload_ctx.scan_finish.wait(true);
@@ -301,8 +319,6 @@ void GPUScene::RemoveEntity(skr::ecs::Entity entity)
     const auto multi_insts = ecs_world->random_readwrite<skr::gpu::Instance>().get(entity);
     if (instance_data->_ready_on_gpu)
     {
-        const auto prims = ecs_world->random_readwrite<gpu::Primitive>().get(entity);
-        const auto mats = ecs_world->random_readwrite<gpu::Material>().get(entity);
         for (auto inst : *multi_insts)
         {
             free_insts.enqueue(inst.global_index);
@@ -344,6 +360,14 @@ void GPUScene::Initialize(gpu::TableManager* table_manager, skr::RenderDevice* r
         gpu::GPUDatablock<gpu::Instance>::SetupTableConfig(table_builder);
         instance_table = table_manager->CreateTable(table_builder);
     }
+    {
+        gpu::TableConfig table_builder(render_device->get_cgpu_device(), u8"MaterialIds");
+        table_builder.with_instances(16 * 1024);
+        gpu::GPUDatablock<gpu::MaterialID>::SetupTableConfig(table_builder);
+        matid_table = table_manager->CreateTable(table_builder);
+
+        matid_range_allocator.resize(matid_table->GetInstanceCapacity());
+    }
     SKR_LOG_INFO(u8"GPUScene initialized successfully");
 }
 
@@ -353,6 +377,7 @@ void GPUScene::Shutdown()
 
     // Shutdown allocators (will release buffers)
     instance_table.reset();
+    matid_table.reset();
 
     for (uint32_t i = 0; i < frame_ctxs.max_frames_in_flight(); ++i)
     {

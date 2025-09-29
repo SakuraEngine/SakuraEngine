@@ -1,6 +1,6 @@
 #pragma once
-#include "SkrRuntime/io/io.h"
-#include "SkrCore/blob.hpp"
+#include "SkrRuntime/io/io.h" // IWYU pragma: export
+#include "SkrCore/blob.hpp" // IWYU pragma: export
 
 SKR_DECLARE_TYPE_ID_FWD(skr::io, IRAMService, skr_io_ram_service)
 

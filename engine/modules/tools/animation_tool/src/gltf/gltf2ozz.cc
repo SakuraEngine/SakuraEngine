@@ -458,7 +458,7 @@ bool CreateNodeTransform(const tinygltf::Node& _node, ozz::math::Transform* _tra
 }
 } // namespace
 
-namespace skd
+namespace skr
 {
 
 GltfOzzImporter::GltfOzzImporter()
@@ -928,7 +928,7 @@ const tinygltf::Node* GltfOzzImporter::FindNodeByName(const std::string& _name) 
     return nullptr;
 }
 
-} // namespace skd
+} // namespace skr
 
 // use case
 // int main(int _argc, const char** _argv) {

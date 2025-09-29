@@ -8,7 +8,7 @@
 #include "SkrContainersDef/hashmap.hpp"
 
 namespace skr {
-namespace render_graph {
+namespace RG {
 
 // 资源生命周期信息
 struct ResourceLifetime
@@ -75,5 +75,5 @@ private:
     ResourceLifetimeResult lifetime_result_;
 };
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

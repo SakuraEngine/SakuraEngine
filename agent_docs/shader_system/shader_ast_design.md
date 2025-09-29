@@ -35,7 +35,7 @@ ShaderAST 是 SakuraEngine 自研的着色器中间表示（IR）系统，作为
 AST 类是 Shader AST 的核心管理器，负责内置函数注册和代码生成：
 
 ```cpp
-// tools/shader_compiler/AST/include/CppSL/CppSLAST.hpp
+// tools/LLVMTools/shader_compiler/AST/include/CppSL/CppSLAST.hpp
 struct AST {
     // 内置函数查找和特化
     const TemplateCallableDecl* FindIntrinsic(const char* name) const;
@@ -68,7 +68,7 @@ private:
 ShaderAST 使用 `[[callop("NAME")]]` 属性将 C++ 方法映射到着色器内置函数。这是系统的核心机制之一：
 
 ```cpp
-// engine/tools/shader_compiler/ShaderSTL/std/raytracing/ray_query.hpp
+// engine/LLVMTools/tools/shader_compiler/ShaderSTL/std/raytracing/ray_query.hpp
 template <uint32 flags>
 struct ray_query {
     // 控制方法
@@ -109,7 +109,7 @@ struct ray_query {
 系统在 AST 构造时注册所有内置函数：
 
 ```cpp
-// tools/shader_compiler/AST/src/AST.cpp (实际代码片段)
+// tools/LLVMTools/shader_compiler/AST/src/AST.cpp (实际代码片段)
 AST::AST() {
     // 数学函数
     std::array<VarConceptDecl*, 1> OneFloatFamily = { FloatFamily };
@@ -423,7 +423,7 @@ protected:
 HLSLGenerator 负责将 ShaderAST 转换为 HLSL 代码，特别是处理 RayQuery 方法的映射：
 
 ```cpp
-// tools/shader_compiler/AST/src/langs/HLSLGenerator.cpp (实际代码片段)
+// tools/LLVMTools/shader_compiler/AST/src/langs/HLSLGenerator.cpp (实际代码片段)
 class HLSLGenerator : public ICodeGenerator {
     SourceBuilderNew sb;
     
@@ -549,7 +549,7 @@ protected:
 基于实际的光线追踪计算着色器，展示从 HLSL 到 CppSL 的转换：
 
 ```cpp
-// engine/tools/shader_compiler/ShaderSTL/raytracing_sample.cpp
+// engine/tools/LLVMTools/shader_compiler/ShaderSTL/raytracing_sample.cpp
 #include "std/std.hpp"
 
 #define WIDTH 3200
@@ -584,8 +584,7 @@ float4 trace(uint2 tid, uint2 tsize) {
 }
 
 // 计算着色器入口点
-[[compute_shader("compute_main")]]
-[[kernel_3d(32, 32, 1)]]
+[[numthreads(32, 32, 1)]]
 void compute_main([[sv_thread_id]] uint3 tid) {
     uint2 tsize = uint2(WIDTH, HEIGHT);
     uint row_pitch = tsize.x;

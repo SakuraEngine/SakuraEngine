@@ -11,8 +11,8 @@ SKR_EXTERN_C SKR_CORE_API void* _sakura_malloc_aligned(size_t size, size_t align
 SKR_EXTERN_C SKR_CORE_API void* _sakura_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name);
 SKR_EXTERN_C SKR_CORE_API void* _sakura_new_n(size_t count, size_t size, const char* pool_name);
 SKR_EXTERN_C SKR_CORE_API void* _sakura_new_aligned(size_t size, size_t alignment, const char* pool_name);
-SKR_EXTERN_C SKR_CORE_API void  _sakura_free(void* p, const char* pool_name) SKR_NOEXCEPT;
-SKR_EXTERN_C SKR_CORE_API void  _sakura_free_aligned(void* p, size_t alignment, const char* pool_name);
+SKR_EXTERN_C SKR_CORE_API void _sakura_free(void* p, const char* pool_name) SKR_NOEXCEPT;
+SKR_EXTERN_C SKR_CORE_API void _sakura_free_aligned(void* p, size_t alignment, const char* pool_name);
 SKR_EXTERN_C SKR_CORE_API void* _sakura_realloc(void* p, size_t newsize, const char* pool_name);
 SKR_EXTERN_C SKR_CORE_API void* _sakura_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name);
 
@@ -20,13 +20,13 @@ SKR_EXTERN_C SKR_CORE_API void* traced_os_malloc(size_t size, const char* pool_n
 SKR_EXTERN_C SKR_CORE_API void* traced_os_calloc(size_t count, size_t size, const char* pool_name);
 SKR_EXTERN_C SKR_CORE_API void* traced_os_malloc_aligned(size_t size, size_t alignment, const char* pool_name);
 SKR_EXTERN_C SKR_CORE_API void* traced_os_calloc_aligned(size_t count, size_t size, size_t alignment, const char* pool_name);
-SKR_EXTERN_C SKR_CORE_API void  traced_os_free(void* p, const char* pool_name) SKR_NOEXCEPT;
-SKR_EXTERN_C SKR_CORE_API void  traced_os_free_aligned(void* p, size_t alignment, const char* pool_name);
+SKR_EXTERN_C SKR_CORE_API void traced_os_free(void* p, const char* pool_name) SKR_NOEXCEPT;
+SKR_EXTERN_C SKR_CORE_API void traced_os_free_aligned(void* p, size_t alignment, const char* pool_name);
 SKR_EXTERN_C SKR_CORE_API void* traced_os_realloc(void* p, size_t newsize, const char* pool_name);
 SKR_EXTERN_C SKR_CORE_API void* traced_os_realloc_aligned(void* p, size_t newsize, size_t alignment, const char* pool_name);
 
 SKR_EXTERN_C SKR_CORE_API void* containers_malloc_aligned(size_t size, size_t alignment);
-SKR_EXTERN_C SKR_CORE_API void  containers_free_aligned(void* p, size_t alignment);
+SKR_EXTERN_C SKR_CORE_API void containers_free_aligned(void* p, size_t alignment);
 
 //=======================alloc with trace=======================
 #if defined(SKR_PROFILE_ENABLE) && defined(TRACY_TRACE_ALLOCATION)

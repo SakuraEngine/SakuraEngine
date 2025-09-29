@@ -8,7 +8,7 @@ namespace skr::gui
 {
 struct [[sattr(
     guid = "0ff4a42c-7195-48c5-a979-263dab05ac2d"
-)]] SKR_GUI_API IBuildContext : virtual public skr::IObject
+)]] SKR_GUI_API IBuildContext : virtual public skr::IRTTRBasic
 {
     SKR_GENERATE_BODY(IBuildContext)
     virtual ~IBuildContext() = default;

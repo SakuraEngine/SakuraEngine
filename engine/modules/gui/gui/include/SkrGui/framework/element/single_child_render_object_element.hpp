@@ -8,8 +8,7 @@ struct [[sattr(guid = "a3f51c75-2995-4f99-95c7-1166b3ba17a6")]]
 SingleChildRenderObjectElement : public RenderObjectElement
 {
     SKR_GENERATE_BODY(SingleChildRenderObjectElement)
-    using Super = RenderObjectElement;
-    using Super::Super;
+    SKR_IFNOT_META(using Super::Super);
 
     // lifecycle & tree
     void first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT override;

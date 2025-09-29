@@ -22,7 +22,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 // Render Graph Executor
 
@@ -443,5 +443,5 @@ uint32_t RenderGraphBackend::collect_buffer_garbage(uint64_t critical_frame, uin
     }
     return total_count;
 }
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

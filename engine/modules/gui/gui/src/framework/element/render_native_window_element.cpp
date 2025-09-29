@@ -28,12 +28,12 @@ void RenderNativeWindowElement::add_render_object_child(NotNull<RenderObject*> c
     // auto              raw_obj = render_object();
     // constexpr int64_t offset  = skr::get_cast_offset<RenderNativeWindow, ISingleChildRenderObject>();
     // auto              obj     = static_cast<ISingleChildRenderObject*>(static_cast<RenderNativeWindow*>(raw_obj));
-    auto obj = render_object()->type_cast<ISingleChildRenderObject>();
+    auto obj = render_object()->rttr_cast<ISingleChildRenderObject>();
     obj->set_child(child);
 }
 void RenderNativeWindowElement::remove_render_object_child(NotNull<RenderObject*> child, Slot slot) SKR_NOEXCEPT
 {
-    auto obj = render_object()->type_cast<ISingleChildRenderObject>();
+    auto obj = render_object()->rttr_cast<ISingleChildRenderObject>();
     obj->remove_child();
 }
 void RenderNativeWindowElement::move_render_object_child(NotNull<RenderObject*> child, Slot old_slot, Slot new_slot) SKR_NOEXCEPT
@@ -56,7 +56,7 @@ void RenderNativeWindowElement::set_new_child_widget(Widget* widget) SKR_NOEXCEP
 
 void RenderNativeWindowElement::_rebuild()
 {
-    _child = _update_child(_child, widget()->type_cast_fast<RenderNativeWindowWidget>()->child, Slot::Invalid());
+    _child = _update_child(_child, widget()->rttr_cast<RenderNativeWindowWidget>()->child, Slot::Invalid());
 }
 
 void RenderNativeWindowElement::prepare_initial_frame() SKR_NOEXCEPT
@@ -64,7 +64,7 @@ void RenderNativeWindowElement::prepare_initial_frame() SKR_NOEXCEPT
     // fake mount
     if (_lifecycle == EElementLifecycle::Initial)
     {
-        _render_object = widget()->type_cast_fast<RenderNativeWindowWidget>()->create_render_object();
+        _render_object = widget()->rttr_cast<RenderNativeWindowWidget>()->create_render_object();
 
         _rebuild();
 

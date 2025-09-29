@@ -58,7 +58,7 @@ void PaintingContext::push_layer(NotNull<ContainerLayer*> layer, ChildPaintingCa
 void PaintingContext::repaint_composited_child(NotNull<RenderObject*> child)
 {
     // update layer
-    auto child_layer = child->layer()->type_cast_fast<OffsetLayer>();
+    auto child_layer = child->layer()->rttr_cast<OffsetLayer>();
     if (child_layer)
     {
         child_layer->remove_all_children();
@@ -78,7 +78,7 @@ void PaintingContext::repaint_composited_child(NotNull<RenderObject*> child)
 }
 void PaintingContext::update_layer_properties(NotNull<RenderObject*> child)
 {
-    auto child_layer = child->layer()->type_cast_fast<OffsetLayer>();
+    auto child_layer = child->layer()->rttr_cast<OffsetLayer>();
     child_layer      = child->update_layer(child_layer);
     child->cancel_needs_layer_update();
 }
@@ -111,7 +111,7 @@ void PaintingContext::_composite_child(NotNull<RenderObject*> child, Offsetf off
         update_layer_properties(child);
     }
 
-    auto child_offset_layer = child->layer()->type_cast_fast<OffsetLayer>();
+    auto child_offset_layer = child->layer()->rttr_cast<OffsetLayer>();
     child_offset_layer->set_offset(offset);
     _append_layer(child_offset_layer);
 }

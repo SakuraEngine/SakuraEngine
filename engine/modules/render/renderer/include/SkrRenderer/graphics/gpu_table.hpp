@@ -55,8 +55,8 @@ public:
     TableInstanceBase(const TableInstanceBase&) = delete;
     TableInstanceBase& operator=(const TableInstanceBase&) = delete;
 
-    skr::render_graph::BufferHandle UpdateTableBuffer(skr::render_graph::RenderGraph* graph, uint64_t required_instances);
-    skr::render_graph::BufferHandle UpdateTableBufferStructured(skr::render_graph::RenderGraph* graph, uint64_t required_instances);
+    skr::RG::BufferHandle UpdateTableBuffer(skr::RG::RenderGraph* graph, uint64_t required_instances);
+    skr::RG::BufferHandle UpdateTableBufferStructured(skr::RG::RenderGraph* graph, uint64_t required_instances);
     template <typename T>
     void Store(uint64_t comp_id, uint64_t inst, const T& value)
     {
@@ -72,12 +72,12 @@ public:
             StoreInternal(offset, &data, GPUDatablock<T>::Size);
         }
     }
-    void DispatchSparseUpload(skr::render_graph::RenderGraph* graph, const render_graph::ComputePassExecuteFunction& on_exec);
+    void DispatchSparseUpload(skr::RG::RenderGraph* graph, const RG::ComputePassExecuteFunction& on_exec);
 
     CGPUBufferId Resize(uint32_t new_instance_capacity);
-    void CopySegments(skr::render_graph::RenderGraph* graph,
-        skr::render_graph::BufferHandle src_buffer,
-        skr::render_graph::BufferHandle dst_buffer,
+    void CopySegments(skr::RG::RenderGraph* graph,
+        skr::RG::BufferHandle src_buffer,
+        skr::RG::BufferHandle dst_buffer,
         uint64_t old_buffer_size) const;
 
     uint32_t GetComponentSize(TableSegmentID component_id) const;
@@ -94,8 +94,8 @@ protected:
     friend struct TableManager;
 
     bool needsResize(uint32_t required_instances) const;
-    skr::render_graph::BufferHandle importBuffer(skr::render_graph::RenderGraph* graph, const char8_t* name);
-    skr::render_graph::BufferHandle importBufferStructured(skr::render_graph::RenderGraph* graph, const char8_t* name);
+    skr::RG::BufferHandle importBuffer(skr::RG::RenderGraph* graph, const char8_t* name);
+    skr::RG::BufferHandle importBufferStructured(skr::RG::RenderGraph* graph, const char8_t* name);
     void StoreInternal(uint64_t offset, const void* data, uint64_t size);    
 
     struct Upload
@@ -107,9 +107,9 @@ protected:
     struct FrameContext
     {
         CGPUBufferId buffer_to_discard = nullptr;
-        skr::render_graph::BufferHandle buffer_handle; 
+        skr::RG::BufferHandle buffer_handle; 
     };
-    skr::render_graph::FrameResource<FrameContext> frame_ctxs;
+    skr::RG::FrameResource<FrameContext> frame_ctxs;
 
     struct UploadBatch
     {
@@ -137,7 +137,7 @@ protected:
     } upload_ctx;
 
     CGPUBufferId buffer = nullptr;
-    render_graph::RenderGraphStateTracker state_tracker;
+    RG::RenderGraphStateTracker state_tracker;
     const TableManager* manager = nullptr;
 
     TableConfig config;
@@ -165,7 +165,7 @@ public:
     ~TableManager();
     static skr::RC<TableManager> Create(CGPUDeviceId cgpu_device);
     skr::RC<TableInstance> CreateTable(const TableConfig& cfg);
-    void UploadToGPU(skr::render_graph::RenderGraph& graph);
+    void UploadToGPU(skr::RG::RenderGraph& graph);
     auto GetSparseUploadPipeline() const { return sparse_upload_pipeline; }
     
 private:

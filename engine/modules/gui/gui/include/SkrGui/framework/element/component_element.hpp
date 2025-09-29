@@ -9,8 +9,7 @@ struct [[sattr(guid = "8344aca9-b204-4b4a-8e16-18e4219039be"
 )]] SKR_GUI_API ComponentElement : public Element
 {
     SKR_GENERATE_BODY(ComponentElement)
-    using Super = Element;
-    using Super::Super;
+    SKR_IFNOT_META(using Super::Super);
 
     // lifecycle & tree
     virtual void first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT override;

@@ -13,7 +13,7 @@ NotNull<RenderObject*> Stack::create_render_object() SKR_NOEXCEPT
 }
 void Stack::update_render_object(NotNull<IBuildContext*> context, NotNull<RenderObject*> render_object) SKR_NOEXCEPT
 {
-    auto r_obj = render_object->type_cast_fast<RenderStack>();
+    auto r_obj = render_object->rttr_cast<RenderStack>();
 
     r_obj->set_stack_alignment(stack_alignment);
     r_obj->set_child_fit(child_fit);

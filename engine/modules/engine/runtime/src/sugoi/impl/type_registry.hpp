@@ -21,6 +21,6 @@ struct TypeRegistry::Impl {
 
     skr::Vector<type_description_t> descriptions;
     skr::FlatHashMap<skr::String, type_index_t, skr::Hash<skr::String>> name2type;
-    skr::FlatHashMap<guid_t, type_index_t, skr::Hash<skr_guid_t>> guid2type;
+    skr::FlatHashMap<guid_t, type_index_t, skr::Hash<skr::GUID>> guid2type;
 };
 } // namespace sugoi

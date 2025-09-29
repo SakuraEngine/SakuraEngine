@@ -7,7 +7,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 // thread-unsafe descriptor set heap
 // it's supposed to be resized only once at compile
@@ -86,5 +86,5 @@ protected:
     const CGPURootSignatureId root_sig;
     skr::FlatHashMap<Key, GuradedMergedBindTable, Key::hasher, Key::equal_to> pool;
 };
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

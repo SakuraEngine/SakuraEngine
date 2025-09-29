@@ -24,7 +24,7 @@ typedef struct skr_live2d_render_model_future_t
 
 struct skr_live2d_render_model_comp_t
 {
-    skr_guid_t resource_guid;
+    skr::GUID resource_guid;
     skr_live2d_ram_io_future_t ram_future;
     skr_live2d_render_model_future_t vram_future;
 };

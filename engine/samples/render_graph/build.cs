@@ -23,8 +23,17 @@ public static class RenderGraphSamples
             .AddCppSLFiles("rg-deferred/**.cxx")
             .CppSLOutputDirectory("resources/shaders/rg-deferred");
 
+        Engine.Program("RenderGraphSkyboxSample")
+            .Depend(Visibility.Public, "SkrImGui", "SkrRenderGraph")
+            .Depend(Visibility.Private, "AppSampleCommon")
+            .IncludeDirs(Visibility.Private, "./../common")
+            .AddCppFiles("rg-skybox/*.cpp")
+            .AddCppSLFiles("rg-skybox/**.cxx")
+            .CppSLOutputDirectory("resources/shaders/rg-skybox");
+
+
         Engine.Program("RenderGraphRaytracingSample")
-            .Depend(Visibility.Public, "SkrRenderGraph", "SkrSystem", "SkrScene")
+            .Depend(Visibility.Public, "SkrRenderGraph", "SkrSystem", "SkrActors")
             .Depend(Visibility.Private, "lodepng")
             .AddCppFiles("rg-raytracing/*.cpp")
             .AddCppSLFiles("rg-raytracing/**.cxx")

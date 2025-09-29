@@ -8,8 +8,7 @@ struct [[sattr(guid = "794d783e-9772-4abd-a2bb-06528963e72b"
 )]] SKR_GUI_API MultiChildRenderObjectElement : public RenderObjectElement
 {
     SKR_GENERATE_BODY(MultiChildRenderObjectElement)
-    using Super = RenderObjectElement;
-    using Super::Super;
+    SKR_IFNOT_META(using Super::Super);
 
     // lifecycle & tree
     void first_mount(NotNull<Element*> parent, Slot slot) SKR_NOEXCEPT override;

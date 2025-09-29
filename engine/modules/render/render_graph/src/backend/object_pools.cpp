@@ -10,7 +10,7 @@
 
 namespace skr
 {
-namespace render_graph
+namespace RG
 {
 
 // Merged Bind Table Pool
@@ -444,5 +444,5 @@ CGPUBufferViewId BufferViewPool::allocate(const CGPUBufferViewDescriptor& desc, 
     }
 }
 
-} // namespace render_graph
+} // namespace RG
 } // namespace skr

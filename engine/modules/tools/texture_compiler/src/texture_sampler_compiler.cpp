@@ -4,7 +4,7 @@
 #include "SkrRenderer/resources/texture_resource.h"
 #include "SkrTextureCompiler/texture_sampler_asset.hpp"
 
-namespace skd::asset
+namespace skr
 {
 
 void* TextureSamplerImporter::Import(skr::io::IRAMService* ioService, CookContext* context)
@@ -47,4 +47,4 @@ bool TextureSamplerCooker::Cook(CookContext* ctx)
     return true;
 }
 
-} // namespace skd::asset
+} // namespace skr
