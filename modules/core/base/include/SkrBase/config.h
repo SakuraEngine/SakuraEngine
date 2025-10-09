@@ -26,3 +26,6 @@
 
 // character
 #include "SkrBase/config/character.h"
+
+#pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#pragma clang diagnostic ignored "-Wnontrivial-memcall"
