@@ -16,7 +16,7 @@ rule("sakura.module")
             local analyze_tbl = analyze.load(target:name())
             if analyze_tbl then
                 local meta_source = analyze_tbl["Module.MetaSourceFile"]
-                if (meta_source ~= "") then
+                if (meta_source ~= "" and os.exists(meta_source)) then
                     target:add("files", meta_source)
                 end
             end
