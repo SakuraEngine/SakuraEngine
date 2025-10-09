@@ -42,7 +42,7 @@ public:
     }
     virtual ~IORequestMixin() SKR_NOEXCEPT = default;
 
-    [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT
+    [[nodiscard]] virtual const IORequestComponent* get_component(skr_guid_t tid) const SKR_NOEXCEPT override
     {
         SkrZoneScopedN("IORequestMixin::get_component");
         auto&  map  = acquire_cmap();
@@ -54,7 +54,7 @@ public:
         return nullptr;
     }
 
-    [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT
+    [[nodiscard]] virtual IORequestComponent* get_component(skr_guid_t tid) SKR_NOEXCEPT override
     {
         SkrZoneScopedN("IORequestMixin::get_component");
         auto&  map  = acquire_cmap();
@@ -66,7 +66,7 @@ public:
         return nullptr;
     }
 
-    IIOService* get_service() const SKR_NOEXCEPT
+    IIOService* get_service() const SKR_NOEXCEPT override
     {
         SKR_ASSERT(service && "service is null!");
         return service;
@@ -100,42 +100,42 @@ public:
         return c;
     }
 
-    void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT
+    void set_vfs(skr_vfs_t* _vfs) SKR_NOEXCEPT override
     {
         safe_comp<PathSrcComponent>()->set_vfs(_vfs);
     }
 
-    void set_path(const char8_t* p) SKR_NOEXCEPT
+    void set_path(const char8_t* p) SKR_NOEXCEPT override
     {
         safe_comp<PathSrcComponent>()->set_path(p);
     }
 
-    [[nodiscard]] const char8_t* get_path() const SKR_NOEXCEPT
+    [[nodiscard]] const char8_t* get_path() const SKR_NOEXCEPT override
     {
         return safe_comp<PathSrcComponent>()->get_path();
     }
 
-    void use_async_complete() SKR_NOEXCEPT
+    void use_async_complete() SKR_NOEXCEPT override
     {
         safe_comp<IOStatusComponent>()->use_async_complete();
     }
 
-    void use_async_cancel() SKR_NOEXCEPT
+    void use_async_cancel() SKR_NOEXCEPT override
     {
         safe_comp<IOStatusComponent>()->use_async_cancel();
     }
 
-    const skr_io_future_t* get_future() const SKR_NOEXCEPT
+    const skr_io_future_t* get_future() const SKR_NOEXCEPT override
     {
         return safe_comp<IOStatusComponent>()->get_future();
     }
 
-    void add_callback(ESkrIOStage stage, IOCallback callback, void* data) SKR_NOEXCEPT
+    void add_callback(ESkrIOStage stage, IOCallback callback, void* data) SKR_NOEXCEPT override
     {
         safe_comp<IOStatusComponent>()->add_callback(stage, callback, data);
     }
 
-    void add_finish_callback(ESkrIOFinishPoint point, IOCallback callback, void* data) SKR_NOEXCEPT
+    void add_finish_callback(ESkrIOFinishPoint point, IOCallback callback, void* data) SKR_NOEXCEPT override
     {
         safe_comp<IOStatusComponent>()->add_finish_callback(point, callback, data);
     }

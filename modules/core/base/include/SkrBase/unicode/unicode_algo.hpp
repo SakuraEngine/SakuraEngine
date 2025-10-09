@@ -318,11 +318,11 @@ inline constexpr uint64_t utf8_code_unit_index(const skr_char8* seq, uint32_t si
 //==================> utf-16 <==================
 inline constexpr bool utf16_is_leading_surrogate(skr_char16 ch)
 {
-    return ch >= kUtf16LeadingSurrogateMin && ch <= kUtf16LeadingSurrogateMax;
+    return ch >= static_cast<skr_char16>(kUtf16LeadingSurrogateMin) && ch <= static_cast<skr_char16>(kUtf16LeadingSurrogateMax);
 }
 inline constexpr bool utf16_is_trailing_surrogate(skr_char16 ch)
 {
-    return ch >= kUtf16TrailingSurrogateMin && ch <= kUtf16TrailingSurrogateMax;
+    return ch >= static_cast<skr_char16>(kUtf16TrailingSurrogateMin) && ch <= static_cast<skr_char16>(kUtf16TrailingSurrogateMax);
 }
 inline constexpr bool utf16_is_surrogate(skr_char16 ch)
 {
@@ -460,22 +460,22 @@ inline constexpr UTF8Seq::UTF8Seq(skr_char32 ch)
     else if (ch <= utf8_maximum_code_point(2))
     {
         data[0] = static_cast<skr_char8>((ch >> 6) | 0xc0);
-        data[1] = static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80);
+        data[1] = static_cast<skr_char8>((ch & static_cast<skr_char32>(utf8_mask(0))) | 0x80);
         len     = 2;
     }
     else if (ch <= utf8_maximum_code_point(3))
     {
         data[0] = static_cast<skr_char8>((ch >> 12) | 0xe0);
-        data[1] = static_cast<skr_char8>(((ch >> 6) & utf8_mask(0)) | 0x80);
-        data[2] = static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80);
+        data[1] = static_cast<skr_char8>(((ch >> 6) & static_cast<skr_char32>(utf8_mask(0))) | 0x80);
+        data[2] = static_cast<skr_char8>((ch & static_cast<skr_char32>(utf8_mask(0))) | 0x80);
         len     = 3;
     }
     else
     {
         data[0] = static_cast<skr_char8>((ch >> 18) | 0xf0);
-        data[1] = static_cast<skr_char8>(((ch >> 12) & utf8_mask(0)) | 0x80);
-        data[2] = static_cast<skr_char8>(((ch >> 6) & utf8_mask(0)) | 0x80);
-        data[3] = static_cast<skr_char8>((ch & utf8_mask(0)) | 0x80);
+        data[1] = static_cast<skr_char8>(((ch >> 12) & static_cast<skr_char32>(utf8_mask(0))) | 0x80);
+        data[2] = static_cast<skr_char8>(((ch >> 6) & static_cast<skr_char32>(utf8_mask(0))) | 0x80);
+        data[3] = static_cast<skr_char8>((ch & static_cast<skr_char32>(utf8_mask(0))) | 0x80);
         len     = 4;
     }
 }
@@ -620,8 +620,10 @@ inline constexpr UTF16Seq::operator skr_char32() const
     //         |||||||||| ||||||||||
     // [110110]9876543210 |||||||||| high surrogate
     //            [110111]9876543210 low  surrogate
-    return len == 1 ? data[0] :
-                      ((data[0] & kUtf16SurrogateMask) << 10) + (data[1] & kUtf16SurrogateMask) + kSMPBaseCodePoint;
+    auto data_0 = static_cast<skr_char32>(data[0]);
+    auto data_1 = static_cast<skr_char32>(data[1]);
+    return len == 1 ? data_0 :
+                      ((data_0 & kUtf16SurrogateMask) << 10) + (data_1 & kUtf16SurrogateMask) + kSMPBaseCodePoint;
 }
 
 // factory
