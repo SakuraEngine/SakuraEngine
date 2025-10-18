@@ -122,39 +122,45 @@ end
 ---------------------------------- codegen ----------------------------------
 -- add codegen component for target
 function codegen_component(owner, opt)
+    local no_codegen = opt.no_codegen
     target(owner)
-        add_rules("c++.codegen.load")
+        add_rules("c++.codegen.load", {no_codegen = no_codegen or false})
         analyzer_attribute("Codegen.Owner")
-        add_deps(owner..".Mako", { public = opt and opt.public or true })
+        if not no_codegen then
+            add_deps(owner..".Mako", { public = opt and opt.public or true })
+        else
+            add_deps(owner..".Meta", { public = opt and opt.public or true })
+        end
         add_values("c++.codegen.api", opt.api or target:name():upper())
         set_values("c++.codegen.enable", true)
     target_end()
 
-    target(owner..".Mako")
-        set_group("01.modules/"..owner.."/codegen")
-        set_kind("headeronly")
-        add_rules("c++.codegen.mako")
-        add_rules("sakura.derived_target", { owner_name = owner })
-        analyzer_ignore()
-        set_policy("build.fence", true)
-        add_deps(owner..".Meta", { public = true })
-        on_load(function (target)
-            target:data_set("mako.owner", owner)
+    if not no_codegen then
+        target(owner..".Mako")
+            set_group("01.modules/"..owner.."/codegen")
+            set_kind("headeronly")
+            add_rules("c++.codegen.mako")
+            add_rules("sakura.derived_target", { owner_name = owner })
+            analyzer_ignore()
+            set_policy("build.fence", true)
+            add_deps(owner..".Meta", { public = true })
+            on_load(function (target)
+                target:data_set("mako.owner", owner)
 
-            -- add deps
-            import("skr.analyze")
-            local analyze_tbl = analyze.load(owner)
-            if analyze_tbl then
-                local depends = analyze_tbl["Codegen.MakoDeps"]
-                for _, dep in ipairs(depends) do
-                    -- print("add codegen dependency: %s -> %s", target:name(), dep)
-                    target:add("deps", dep, { public = true })
+                -- add deps
+                import("skr.analyze")
+                local analyze_tbl = analyze.load(owner)
+                if analyze_tbl then
+                    local depends = analyze_tbl["Codegen.MakoDeps"]
+                    for _, dep in ipairs(depends) do
+                        -- print("add codegen dependency: %s -> %s", target:name(), dep)
+                        target:add("deps", dep, { public = true })
+                    end
+                else
+                    -- print("failed to load analyze table for %s", target:name())
                 end
-            else
-                -- print("failed to load analyze table for %s", target:name())
-            end
-        end)
-
+            end)
+    end
     -- must be declared at the end of this helper function
     target(owner..".Meta")
         set_group("01.modules/"..owner.."/codegen")
