@@ -2325,13 +2325,13 @@ CGPURenderPassEncoderId cgpu_cmd_begin_render_pass_d3d12(CGPUCommandBufferId cmd
         clearStencil.DepthStencil.Stencil                       = desc->depth_stencil->clear_stencil;
         renderPassDepthStencilDesc.cpuDescriptor                = DTV->mDxRtvDsvDescriptorHandle;
         
-        D3D12_RENDER_PASS_BEGINNING_ACCESS DepthBeginningAccess = { dBeginingAccess, { clearDepth } };
+        D3D12_RENDER_PASS_BEGINNING_ACCESS DepthBeginningAccess = { dBeginingAccess, { {clearDepth} } };
         renderPassDepthStencilDesc.DepthBeginningAccess = DepthBeginningAccess;
         
         D3D12_RENDER_PASS_ENDING_ACCESS DepthEndingAccess = { dEndingAccess, { 0 } };
         renderPassDepthStencilDesc.DepthEndingAccess = DepthEndingAccess;
         
-        D3D12_RENDER_PASS_BEGINNING_ACCESS StencilBeginningAccess = { sBeginingAccess, { clearStencil } };
+        D3D12_RENDER_PASS_BEGINNING_ACCESS StencilBeginningAccess = { sBeginingAccess, { {clearStencil} } };
         renderPassDepthStencilDesc.StencilBeginningAccess = StencilBeginningAccess;
 
         D3D12_RENDER_PASS_ENDING_ACCESS StencilEndingAccess = { sEndingAccess, { 0 } };

@@ -22,19 +22,19 @@ struct SKR_IMAGE_CODER_API BaseImageEncoder : public skr::IImageEncoder {
     static uint8_t*  Allocate(uint64_t size, uint64_t alignment) SKR_NOEXCEPT;
     static void      Deallocate(uint8_t* ptr, uint64_t alignment) SKR_NOEXCEPT;
 
-    virtual bool initialize(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT;
+    virtual bool initialize(const uint8_t* data, uint64_t size, uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT override;
 
     skr::span<const uint8_t> decoded_view;
 
-    virtual uint8_t* get_data() const SKR_NOEXCEPT { return encoded_data; }
-    virtual uint64_t get_size() const SKR_NOEXCEPT { return encoded_size; }
+    virtual uint8_t* get_data() const SKR_NOEXCEPT override { return encoded_data; }
+    virtual uint64_t get_size() const SKR_NOEXCEPT override { return encoded_size; }
     uint8_t*         encoded_data = nullptr;
     uint64_t         encoded_size = 0;
 
-    virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT { return props.color_format; }
-    virtual uint32_t               get_width() const SKR_NOEXCEPT { return props.width; }
-    virtual uint32_t               get_height() const SKR_NOEXCEPT { return props.height; }
-    virtual uint32_t               get_bit_depth() const SKR_NOEXCEPT { return props.bit_depth; }
+    virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT override { return props.color_format; }
+    virtual uint32_t               get_width() const SKR_NOEXCEPT override { return props.width; }
+    virtual uint32_t               get_height() const SKR_NOEXCEPT override { return props.height; }
+    virtual uint32_t               get_bit_depth() const SKR_NOEXCEPT override { return props.bit_depth; }
     void                           setRawProps(uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT;
     uint32_t                       bytes_per_row = 0;
 
@@ -67,19 +67,19 @@ struct SKR_IMAGE_CODER_API BaseImageDecoder : public skr::IImageDecoder {
     static uint8_t*  Allocate(uint64_t size, uint64_t alignment) SKR_NOEXCEPT;
     static void      Deallocate(uint8_t* ptr, uint64_t alignment) SKR_NOEXCEPT;
 
-    virtual bool initialize(const uint8_t* data, uint64_t size) SKR_NOEXCEPT;
+    virtual bool initialize(const uint8_t* data, uint64_t size) SKR_NOEXCEPT override;
 
     skr::span<const uint8_t> encoded_view;
 
-    virtual uint8_t* get_data() const SKR_NOEXCEPT { return decoded_data; }
-    virtual uint64_t get_size() const SKR_NOEXCEPT { return decoded_size; }
+    virtual uint8_t* get_data() const SKR_NOEXCEPT override { return decoded_data; }
+    virtual uint64_t get_size() const SKR_NOEXCEPT override { return decoded_size; }
     uint8_t*         decoded_data = nullptr;
     uint64_t         decoded_size = 0;
 
-    virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT { return props.color_format; }
-    virtual uint32_t               get_width() const SKR_NOEXCEPT { return props.width; }
-    virtual uint32_t               get_height() const SKR_NOEXCEPT { return props.height; }
-    virtual uint32_t               get_bit_depth() const SKR_NOEXCEPT { return props.bit_depth; }
+    virtual EImageCoderColorFormat get_color_format() const SKR_NOEXCEPT override { return props.color_format; }
+    virtual uint32_t               get_width() const SKR_NOEXCEPT override { return props.width; }
+    virtual uint32_t               get_height() const SKR_NOEXCEPT override { return props.height; }
+    virtual uint32_t               get_bit_depth() const SKR_NOEXCEPT override { return props.bit_depth; }
     void                           setRawProps(uint32_t width, uint32_t height, EImageCoderColorFormat format, uint32_t bit_depth) SKR_NOEXCEPT;
 
 protected:

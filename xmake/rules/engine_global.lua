@@ -8,6 +8,7 @@ skr_global_target()
 
     -- scripts
     on_load(function (target)
+        import("core.base.task")
         import("skr.utils")
         import("skr.analyze")
         import("skr.install")

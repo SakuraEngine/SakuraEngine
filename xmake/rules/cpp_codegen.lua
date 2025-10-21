@@ -71,30 +71,29 @@ rule("c++.codegen.load")
     on_load(function (target, opt)
         import("skr.analyze")
         import("skr.utils")
-
+        local no_codegen = target:extraconf("rules", "c++.codegen.load", "no_codegen")
         if xmake.argv()[1] ~= "analyze_project" then
             -- config
             local codegen_dir = path.join(utils.skr_codegen_dir(target:name()), "codegen")
             local source_file = path.join(codegen_dir, target:name(), "/generated.cpp")
-
             -- check generated files
-            if not os.exists(source_file) then
-                local gen_file = io.open(source_file, "w")
-                -- gen_file:print("static_assert(false, \"codegen of module "..target:name().." is not completed!\");")
-                gen_file:close()
-            end
-
-            -- add to target configure
-            target:add("files", source_file, { unity_ignored = true })
-            target:add("includedirs", codegen_dir, {public = true})
-            target:add("includedirs", path.join(codegen_dir, target:name()), {public = true})
-
-            -- add deps
-            local analyze_tbl = analyze.load(target:name())
-            if analyze_tbl then
-                local codegen_deps = analyze_tbl["Codegen.Deps"]
-                for _, codegen_dep in ipairs(codegen_deps) do
-                    target:add("deps", codegen_dep, { public = false })
+            if not no_codegen then
+                if not os.exists(source_file) then
+                    local gen_file = io.open(source_file, "w")
+                    -- gen_file:print("static_assert(false, \"codegen of module "..target:name().." is not completed!\");")
+                    gen_file:close()
+                end
+                -- add to target configure
+                target:add("includedirs", codegen_dir, {public = true})
+                target:add("includedirs", path.join(codegen_dir, target:name()), {public = true})
+                target:add("files", source_file, { unity_ignored = true })
+                -- add deps
+                local analyze_tbl = analyze.load(target:name())
+                if analyze_tbl then
+                    local codegen_deps = analyze_tbl["Codegen.Deps"]
+                    for _, codegen_dep in ipairs(codegen_deps) do
+                        target:add("deps", codegen_dep, { public = false })
+                    end
                 end
             end
         end
