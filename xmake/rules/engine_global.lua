@@ -14,15 +14,15 @@ skr_global_target()
         import("skr.install")
         import("skr.download")
         
+        argv = xmake.argv()
+
+        -- save config
+        if argv[1] == "f" or argv[1] == "config" then
+            utils.save_config()
+        end
+
         -- trigger analyze
         if analyze.filter_analyze_trigger() then
-            local argv = xmake.argv()
-
-            -- save config
-            if not (argv[1] == "f" or argv[1] == "config") then
-                utils.error("Should call config like `xmake f xxx -c` first.")
-                return
-            end
             analyze.trigger_analyze()
         end
     end)
